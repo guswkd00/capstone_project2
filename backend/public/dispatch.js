@@ -181,7 +181,7 @@ async function loadRecommendations() {
   candidateList.replaceChildren();
 
   try {
-        const tracking = await requestJson(
+    const tracking = await requestJson(
       `/api/dispatch/${orderSelect.value}/tracking`
     );
 
@@ -265,7 +265,14 @@ async function loadDispatchOrders() {
     const result = await requestJson("/api/orders");
 
     const orders = result.data.filter(order =>
-      ["pending", "confirmed", "assigned"].includes(order.status)
+      [
+  "pending",
+  "confirmed",
+  "assigned",
+  "delivering",
+  "completed",
+  "failed"
+].includes(order.status)
     );
 
     for (const order of orders) {
