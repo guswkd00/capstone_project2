@@ -204,3 +204,45 @@ body.sf-app > header nav a.active {
     min-width: 0;
   }
 }
+/* Shared account page */
+body.sf-app #account-card {
+  padding: 28px;
+  border-radius: 16px;
+}
+
+body.sf-app #account-card dt {
+  color: var(--muted, #737373);
+}
+
+body.sf-app #account-card dd {
+  color: var(--ink);
+}
+
+body.sf-app #account-card .links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 16px;
+  background: #fff;
+  color: #b03b24;
+  border: 1px solid #f0cdbf;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+body.sf-app #account-card .links a:hover {
+  background: #fff0e9;
+}
+
+body.sf-app #sign-out-button {
+  padding: 11px 18px;
+  background: #fff5f5;
+  color: #b42318;
+  border: 1px solid #f1b4ad;
+  border-radius: 10px;
+}
+
+body.sf-app #sign-out-button:hover:not(:disabled) {
+  background: #ffe8e5;
+}
