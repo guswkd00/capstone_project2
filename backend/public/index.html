@@ -595,6 +595,22 @@
           ["COD to Collect", currency.format(Number(order.cod_amount || 0))],
           ["Status", order.status],
           ["Assigned Driver", order.assigned_driver || "Unassigned"],
+                    [
+            "COD Collected",
+            order.cod_collected == null
+              ? "Not recorded"
+              : currency.format(Number(order.cod_collected))
+          ],
+          [
+            "Delivery Confirmation",
+            order.delivery_note || "Not recorded"
+          ],
+          [
+            "Delivered At",
+            order.delivered_at
+              ? new Date(order.delivered_at).toLocaleString("en-GB")
+              : "Not completed"
+          ],
           ["Created At", new Date(order.created_at).toLocaleString("en-GB")]
         ]);
 
