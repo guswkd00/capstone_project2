@@ -671,7 +671,53 @@
           ["Delivery Fee", currency.format(Number(order.delivery_fee || 0))],
           ["Total Amount", currency.format(Number(order.total_amount))]
         ]);
+// Delivery photo uploaded by the assigned driver.
+const proofSection = document.createElement("section");
+proofSection.style.marginTop = "24px";
 
+proofSection.appendChild(
+  createElement("h3", "Delivery Photo")
+);
+
+const proofMessage = createElement(
+  "p",
+  "Loading delivery photo..."
+);
+proofSection.appendChild(proofMessage);
+
+const proofUrl = `/api/orders/${encodeURIComponent(order.id)}/proof`;
+
+const proofImage = document.createElement("img");
+proofImage.alt = "Delivery photo uploaded by the driver";
+proofImage.hidden = true;
+proofImage.style.cssText =
+  "display:block;max-width:100%;max-height:480px;" +
+  "object-fit:contain;border-radius:12px;margin-top:12px;";
+
+const proofLink = createElement("a", "Open full-size photo");
+proofLink.href = proofUrl;
+proofLink.target = "_blank";
+proofLink.rel = "noopener noreferrer";
+proofLink.hidden = true;
+
+proofImage.onload = () => {
+  proofMessage.textContent =
+    "Uploaded by the driver as delivery evidence.";
+  proofImage.hidden = false;
+  proofLink.hidden = false;
+};
+
+proofImage.onerror = () => {
+  proofImage.remove();
+  proofLink.remove();
+  proofMessage.textContent =
+    "No delivery photo is available, or the photo could not be loaded.";
+};
+
+proofSection.appendChild(proofImage);
+proofSection.appendChild(proofLink);
+container.appendChild(proofSection);
+proofImage.src = proofUrl;
         detailsContent.replaceChildren(container);
       } catch (error) {
         if (thisRequest === detailsRequest && detailsDialog.open) {
