@@ -644,9 +644,40 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/app-theme.css?v=3">
+
+<style>
+  body.sf-login {
+    --orange: var(--brand);
+    --orange-light: #fff0e9;
+    background: #fff8f5;
+    color: var(--ink);
+    font-family: "Segoe UI", Arial, sans-serif;
+  }
+
+  body.sf-login .topbar {
+    border-top: 4px solid var(--brand);
+    border-bottom: 1px solid var(--border);
+  }
+
+  body.sf-login .hero {
+    background: linear-gradient(135deg, #ee4d2d, #ff6633);
+  }
+
+  body.sf-login .login-card {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 16px 48px rgba(100, 40, 20, 0.14);
+  }
+
+  body.sf-login :is(button, a, input):focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 3px;
+  }
+</style>
 </head>
 
-<body>
+<body class="sf-login">
   <svg
     width="0"
     height="0"
