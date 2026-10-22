@@ -409,6 +409,60 @@ router.post("/demo-driver-accounts", async (req, res) => {
     if (connection) connection.release();
   }
 });
+// Manager access is enforced in server.js.
+router.get("/vehicles/:id/expenses", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+
+  const vehicleId = Number(req.params.id);
+
+  if (!Number.isSafeInteger(vehicleId) || vehicleId <= 0) {
+    return res.status(400).json({
+      message: "Invalid vehicle ID."
+    });
+  }
+
+  try {
+    const [vehicles] = await pool.execute(
+      "SELECT id, plate_number FROM vehicles WHERE id = ?",
+      [vehicleId]
+    );
+
+    if (!vehicles.length) {
+      return res.status(404).json({
+        message: "Vehicle not found."
+      });
+    }
+
+    const [expenses] = await pool.execute(
+      `SELECT
+         e.id,
+         e.expense_type,
+         e.amount,
+         DATE_FORMAT(e.expense_date, '%Y-%m-%d') AS expense_date,
+         e.description,
+         e.created_at,
+         u.full_name AS recorded_by
+       FROM vehicle_expenses e
+       JOIN users u ON u.id = e.created_by
+       WHERE e.vehicle_id = ?
+       ORDER BY e.expense_date DESC, e.id DESC
+       LIMIT 200`,
+      [vehicleId]
+    );
+
+    return res.json({
+      vehicle: vehicles[0],
+      data: expenses,
+      limit: 200
+    });
+  } catch (error) {
+    console.error("Vehicle expenses query failed:", error.code);
+
+    return res.status(500).json({
+      message: "Unable to retrieve vehicle expenses."
+    });
+  }
+});
 module.exports = router;
 // Validate driver information.
 function validateDriver(body) {
