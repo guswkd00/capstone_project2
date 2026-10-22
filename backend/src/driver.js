@@ -629,17 +629,6 @@ if (!proofRows.length) {
         [deliveryNote, collected, order.id]
       );
 
-      if (validCoordinates(order.latitude, order.longitude)) {
-        await connection.execute(
-          `
-            UPDATE drivers
-            SET latitude = ?, longitude = ?
-            WHERE id = ?
-          `,
-          [order.latitude, order.longitude, driver.id]
-        );
-      }
-
       eventType = "delivery_completed";
       note = deliveryNote;
     }
@@ -719,3 +708,4 @@ if (!proofRows.length) {
 });
 router.use(require("./delivery-proof"));
 module.exports = router;
+
