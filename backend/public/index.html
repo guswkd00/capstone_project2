@@ -757,6 +757,108 @@ appendDetails(container, [
       : "Not recorded"
   ]
 ]);
+        if (
+  requiresHandover &&
+  order.status === "completed" &&
+  !order.cod_settled_at
+) {
+  const settlementForm = document.createElement("form");
+  settlementForm.style.cssText =
+    "display:grid;gap:12px;margin:20px 0;";
+
+  const amountLabel = createElement(
+    "label",
+    "Amount actually received from the driver (VND)"
+  );
+
+  const amountInput = document.createElement("input");
+  amountInput.type = "number";
+  amountInput.min = "1";
+  amountInput.step = "1";
+  amountInput.required = true;
+  amountInput.placeholder = "Enter the received amount";
+  amountLabel.appendChild(amountInput);
+
+  const confirmationLabel = document.createElement("label");
+  const confirmationInput = document.createElement("input");
+  confirmationInput.type = "checkbox";
+  confirmationInput.required = true;
+
+  confirmationLabel.append(
+    confirmationInput,
+    document.createTextNode(
+      " I confirm that I have actually received this money."
+    )
+  );
+
+  const settlementMessage = createElement("p", "");
+  settlementMessage.setAttribute("role", "status");
+
+  const settlementButton = createElement(
+    "button",
+    "Confirm COD Handover",
+    "primary"
+  );
+  settlementButton.type = "submit";
+
+  settlementForm.append(
+    amountLabel,
+    confirmationLabel,
+    settlementButton,
+    settlementMessage
+  );
+
+  let savingSettlement = false;
+
+  settlementForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (savingSettlement || !settlementForm.reportValidity()) return;
+
+    const amount = Number(amountInput.value);
+
+    if (
+      !Number.isSafeInteger(amount) ||
+      amount <= 0 ||
+      amount !== Number(order.cod_amount) ||
+      amount !== Number(order.cod_collected)
+    ) {
+      settlementMessage.textContent =
+        "Received amount must match the required and collected COD.";
+      return;
+    }
+
+    savingSettlement = true;
+    settlementButton.disabled = true;
+    settlementMessage.textContent = "Saving COD handover...";
+
+    try {
+      await requestJson(
+        `/api/orders/${encodeURIComponent(order.id)}/cod-settlement`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ received_amount: amount })
+        }
+      );
+
+      settlementMessage.textContent = "COD handover confirmed.";
+
+      if (
+        detailsDialog.open &&
+        thisRequest === detailsRequest
+      ) {
+        await showDetails(order.id);
+      }
+    } catch (error) {
+      settlementMessage.textContent = error.message;
+      savingSettlement = false;
+      settlementButton.disabled = false;
+    }
+  });
+
+  container.appendChild(settlementForm);
+}
         detailsContent.replaceChildren(container);
       } catch (error) {
         if (thisRequest === detailsRequest && detailsDialog.open) {
