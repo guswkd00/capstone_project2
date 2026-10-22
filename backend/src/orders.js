@@ -424,15 +424,23 @@ router.get("/:id", async (req, res) => {
           o.total_amount,
           o.payment_method,
           o.cod_amount,
+          o.cod_collected,
+          o.delivery_note,
+          o.delivered_at,
           o.status,
           o.created_at,
           r.name AS restaurant_name,
           r.address AS pickup_address,
           r.phone AS restaurant_phone,
-          d.full_name AS assigned_driver
+          d.full_name AS assigned_driver,
+          s.received_amount AS cod_received_amount,
+          s.confirmed_at AS cod_settled_at,
+          manager.full_name AS cod_confirmed_by
         FROM orders o
         LEFT JOIN restaurants r ON r.id = o.restaurant_id
         LEFT JOIN drivers d ON d.id = o.driver_id
+        LEFT JOIN order_cod_settlements s ON s.order_id = o.id
+        LEFT JOIN users manager ON manager.id = s.confirmed_by
         WHERE o.id = ?
       `,
       [orderId]
