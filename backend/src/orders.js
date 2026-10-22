@@ -521,4 +521,116 @@ router.get("/:id/proof", async (req, res) => {
     });
   }
 });
+router.post("/:id/cod-settlement", async (req, res) => {
+  if (req.user?.role !== "manager") {
+    return res.status(403).json({
+      message: "Manager access required."
+    });
+  }
+
+  const orderId = Number(req.params.id);
+  const amount = req.body?.received_amount;
+
+  if (
+    !Number.isSafeInteger(orderId) ||
+    orderId <= 0 ||
+    !Number.isSafeInteger(amount) ||
+    amount <= 0
+  ) {
+    return res.status(400).json({
+      message: "Provide a valid order ID and received amount in VND."
+    });
+  }
+
+  let connection;
+
+  const reject = (status, message) => {
+    throw Object.assign(new Error(message), { status });
+  };
+
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const [orders] = await connection.execute(
+      `SELECT id, driver_id, status, payment_method,
+              cod_amount, cod_collected
+       FROM orders
+       WHERE id = ?
+       FOR UPDATE`,
+      [orderId]
+    );
+
+    const order = orders[0];
+
+    if (!order) {
+      reject(404, "Order not found.");
+    }
+
+    if (
+      order.status !== "completed" ||
+      order.payment_method !== "cash" ||
+      !order.driver_id
+    ) {
+      reject(409, "Only completed cash orders can be settled.");
+    }
+
+    if (
+      amount !== Number(order.cod_amount) ||
+      amount !== Number(order.cod_collected)
+    ) {
+      reject(
+        409,
+        "Received amount must match the required and collected COD."
+      );
+    }
+
+    const [existing] = await connection.execute(
+      `SELECT order_id
+       FROM order_cod_settlements
+       WHERE order_id = ?`,
+      [orderId]
+    );
+
+    if (existing.length) {
+      reject(409, "COD has already been settled for this order.");
+    }
+
+    await connection.execute(
+      `INSERT INTO order_cod_settlements
+         (order_id, driver_id, received_amount, confirmed_by)
+       VALUES (?, ?, ?, ?)`,
+      [orderId, order.driver_id, amount, req.user.id]
+    );
+
+    await connection.commit();
+
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(201).json({
+      message: "COD handover confirmed successfully."
+    });
+  } catch (error) {
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch {}
+    }
+
+    const status = [400, 404, 409].includes(error.status)
+      ? error.status
+      : 500;
+
+    if (status === 500) {
+      console.error("COD settlement failed:", error.code || error.name);
+    }
+
+    return res.status(status).json({
+      message: status === 500
+        ? "Unable to confirm COD handover."
+        : error.message
+    });
+  } finally {
+    connection?.release();
+  }
+});
 module.exports = router;
