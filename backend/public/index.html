@@ -718,6 +718,45 @@ proofSection.appendChild(proofImage);
 proofSection.appendChild(proofLink);
 container.appendChild(proofSection);
 proofImage.src = proofUrl;
+        container.appendChild(
+  createElement("h3", "COD Handover")
+);
+
+const requiresHandover =
+  order.payment_method === "cash" &&
+  Number(order.cod_amount) > 0;
+
+let handoverStatus = "Not required";
+
+if (requiresHandover) {
+  if (order.cod_settled_at) {
+    handoverStatus = "Confirmed";
+  } else if (order.status === "completed") {
+    handoverStatus = "Awaiting handover";
+  } else {
+    handoverStatus = "Not ready — order not completed";
+  }
+}
+
+appendDetails(container, [
+  ["Handover Status", handoverStatus],
+  [
+    "Amount Received by Manager",
+    order.cod_settled_at
+      ? currency.format(Number(order.cod_received_amount))
+      : "Not recorded"
+  ],
+  [
+    "Confirmed By",
+    order.cod_confirmed_by || "Not recorded"
+  ],
+  [
+    "Confirmed At",
+    order.cod_settled_at
+      ? new Date(order.cod_settled_at).toLocaleString("en-GB")
+      : "Not recorded"
+  ]
+]);
         detailsContent.replaceChildren(container);
       } catch (error) {
         if (thisRequest === detailsRequest && detailsDialog.open) {
