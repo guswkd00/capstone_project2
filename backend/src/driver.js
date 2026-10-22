@@ -527,22 +527,6 @@ router.post("/orders/:id/progress", async (req, res) => {
 
       const restaurant = restaurants[0];
 
-      if (
-        validCoordinates(
-          restaurant.latitude,
-          restaurant.longitude
-        )
-      ) {
-        await connection.execute(
-          `
-            UPDATE drivers
-            SET latitude = ?, longitude = ?
-            WHERE id = ?
-          `,
-          [restaurant.latitude, restaurant.longitude, driver.id]
-        );
-      }
-
       eventType = "restaurant_arrived";
       note = "Driver confirmed arrival at the restaurant.";
     }
