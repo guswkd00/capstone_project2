@@ -132,11 +132,49 @@
           `box-shadow:0 2px 8px #0003;font-size:23px">🛵</span>`
       });
 
-      L.marker(point, {
+            L.marker(point, {
         icon,
-        title: `${driver.full_name} · ${driver.plate_number}`
+        title: `${driver.full_name} · ${driver.plate_number}`,
+        keyboard: true
       })
         .addTo(markers)
+        .bindPopup(() => {
+          const popup = document.createElement("div");
+
+          popup.append(
+            text("strong", driver.full_name),
+            text(
+              "p",
+              `${driver.driver_code} · ${driver.plate_number}`
+            )
+          );
+
+          if (result.tracking) {
+            popup.append(
+              text("p", driver.tracking_phase),
+              text("p", driver.tracking_gps)
+            );
+          } else {
+            popup.append(
+              text(
+                "p",
+                `Pickup distance: ${driver.pickup_km ?? "—"} km`
+              ),
+              text(
+                "p",
+                `Estimated delivery: ${driver.eta_minutes ?? "—"} min`
+              ),
+              text(
+                "p",
+                driver.eligible
+                  ? "Use the assignment button below the map."
+                  : "This driver is not eligible for this order."
+              )
+            );
+          }
+
+          return popup;
+        }, { maxWidth: 280 })
         .on("click", () => {
           if (result.tracking) {
   details.replaceChildren(
