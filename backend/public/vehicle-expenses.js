@@ -83,7 +83,90 @@
     }
   }
 
-  // Expense submission will be added here.
+  function updateSaveButton() {
+    saveButton.disabled = saving || !vehicleSelect.value;
+  }
+
+  vehicleSelect.addEventListener("change", updateSaveButton);
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (saving || !form.reportValidity()) return;
+
+    const vehicleId = vehicleSelect.value;
+
+    if (!vehicleId) {
+      message.textContent = "Select a vehicle first.";
+      return;
+    }
+
+    const values = Object.fromEntries(new FormData(form));
+
+    const body = {
+      expense_type: values.expense_type,
+      amount: Number(values.amount),
+      expense_date: values.expense_date,
+      description: String(values.description || "").trim()
+    };
+
+    if (
+      !Number.isSafeInteger(body.amount) ||
+      body.amount <= 0 ||
+      body.amount > 9999999999 ||
+      !body.description
+    ) {
+      message.textContent =
+        "Enter a valid whole-VND amount and description.";
+      return;
+    }
+
+    saving = true;
+    historyRequest++;
+
+    const controls = [
+      vehicleSelect,
+      ...Array.from(form.elements)
+    ];
+
+    controls.forEach(control => {
+      control.disabled = true;
+    });
+
+    saveButton.textContent = "Saving...";
+    message.textContent = "Saving vehicle expense...";
+
+    try {
+      await request(
+        `/api/fleet/vehicles/${encodeURIComponent(vehicleId)}/expenses`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        }
+      );
+
+      form.reset();
+      form.elements.namedItem("expense_date").value =
+        body.expense_date;
+
+      await loadHistory();
+
+      message.textContent =
+        `Expense saved successfully. ${message.textContent}`;
+    } catch (error) {
+      message.textContent = error.message;
+    } finally {
+      saving = false;
+
+      controls.forEach(control => {
+        control.disabled = false;
+      });
+
+      saveButton.textContent = "Save Expense";
+      updateSaveButton();
+    }
+  });
 
   vehicleSelect.addEventListener("change", loadHistory);
 
