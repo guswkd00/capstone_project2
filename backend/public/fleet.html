@@ -236,6 +236,72 @@
       Driver availability and vehicle status are checked separately.
       A driver with a maintenance vehicle should not receive a new assignment.
     </p>
+<section class="card" style="margin-top:24px">
+  <h2>Vehicle Expenses</h2>
+  <p>Record actual fuel, maintenance and other vehicle expenses.</p>
+
+  <label for="expense-vehicle">Select Vehicle</label>
+  <select id="expense-vehicle" disabled>
+    <option value="">Loading vehicles...</option>
+  </select>
+
+  <p id="expense-message" role="status" aria-live="polite"></p>
+
+  <form id="expense-form" class="form-grid">
+    <label>
+      Expense Type
+      <select name="expense_type" required>
+        <option value="fuel">Fuel</option>
+        <option value="maintenance">Maintenance</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+
+    <label>
+      Amount (VND)
+      <input
+        name="amount"
+        type="number"
+        min="1"
+        max="9999999999"
+        step="1"
+        required
+      >
+    </label>
+
+    <label>
+      Expense Date
+      <input name="expense_date" type="date" required>
+    </label>
+
+    <label>
+      Description
+      <textarea name="description" maxlength="500" required></textarea>
+    </label>
+
+    <button id="save-expense" class="primary" type="submit" disabled>
+      Save Expense
+    </button>
+  </form>
+
+  <h3>Expense History</h3>
+  <p>Shows up to 200 recent records for the selected vehicle.</p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Description</th>
+          <th>Recorded By</th>
+        </tr>
+      </thead>
+      <tbody id="expense-history"></tbody>
+    </table>
+  </div>
+</section>
   </main>
 
   <dialog id="vehicle-dialog" aria-labelledby="vehicle-title">
