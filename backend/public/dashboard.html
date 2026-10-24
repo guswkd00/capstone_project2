@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ShopeeFood Delivery DSS — Dashboard</title>
+
+  <script src="/auth-client.js" data-role="manager"></script>
+
+  <style>
+    :root {
+      --sf-red: #ee4d2d;
+      --sf-orange: #ff6633;
+      --sf-gradient: linear-gradient(135deg, #f53d2d 0%, #ff6633 100%);
+      --sf-bg: #f6f6f6;
+      --sf-surface: #ffffff;
+      --sf-text: #222222;
+      --sf-muted: #757575;
+      --sf-border: #e8e8e8;
+      --sf-light-orange: #fff5f1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--sf-bg);
+      color: var(--sf-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* ==================== HEADER ==================== */
+    header {
+      background: var(--sf-surface);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      background: var(--sf-gradient);
+      color: white;
+      padding: 14px 30px;
+    }
+
+    .header-container {
+      max-width: 1250px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    /* Brand / Logo Left */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: white;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sf-red);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    .brand-text strong {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      display: block;
+      line-height: 1.15;
+    }
+
+    .brand-text span {
+      font-size: 12px;
+      opacity: 0.9;
+      font-weight: 500;
+      display: inline-block;
+      margin-top: 2px;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    /* Right Actions: Notification Bell & My Account */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .notif-wrapper {
+      position: relative;
+    }
+
+    .notif-btn {
+      position: relative;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .notif-btn:hover {
+      background: rgba(255, 255, 255, 0.28);
+      transform: translateY(-1px);
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #ffffff;
+      color: var(--sf-red);
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Notification Dropdown */
+    .notif-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 10px);
+      width: 310px;
+      background: white;
+      color: var(--sf-text);
+      border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+      border: 1px solid var(--sf-border);
+      overflow: hidden;
+      z-index: 200;
+    }
+
+    .notif-dropdown.show {
+      display: block;
+    }
+
+    .notif-header {
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--sf-muted);
+      border-bottom: 1px solid var(--sf-border);
+      background: #fafafa;
+    }
+
+    .notif-item {
+      padding: 12px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #f2f2f2;
+      line-height: 1.45;
+    }
+
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item:hover { background: var(--sf-light-orange); }
+    .notif-item strong { color: var(--sf-red); display: block; margin-bottom: 2px; }
+
+    /* My Account Button */
+    .account-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: white;
+      color: var(--sf-red);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      transition: all 0.2s ease;
+    }
+
+    .account-btn:hover {
+      background: #fff8f6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+    }
+
+    /* Navigation Bar */
+    .header-nav-bar {
+      background: var(--sf-surface);
+      border-bottom: 1px solid var(--sf-border);
+      padding: 0 30px;
+    }
+
+    nav {
+      max-width: 1250px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    nav a {
+      color: #555555;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 14px 16px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    nav a:hover {
+      color: var(--sf-red);
+      background: var(--sf-light-orange);
+    }
+
+    nav a.active {
+      color: var(--sf-red);
+      border-bottom-color: var(--sf-red);
+      background: var(--sf-light-orange);
+    }
+
+    /* ==================== MAIN CONTENT ==================== */
+    main {
+      max-width: 1250px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      color: var(--sf-text);
+      margin: 0 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 24px;
+      background: var(--sf-gradient);
+      border-radius: 3px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-top: 0;
+      color: var(--sf-text);
+    }
+
+    .muted {
+      color: var(--sf-muted);
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+
+    .error {
+      color: #d0011b;
+      background: #fff0f1;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid #ffccd0;
+      font-weight: 600;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: 1px solid #dcdcdc;
+      border-radius: 6px;
+      background: white;
+      color: var(--sf-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: var(--sf-red);
+      color: var(--sf-red);
+      background: var(--sf-light-orange);
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .primary {
+      background: var(--sf-gradient);
+      border-color: var(--sf-red);
+      color: white;
+      box-shadow: 0 2px 6px rgba(238, 77, 45, 0.25);
+    }
+
+    .primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #d73211 0%, #ee4d2d 100%);
+      color: white;
+      border-color: #d73211;
+    }
+
+    /* Metrics Grid */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .metric, .card {
+      padding: 20px 22px;
+      background: var(--sf-surface);
+      border: 1px solid var(--sf-border);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    }
+
+    .metric {
+      border-top: 3px solid transparent;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .metric:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(238, 77, 45, 0.08);
+      border-top-color: var(--sf-red);
+    }
+
+    .metric span {
+      color: var(--sf-muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 26px;
+      margin-top: 10px;
+      color: var(--sf-red);
+      overflow-wrap: anywhere;
+    }
+
+    .card { margin-top: 22px; }
+
+    .notice {
+      margin: 22px 0;
+      padding: 15px 18px;
+      border-left: 4px solid var(--sf-red);
+      background: var(--sf-light-orange);
+      border-radius: 0 8px 8px 0;
+      color: #444;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Tables */
+    .table-wrapper { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 13px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+
+    th {
+      background: #fff8f6;
+      color: var(--sf-red);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+      border-bottom: 2px solid #ffd8cc;
+    }
+
+    tbody tr:hover {
+      background: #fffcfb;
+    }
+
+    .late {
+      color: #d0011b;
+      font-weight: 700;
+    }
+
+    .on-time {
+      color: #008a5e;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .header-top, .header-nav-bar {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .metrics { grid-template-columns: 1fr; }
+      .brand-text strong { font-size: 18px; }
+      .account-btn span { display: none; }
+    }
+
+    @media print {
+      header, .toolbar { display: none; }
+      body { background: white; }
+
+      main {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .metric { padding: 12px; }
+      .metric strong { font-size: 20px; }
+
+      .table-wrapper { overflow: visible; }
+      table { white-space: normal; }
+
+      th, td {
+        padding: 7px 4px;
+        font-size: 10px;
+      }
+
+      tr, .metric { break-inside: avoid; }
+      thead { display: table-header-group; }
+    }
+  </style>
+<link rel="stylesheet" href="/app-theme.css">
+<script src="/app-shell.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <div class="header-top">
+      <div class="header-container">
+        <!-- Bên trái: Logo ShopeeFood -->
+        <a href="/" class="brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <strong>ShopeeFood Delivery DSS</strong>
+            <span>Academic Prototype</span>
+          </div>
+        </a>
+
+        <!-- Bên phải: Chuông thông báo + My Account -->
+        <div class="header-actions">
+          <div class="notif-wrapper">
+            <button type="button" class="notif-btn" id="notif-toggle" aria-label="Notifications" title="Notifications">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="notif-badge">2</span>
+            </button>
+
+            <div class="notif-dropdown" id="notif-dropdown">
+              <div class="notif-header">System Notifications</div>
+              <div class="notif-item">
+                <strong>ShopeeFood DSS</strong>
+                Delivery metrics and COD records are synced in real time.
+              </div>
+              <div class="notif-item">
+                <strong>Dispatch Reminder</strong>
+                Check overdue open orders in the metrics summary below.
+              </div>
+            </div>
+          </div>
+
+          <a href="/account.html" class="account-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>My Account</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thanh điều hướng giữ nguyên toàn bộ link gốc -->
+    <div class="header-nav-bar">
+      <nav aria-label="Main navigation">
+        <a href="/">Orders</a>
+        <a href="/fleet.html">Fleet Management</a>
+        <a href="/drivers.html">Manage Drivers</a>
+        <a href="/dispatch.html">Dispatch</a>
+        <a href="/dispatch-history.html">Dispatch History</a>
+        <a href="/dashboard.html" class="active">Dashboard</a>
+        <a href="/account.html">Account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1>Delivery Dashboard</h1>
+
+    <p class="muted">
+      All-time delivery results and recorded cash collections.
+    </p>
+
+    <div class="toolbar">
+      <button id="refresh-report" class="primary" type="button">
+        Refresh
+      </button>
+
+      <button id="print-report" type="button" disabled>
+        Print / Save PDF
+      </button>
+    </div>
+
+    <p id="report-message" role="status" class="muted"></p>
+    <p id="report-time" class="muted"></p>
+
+    <section
+      id="report-metrics"
+      class="metrics"
+      aria-label="Delivery metrics"
+    ></section>
+
+    <p class="notice">
+      On-time rate uses completed orders with both a deadline
+      and a completion time.
+      Delivery duration is measured from Start Delivery to completion.
+      Recorded COD is the amount drivers confirmed collecting;
+      it does not confirm settlement with the platform.
+      Overdue demo deadlines remain unchanged.
+    </p>
+
+    <section class="card">
+      <h2>Driver Results</h2>
+
+      <p class="muted">
+        Orders are grouped by their currently recorded assigned driver.
+        A dash means no timed completed deliveries are available.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Driver</th>
+              <th>Status</th>
+              <th>Active</th>
+              <th>Completed</th>
+              <th>Failed</th>
+              <th>On-time Rate</th>
+              <th>Recorded COD</th>
+            </tr>
+          </thead>
+
+          <tbody id="driver-results"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recent Orders</h2>
+
+      <p class="muted">
+        Up to 50 orders, sorted by the latest available completion,
+        start, assignment or creation time.
+        Times are shown in Vietnam time.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Driver</th>
+              <th>Status</th>
+              <th>Deadline</th>
+              <th>Completed At</th>
+              <th>Result</th>
+              <th>COD Required</th>
+              <th>COD Collected</th>
+            </tr>
+          </thead>
+
+          <tbody id="recent-orders"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // UI script nhỏ cho nút chuông thông báo (không ảnh hưởng tới luồng backend)
+    const notifToggle = document.getElementById("notif-toggle");
+    const notifDropdown = document.getElementById("notif-dropdown");
+
+    if (notifToggle && notifDropdown) {
+      notifToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifDropdown.classList.toggle("show");
+      });
+      document.addEventListener("click", () => {
+        notifDropdown.classList.remove("show");
+      });
+    }
+
+    // ==================== NGUYÊN BẢN SCRIPT BACKEND CỦA BẠN ====================
+    const refreshButton = document.getElementById("refresh-report");
+    const printButton = document.getElementById("print-report");
+    const message = document.getElementById("report-message");
+    const generatedTime = document.getElementById("report-time");
+    const metrics = document.getElementById("report-metrics");
+    const driverBody = document.getElementById("driver-results");
+    const ordersBody = document.getElementById("recent-orders");
+
+    let loading = false;
+
+    const money = (value) =>
+      new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+        maximumFractionDigits: 0,
+      }).format(Number(value || 0));
+
+    const count = (value) =>
+      Number(value || 0).toLocaleString("en-US");
+
+    const rate = (value) =>
+      value == null ? "—" : `${Number(value).toFixed(1)}%`;
+
+    function node(tag, text, className = "") {
+      const item = document.createElement(tag);
+
+      if (text != null) item.textContent = String(text);
+      if (className) item.className = className;
+
+      return item;
+    }
+
+    function dateTime(value) {
+      if (!value) return "—";
+
+      let text = String(value);
+
+      if (
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
+      ) {
+        text = text.replace(" ", "T") + "Z";
+      }
+
+      const date = new Date(text);
+
+      return Number.isNaN(date.getTime())
+        ? "—"
+        : date.toLocaleString("en-GB", {
+            timeZone: "Asia/Ho_Chi_Minh",
+          });
+    }
+
+    function emptyRow(body, columns) {
+      const row = node("tr");
+      const cell = node("td", "No records found.");
+
+      cell.colSpan = columns;
+      row.appendChild(cell);
+      body.appendChild(row);
+    }
+
+    function renderReport(data) {
+      const s = data.summary;
+
+      metrics.replaceChildren();
+
+      const cards = [
+        ["Total Orders", count(s.total_orders)],
+        ["Waiting for Assignment", count(s.waiting_orders)],
+        ["Active Deliveries", count(s.active_orders)],
+        ["Completed", count(s.completed_orders)],
+        ["Failed", count(s.failed_orders)],
+        ["Cancelled", count(s.cancelled_orders)],
+        ["On-time Rate", rate(s.on_time_rate)],
+        ["Overdue Open Orders", count(s.overdue_open_orders)],
+        ["Recorded COD Collected", money(s.recorded_cod_collected)],
+        ["COD on Active Deliveries", money(s.active_cod_required)],
+        [
+          "Average Delivery Duration",
+          s.average_delivery_minutes == null
+            ? "—"
+            : `${Number(s.average_delivery_minutes).toFixed(1)} min`,
+        ],
+        [
+          "Completed COD Records to Review",
+          count(
+            Number(s.missing_cod_records) +
+            Number(s.cod_mismatches)
+          ),
+        ],
+      ];
+
+      for (const [label, value] of cards) {
+        const card = node("div", null, "metric");
+
+        card.append(
+          node("span", label),
+          node("strong", value)
+        );
+
+        metrics.appendChild(card);
+      }
+
+      driverBody.replaceChildren();
+
+      for (const driver of data.drivers) {
+        const row = node("tr");
+
+        for (const value of [
+          `${driver.full_name} (${driver.driver_code})`,
+          driver.status,
+          count(driver.active_orders),
+          count(driver.completed_orders),
+          count(driver.failed_orders),
+          rate(driver.on_time_rate),
+          money(driver.recorded_cod_collected),
+        ]) {
+          row.appendChild(node("td", value));
+        }
+
+        driverBody.appendChild(row);
+      }
+
+      if (!data.drivers.length) {
+        emptyRow(driverBody, 7);
+      }
+
+      ordersBody.replaceChildren();
+
+      for (const order of data.recent_orders) {
+        const row = node("tr");
+
+        for (const value of [
+          order.order_code,
+          order.driver_name || "Unassigned",
+          order.status,
+          dateTime(order.due_at),
+          dateTime(order.delivered_at),
+          order.delivery_result || "—",
+          money(order.cod_amount),
+          order.cod_collected == null
+            ? "Not recorded"
+            : money(order.cod_collected),
+        ]) {
+          row.appendChild(node("td", value));
+        }
+
+        if (order.delivery_result === "Late") {
+          row.cells[5].className = "late";
+        }
+
+        if (order.delivery_result === "On time") {
+          row.cells[5].className = "on-time";
+        }
+
+        ordersBody.appendChild(row);
+      }
+
+      if (!data.recent_orders.length) {
+        emptyRow(ordersBody, 8);
+      }
+
+      generatedTime.textContent =
+        `Generated: ${dateTime(data.generated_at)} (Vietnam time). ` +
+        `Timed completed deliveries: ${count(s.timed_completed_orders)}; ` +
+        `on time: ${count(s.on_time_orders)}.`;
+    }
+
+    async function loadReport() {
+      if (loading) return;
+
+      loading = true;
+      refreshButton.disabled = true;
+      printButton.disabled = true;
+
+      message.className = "muted";
+      message.textContent = "Loading report...";
+
+      try {
+        const response = await fetch("/api/reports", {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message || "Unable to load report."
+          );
+        }
+
+        renderReport(result.data);
+
+        message.textContent = "";
+        printButton.disabled = false;
+      } catch (error) {
+        message.className = "error";
+        message.textContent = error.message;
+      } finally {
+        loading = false;
+        refreshButton.disabled = false;
+      }
+    }
+
+    refreshButton.addEventListener("click", loadReport);
+    printButton.addEventListener("click", () => window.print());
+
+    loadReport();
+  </script>
+</body>
+</html>

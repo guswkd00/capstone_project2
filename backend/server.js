@@ -1,43 +1,107 @@
 const path = require("node:path");
-require("dotenv").config({
-  path: path.join(__dirname, ".env"),
-});
-
 const express = require("express");
-const mysql = require("mysql2/promise");
+
+const { pool } = require("./src/db");
+
+const {
+  router: authRouter,
+  requireLogin,
+  requireManager,
+  requireCsrf,
+} = require("./src/auth");
+
+const ordersRouter = require("./src/orders");
+const fleetRouter = require("./src/fleet");
+const dispatchRouter = require("./src/dispatch");
+const driverRouter = require("./src/driver");
+const reportsRouter = require("./src/reports");
 
 const app = express();
-app.use(express.json());
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 5,
+app.disable("x-powered-by");
+
+if (process.env.TRUST_PROXY === "1") {
+  app.set("trust proxy", 1);
+}
+
+app.use(express.json({ limit: "32kb" }));
+
+app.get("/api/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+
+    res.json({ status: "ok" });
+  } catch (error) {
+    res.status(503).json({
+      message: "Database is unavailable.",
+    });
+  }
 });
+
+app.use("/api/auth", authRouter);
+
+function protectWrites(req, res, next) {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    return next();
+  }
+
+  return requireCsrf(req, res, next);
+}
+
+app.use(
+  "/api/orders",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  ordersRouter
+);
+
+app.use(
+  "/api/fleet",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  fleetRouter
+);
+
+app.use(
+  "/api/dispatch",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  dispatchRouter
+);
+
+app.use(
+  "/api/driver",
+  requireLogin,
+  protectWrites,
+  driverRouter
+);
+
+app.use(
+  "/api/reports",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  reportsRouter
+);
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/api/orders/pending", async (req, res) => {
-  try {
-    const [orders] = await pool.execute(`
-      SELECT id, order_code, customer_name,
-             total_amount, status, created_at
-      FROM orders
-      WHERE status = 'pending'
-      ORDER BY created_at DESC, id DESC
-    `);
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
 
-    res.json({ data: orders });
-  } catch (error) {
-    console.error("Lỗi truy vấn đơn hàng:", error.code);
-    res.status(500).json({
-      message: "Không thể lấy danh sách đơn hàng.",
-    });
-  }
+  console.error("Request failed:", error.code || error.name);
+
+  const status = error.status === 400 ? 400 : 500;
+
+  res.status(status).json({
+    message:
+      status === 400
+        ? "Invalid request body."
+        : "An unexpected server error occurred.",
+  });
 });
 
 async function start() {
@@ -45,12 +109,31 @@ async function start() {
     await pool.query("SELECT 1");
 
     const port = Number(process.env.PORT || 3000);
-    app.listen(port, "127.0.0.1", () => {
-      console.log(`Backend đang chạy tại http://localhost:${port}`);
-      console.log("Kết nối MySQL thành công.");
+    const host = process.env.HOST || "127.0.0.1";
+
+    const server = app.listen(port, host, () => {
+      console.log(`Server running on port ${port}.`);
+      console.log("MySQL connected successfully.");
     });
+
+    server.on("error", async (error) => {
+      console.error("Server failed to start:", error.code);
+
+      await pool.end();
+      process.exitCode = 1;
+    });
+
+    for (const signal of ["SIGINT", "SIGTERM"]) {
+      process.once(signal, () => {
+        server.close(async () => {
+          await pool.end();
+          process.exit(0);
+        });
+      });
+    }
   } catch (error) {
-    console.error("Không thể kết nối MySQL:", error.code);
+    console.error("MySQL connection failed:", error.code);
+
     await pool.end();
     process.exitCode = 1;
   }

@@ -1,0 +1,281 @@
+:root {
+  --brand: #ee4d2d;
+  --brand-orange: #ff6633;
+  --ink: #29323b;
+  --border: #f0e2dc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.sf-app {
+  margin: 0;
+  background: #fff8f5 !important;
+  color: var(--ink);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body.sf-app .card,
+body.sf-app .metric,
+body.sf-app .delivery-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(120, 52, 20, 0.03);
+}
+
+body.sf-app button {
+  padding: 11px 16px;
+  border: 1px solid #f0cdbf;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #b03b24;
+  font: inherit;
+  cursor: pointer;
+}
+
+body.sf-app button:hover:not(:disabled) {
+  background: #fff0e9;
+}
+
+body.sf-app button.primary,
+body.sf-app button.active {
+  background: linear-gradient(120deg, #ee4d2d, #ff6633);
+  border-color: #ee4d2d;
+  color: #ffffff;
+}
+
+body.sf-app button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+body.sf-app input,
+body.sf-app select,
+body.sf-app textarea {
+  padding: 11px 12px;
+  border: 1px solid #e8dcd6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  font: inherit;
+  max-width: 100%;
+}
+body.sf-app > header {
+  background: #ffffff;
+  color: #ee4d2d;
+  border-top: 4px solid #ee4d2d;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 3px 15px rgba(100, 45, 20, 0.05);
+}
+
+body.sf-app > header nav a {
+  color: #5c6269;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+body.sf-app > header nav a:hover,
+body.sf-app > header nav a.active {
+  color: #ee4d2d;
+}
+.sf-header {
+  background: #ffffff;
+  border-top: 4px solid #ee4d2d;
+  border-bottom: 1px solid #f0e2dc;
+  padding: 20px 28px;
+  position: relative;
+  z-index: 1000;
+}
+
+.sf-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.sf-brand {
+  color: #ee4d2d;
+  font-size: 26px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sf-user {
+  color: #77818b;
+  font-size: 13px;
+}
+
+.sf-navigation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.sf-navigation > a,
+.sf-navigation summary {
+  display: block;
+  padding: 10px 14px;
+  color: #454e56;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sf-navigation details {
+  position: relative;
+}
+
+.sf-navigation summary {
+  list-style: none;
+}
+
+.sf-navigation summary::after {
+  content: " ▾";
+  color: #ee4d2d;
+}
+
+.sf-navigation summary::-webkit-details-marker {
+  display: none;
+}
+
+.sf-navigation > a:hover,
+.sf-navigation details[open] summary {
+  background: #fff0e9;
+  color: #ee4d2d;
+}
+
+.sf-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid #f0e2dc;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(100, 45, 20, 0.12);
+}
+
+.sf-dropdown a {
+  display: block;
+  padding: 12px;
+  color: #454e56;
+  font-size: 13px;
+  text-decoration: none;
+  border-radius: 7px;
+}
+
+.sf-dropdown a:hover {
+  background: #fff0e9;
+  color: #ee4d2d;
+}
+
+@media (max-width: 650px) {
+  .sf-header {
+    padding: 16px;
+  }
+
+  .sf-navigation {
+    gap: 2px;
+  }
+
+  .sf-navigation > a,
+  .sf-navigation summary {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .sf-navigation details {
+    position: static;
+  }
+
+  .sf-dropdown {
+    top: 100%;
+    left: 12px;
+    right: 12px;
+    min-width: 0;
+  }
+}
+/* Driver portal — shared ShopeeFood theme */
+body.sf-app {
+  --muted: #737373;
+}
+
+body.sf-app > header small {
+  color: var(--muted);
+}
+
+body.sf-app .df-driver-main,
+body.sf-app .df-driver-dialog {
+  color: var(--ink);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body.sf-app .df-muted {
+  color: var(--muted);
+}
+
+body.sf-app .df-card,
+body.sf-app .df-metric {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(120, 52, 20, 0.04);
+}
+
+body.sf-app .df-driver-main button,
+body.sf-app .df-driver-dialog button,
+body.sf-app .df-driver-dialog a.df-button {
+  background: #fff;
+  color: #b03b24;
+  border: 1px solid #f0cdbf;
+  border-radius: 10px;
+  font: inherit;
+}
+
+body.sf-app .df-driver-main button.df-primary,
+body.sf-app .df-driver-dialog button.df-primary {
+  background: linear-gradient(120deg, #ee4d2d, #ff6633);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+body.sf-app .df-driver-main button:hover:not(:disabled),
+body.sf-app .df-driver-dialog button:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+body.sf-app .df-driver-main button.df-danger,
+body.sf-app .df-driver-dialog button.df-danger {
+  background: #fff5f5;
+  border-color: #f1b4ad;
+  color: #b42318;
+}
+
+body.sf-app .df-driver-dialog {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(70, 30, 15, 0.18);
+}
+
+body.sf-app .df-driver-dialog::backdrop {
+  background: rgba(45, 30, 25, 0.45);
+}
+
+body.sf-app :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid #ee4d2d;
+  outline-offset: 3px;
+}
+
+body.sf-app input[type="checkbox"] {
+  accent-color: var(--brand);
+}

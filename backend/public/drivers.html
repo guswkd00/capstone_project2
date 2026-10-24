@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/auth-client.js" data-role="manager"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DispatchFlow — Drivers</title>
+  <script src="/drivers.js?v=2" defer></script>
+    <script src="/demo-driver-accounts.js" defer></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f4f6f8;
+      color: #23313f;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 22px 30px;
+      background: #18232e;
+      color: white;
+    }
+
+    header strong { font-size: 24px; }
+
+    nav {
+      display: flex;
+      gap: 20px;
+      margin-top: 18px;
+    }
+
+    nav a { color: #b8c6d3; text-decoration: none; }
+    nav a.active { color: #ff946e; }
+
+    main {
+      max-width: 1200px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    h1 { margin-bottom: 8px; }
+    .subtitle { color: #6d7c89; }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin: 25px 0;
+    }
+
+    button {
+      padding: 11px 16px;
+      border: 1px solid #dce2e8;
+      border-radius: 7px;
+      background: white;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .primary {
+      background: #ef6b40;
+      border-color: #ef6b40;
+      color: white;
+    }
+
+    button:disabled { opacity: 0.6; cursor: wait; }
+
+    .card {
+      padding: 22px;
+      background: white;
+      border: 1px solid #e3e8ed;
+      border-radius: 12px;
+    }
+
+    .table-wrapper { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 15px 12px;
+      text-align: left;
+      border-bottom: 1px solid #edf0f3;
+      font-size: 13px;
+    }
+
+    th { background: #f8fafb; color: #6d7c89; }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 5px;
+      background: #eef2f6;
+      text-transform: capitalize;
+    }
+
+    .badge.available { background: #e8f7ef; color: #24734b; }
+    .badge.offline { background: #ffeded; color: #a84343; }
+    .badge.maintenance { background: #fff0dc; color: #97651a; }
+
+    .muted { color: #6d7c89; }
+    .error { color: #b53c3c; }
+
+    dialog {
+      width: min(650px, 92vw);
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 25px;
+      border: none;
+      border-radius: 12px;
+    }
+
+    dialog::backdrop { background: #18232e88; }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dialog-header h2 { margin: 0; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 25px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #dce2e8;
+      border-radius: 7px;
+      font: inherit;
+    }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+<link rel="stylesheet" href="/app-theme.css">
+<script src="/app-shell.js" defer></script>
+</head>
+
+<body class="sf-app">
+  <header>
+    <strong>DispatchFlow</strong>
+    <nav aria-label="Main navigation">
+      <a href="/">Orders</a>
+      <a href="/fleet.html">Fleet Management</a>
+      <a href="/drivers.html" class="active">Manage Drivers</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Driver Management</h1>
+    <p class="subtitle">
+      Manage driver profiles, vehicle allocation and availability.
+    </p>
+
+    <div class="toolbar">
+      <button id="add-driver" class="primary">+ Add Driver</button>
+      <button id="refresh-drivers">Refresh</button>
+    </div>
+
+    <section class="card">
+      <p id="driver-message" class="muted" role="status"></p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Driver Code</th>
+              <th>Full Name</th>
+              <th>Phone</th>
+              <th>Service Zone</th>
+              <th>Vehicle</th>
+              <th>Driver Status</th>
+              <th>Vehicle Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="drivers-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="driver-dialog" aria-labelledby="driver-title">
+    <div class="dialog-header">
+      <h2 id="driver-title">Add Driver</h2>
+      <button id="close-driver" type="button">Close</button>
+    </div>
+
+    <p class="muted">
+      Each vehicle can be allocated to one driver.
+      An available driver must have an available vehicle.
+    </p>
+
+    <form id="driver-form" class="form-grid">
+      <label>
+        Driver Code
+        <input
+          name="driver_code"
+          maxlength="30"
+          pattern="[A-Za-z0-9_-]+"
+          required
+        >
+      </label>
+
+      <label>
+        Full Name
+        <input name="full_name" maxlength="100" required>
+      </label>
+
+      <label>
+        Phone
+        <input
+          name="phone"
+          type="tel"
+          pattern="\+?[0-9]{8,15}"
+          maxlength="16"
+          required
+        >
+      </label>
+
+      <label>
+        Availability
+        <select name="status">
+          <option value="available">Available</option>
+          <option value="offline">Offline</option>
+        </select>
+      </label>
+
+      <label>
+        Service Zone
+        <select name="zone_id" required></select>
+      </label>
+
+      <label>
+        Vehicle
+        <select name="vehicle_id" required></select>
+      </label>
+
+      <label>
+        Starting Latitude
+        <input
+          name="latitude"
+          type="number"
+          min="-90"
+          max="90"
+          step="any"
+          required
+        >
+      </label>
+
+      <label>
+        Starting Longitude
+        <input
+          name="longitude"
+          type="number"
+          min="-180"
+          max="180"
+          step="any"
+          required
+        >
+      </label>
+
+      <p id="driver-error" class="error full-width" role="alert"></p>
+
+      <div class="form-actions full-width">
+        <button id="cancel-driver" type="button">Cancel</button>
+        <button id="save-driver" class="primary" type="submit">
+          Save Driver
+        </button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

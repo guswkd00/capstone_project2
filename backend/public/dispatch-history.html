@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/auth-client.js" data-role="manager"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DispatchFlow — Dispatch History</title>
+  <script src="/dispatch-history.js" defer></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f4f6f8;
+      color: #23313f;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 22px 30px;
+      background: #18232e;
+      color: white;
+    }
+
+    header strong { font-size: 24px; }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 18px;
+    }
+
+    nav a { color: #b8c6d3; text-decoration: none; }
+    nav a.active { color: #ff946e; }
+
+    main {
+      max-width: 1300px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    h1 { margin-bottom: 8px; }
+    .muted { color: #6d7c89; line-height: 1.6; }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 25px 0;
+    }
+
+    input, button {
+      padding: 11px 16px;
+      border: 1px solid #dce2e8;
+      border-radius: 7px;
+      background: white;
+      font: inherit;
+    }
+
+    input { width: min(380px, 100%); }
+    button { cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: wait; }
+
+    .card {
+      background: white;
+      border: 1px solid #e3e8ed;
+      border-radius: 12px;
+      padding: 22px;
+    }
+
+    .table-wrapper { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 15px 12px;
+      text-align: left;
+      border-bottom: 1px solid #edf0f3;
+      font-size: 13px;
+    }
+
+    th { background: #f8fafb; color: #6d7c89; }
+
+    td.reason {
+      min-width: 220px;
+      max-width: 350px;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 5px;
+      text-transform: capitalize;
+    }
+
+    .badge.recommended { background: #e8f7ef; color: #24734b; }
+    .badge.override { background: #fff0dc; color: #97651a; }
+    .error { color: #b53c3c; }
+  </style>
+<link rel="stylesheet" href="/app-theme.css">
+<script src="/app-shell.js" defer></script>
+</head>
+
+<body class="sf-app">
+  <header>
+    <strong>DispatchFlow</strong>
+    <nav aria-label="Main navigation">
+      <a href="/">Orders</a>
+      <a href="/fleet.html">Fleet Management</a>
+      <a href="/drivers.html">Manage Drivers</a>
+      <a href="/dispatch.html">Dispatch</a>
+      <a href="/dispatch-history.html" class="active">Dispatch History</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Dispatch History</h1>
+    <p class="muted">
+      Review approved recommendations, overrides and reassignment reasons.
+    </p>
+
+    <div class="toolbar">
+      <input
+        id="history-search"
+        type="search"
+        placeholder="Search order, driver or reason..."
+        aria-label="Search dispatch history"
+      >
+      <button id="refresh-history">Refresh</button>
+    </div>
+
+    <section class="card">
+      <p id="history-message" class="muted" role="status"></p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Driver</th>
+              <th>Vehicle</th>
+              <th>Decision</th>
+              <th>Score</th>
+              <th>Distance</th>
+              <th>ETA</th>
+              <th>Estimated Cost</th>
+              <th>Reason</th>
+              <th>Decision Time</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

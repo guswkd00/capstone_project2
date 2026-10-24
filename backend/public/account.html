@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Account — ShopeeFood Delivery DSS</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f4f6f8;
+      color: #23313f;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      background: #18232e;
+      color: white;
+      padding: 22px 30px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      padding: 28px;
+      background: white;
+      border: 1px solid #e3e8ed;
+      border-radius: 12px;
+    }
+
+    .muted { color: #6d7c89; }
+
+    dl {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 18px;
+    }
+
+    dt { color: #6d7c89; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    #account-role { text-transform: capitalize; }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 25px 0;
+    }
+
+    a, button {
+      display: inline-block;
+      padding: 11px 16px;
+      background: #ef6b40;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      text-decoration: none;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button {
+      background: #eef2f6;
+      color: #23313f;
+    }
+
+    button:disabled { opacity: 0.6; cursor: wait; }
+
+    .error { color: #b53c3c; }
+    [hidden] { display: none !important; }
+
+    @media (max-width: 500px) {
+      dl { grid-template-columns: 1fr; gap: 8px; }
+      dd { margin-bottom: 12px; }
+    }
+  </style>
+<link rel="stylesheet" href="/app-theme.css?v=3">
+<script src="/app-shell.js" defer></script>
+</head>
+
+<body class="sf-app">
+  <header>ShopeeFood Delivery DSS</header>
+
+  <main>
+    <h1>Your Account</h1>
+    <p id="account-message" class="muted" role="status">
+      Checking your session...
+    </p>
+
+    <section id="account-card" class="card" hidden>
+      <dl>
+        <dt>Full Name</dt>
+        <dd id="account-name"></dd>
+
+        <dt>Email</dt>
+        <dd id="account-email"></dd>
+
+        <dt>Role</dt>
+        <dd id="account-role"></dd>
+      </dl>
+
+      <nav id="manager-links" class="links" hidden>
+        <a href="/">Orders</a>
+        <a href="/fleet.html">Fleet Management</a>
+        <a href="/drivers.html">Manage Drivers</a>
+        <a href="/dispatch.html">Dispatch</a>
+        <a href="/dispatch-history.html">Dispatch History</a>
+      </nav>
+
+      <button id="sign-out-button">Sign Out</button>
+    </section>
+  </main>
+
+  <script>
+    const accountMessage = document.getElementById("account-message");
+    const accountCard = document.getElementById("account-card");
+    const signOutButton = document.getElementById("sign-out-button");
+
+    let csrfToken = "";
+
+    async function loadAccount() {
+      try {
+        const response = await fetch("/api/auth/me");
+        const result = await response.json();
+
+        if (response.status === 401) {
+          window.location.replace("/login.html");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(result.message || "Unable to load your account.");
+        }
+
+        csrfToken = result.csrf_token;
+
+        document.getElementById("account-name").textContent =
+          result.user.full_name;
+
+        document.getElementById("account-email").textContent =
+          result.user.email;
+
+        document.getElementById("account-role").textContent =
+          result.user.role;
+
+        document.getElementById("manager-links").hidden =
+          result.user.role !== "manager";
+
+        accountCard.hidden = false;
+        accountMessage.className = "muted";
+        accountMessage.textContent = "You are signed in.";
+      } catch (error) {
+        accountMessage.className = "error";
+        accountMessage.textContent = error.message;
+      }
+    }
+
+    signOutButton.addEventListener("click", async () => {
+      signOutButton.disabled = true;
+
+      try {
+        const response = await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "X-CSRF-Token": csrfToken }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Unable to sign out.");
+        }
+
+        window.location.replace("/login.html");
+      } catch (error) {
+        accountMessage.className = "error";
+        accountMessage.textContent = error.message;
+      } finally {
+        signOutButton.disabled = false;
+      }
+    });
+
+    loadAccount();
+  </script>
+</body>
+</html>
