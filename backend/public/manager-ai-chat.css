@@ -1,0 +1,307 @@
+#manager-ai-widget {
+  --mai-brand: var(--brand, #ee4d2d);
+  --mai-border: #f0ded6;
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2000;
+  color: #29323b;
+  font: 14px/1.5 "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+
+#manager-ai-widget *,
+#manager-ai-widget *::before,
+#manager-ai-widget *::after {
+  box-sizing: border-box;
+}
+
+#manager-ai-widget [hidden] {
+  display: none !important;
+}
+
+#manager-ai-widget button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--mai-border);
+  border-radius: 10px;
+  background: #fff;
+  color: #b03b24;
+  font: inherit;
+  cursor: pointer;
+}
+
+#manager-ai-widget button:hover:not(:disabled) {
+  background: #fff0e9;
+}
+
+#manager-ai-widget button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+#manager-ai-widget :is(button, select, textarea, a):focus-visible {
+  outline: 3px solid #a92c15;
+  outline-offset: 3px;
+}
+
+#manager-ai-widget .mai-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 30px;
+  background: linear-gradient(120deg, #ee4d2d, #ff6633);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 26px rgba(180, 55, 25, .25);
+}
+
+#manager-ai-widget .mai-launcher:hover {
+  background: #d94325;
+}
+
+#manager-ai-widget .mai-panel {
+  position: absolute;
+  right: 0;
+  bottom: 68px;
+  display: flex;
+  flex-direction: column;
+  width: 430px;
+  max-width: calc(100vw - 32px);
+  height: min(700px, calc(100vh - 112px));
+  height: min(700px, calc(100dvh - 112px));
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--mai-border);
+  border-radius: 20px;
+  box-shadow: 0 18px 60px rgba(70, 30, 15, .2);
+}
+
+#manager-ai-widget .mai-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  background: linear-gradient(120deg, #ee4d2d, #ff6633);
+  color: #fff;
+}
+
+#manager-ai-widget .mai-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+#manager-ai-widget .mai-header p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #fff;
+}
+
+#manager-ai-widget #mai-close {
+  flex-shrink: 0;
+  background: #ffffff24;
+  border-color: #ffffff55;
+  color: #fff;
+}
+
+#manager-ai-widget .mai-context {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--mai-border);
+}
+
+#manager-ai-widget label {
+  display: block;
+  min-width: 0;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+#manager-ai-widget :is(select, textarea) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--mai-border);
+  border-radius: 10px;
+  background: #fff;
+  color: #29323b;
+  font: inherit;
+}
+
+#manager-ai-widget textarea {
+  resize: vertical;
+  min-height: 60px;
+  max-height: 140px;
+}
+
+#manager-ai-widget #mai-order-info {
+  margin: 7px 0;
+  color: #737373;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+#manager-ai-widget .mai-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#manager-ai-widget .mai-tools button {
+  min-height: 32px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+
+#manager-ai-widget .mai-messages {
+  flex: 1 1 auto;
+  min-height: 90px;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff8f5;
+}
+
+#manager-ai-widget .mai-message {
+  max-width: 96%;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--mai-border);
+  border-radius: 14px;
+  background: #fff;
+  overflow-wrap: anywhere;
+}
+
+#manager-ai-widget .mai-message p {
+  margin: 6px 0 0;
+  color: inherit;
+  white-space: pre-wrap;
+}
+
+#manager-ai-widget .mai-user {
+  margin-left: auto;
+  background: #fff0e9;
+  border-color: #f3c3b3;
+}
+
+#manager-ai-widget .mai-message strong {
+  font-size: 13px;
+}
+
+#manager-ai-widget .mai-source {
+  display: block;
+  margin-bottom: 6px;
+  color: #a83b24;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#manager-ai-widget .mai-driver-card {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #f3c3b3;
+  border-radius: 10px;
+  background: #fffaf7;
+}
+
+#manager-ai-widget .mai-driver-stats {
+  margin: 6px 0;
+  font-size: 12px;
+}
+
+#manager-ai-widget .mai-review {
+  display: inline-block;
+  margin-top: 8px;
+  color: #b03b24;
+  font-weight: 600;
+}
+
+#manager-ai-widget .mai-notes {
+  padding-left: 18px;
+  color: #737373;
+  font-size: 12px;
+}
+
+#manager-ai-widget .mai-composer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--mai-border);
+  background: #fff;
+}
+
+#manager-ai-widget .mai-send-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+#manager-ai-widget .mai-send-row small {
+  color: #737373;
+  font-size: 11px;
+}
+
+#manager-ai-widget #mai-send {
+  background: var(--mai-brand);
+  border-color: var(--mai-brand);
+  color: #fff;
+  font-weight: 600;
+}
+
+#manager-ai-widget #mai-send:hover:not(:disabled) {
+  background: #d94325;
+}
+
+#manager-ai-widget #mai-status {
+  margin: 7px 0 0;
+  color: #737373;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+#manager-ai-widget #mai-status.mai-error {
+  color: #b42318;
+}
+
+#manager-ai-widget .mai-privacy {
+  margin: 7px 0 0;
+  color: #737373;
+  font-size: 10px;
+}
+
+@media (max-width: 480px) {
+  #manager-ai-widget {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  #manager-ai-widget .mai-panel {
+    max-width: calc(100vw - 24px);
+    bottom: 64px;
+    height: calc(100vh - 100px);
+    height: calc(100dvh - 100px);
+    border-radius: 16px;
+  }
+
+  #manager-ai-widget .mai-header {
+    padding: 12px 14px;
+  }
+
+  #manager-ai-widget .mai-header h2 {
+    font-size: 16px;
+  }
+
+  #manager-ai-widget .mai-context,
+  #manager-ai-widget .mai-composer {
+    padding: 10px 12px;
+  }
+}
