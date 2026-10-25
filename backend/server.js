@@ -15,6 +15,7 @@ const fleetRouter = require("./src/fleet");
 const dispatchRouter = require("./src/dispatch");
 const driverRouter = require("./src/driver");
 const reportsRouter = require("./src/reports");
+const managerAIRouter = require("./src/manager-ai");
 
 const app = express();
 
@@ -86,7 +87,13 @@ app.use(
   protectWrites,
   reportsRouter
 );
-
+app.use(
+  "/api/manager-ai",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  managerAIRouter
+);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((error, req, res, next) => {
