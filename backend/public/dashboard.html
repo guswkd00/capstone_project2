@@ -555,6 +555,9 @@
       <button id="print-report" type="button" disabled>
         Print / Save PDF
       </button>
+      <button id="export-kpi-csv" type="button">
+  Export KPI CSV
+</button>
     </div>
 
     <p id="report-message" role="status" class="muted"></p>
@@ -898,6 +901,64 @@
 
     refreshButton.addEventListener("click", loadReport);
     printButton.addEventListener("click", () => window.print());
+        document.getElementById("export-kpi-csv")
+      .addEventListener("click", () => {
+        if (loading || printButton.disabled) {
+          message.textContent =
+            "Load the report successfully before exporting.";
+          return;
+        }
+
+        const rows = [
+          ["Metric", "Value"],
+          ["Report Information", generatedTime.textContent],
+          [
+            "Scope",
+            "All-time delivery results; current fleet utilization; " +
+            "vehicle expenses recorded across all dates."
+          ]
+        ];
+
+        for (const card of metrics.querySelectorAll(".metric")) {
+          const label = card.querySelector("span")?.textContent;
+          const value = card.querySelector("strong")?.textContent;
+
+          if (label != null && value != null) {
+            rows.push([label, value]);
+          }
+        }
+
+        function csvCell(value) {
+          let text = String(value ?? "");
+
+          // Prevent spreadsheet formulas from being executed.
+          if (/^[\s]*[=+\-@]/.test(text)) {
+            text = "'" + text;
+          }
+
+          return '"' + text.replace(/"/g, '""') + '"';
+        }
+
+        const csv = rows
+          .map(row => row.map(csvCell).join(","))
+          .join("\r\n");
+
+        const blob = new Blob(
+          ["\uFEFF", csv],
+          { type: "text/csv;charset=utf-8" }
+        );
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = "shopeefood-delivery-kpis.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+      });
 
     loadReport();
   </script>
