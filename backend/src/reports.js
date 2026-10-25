@@ -217,9 +217,14 @@ router.get("/", async (req, res) => {
     function withRate(row) {
       const timed = Number(row.timed_completed_orders);
       const onTime = Number(row.on_time_orders);
+            const failed = Number(row.failed_orders);
+      const finished = Number(row.completed_orders) + failed;
 
       return {
         ...row,
+                failure_rate: finished > 0
+          ? Math.round(failed / finished * 1000) / 10
+          : null,
         on_time_rate:
           timed > 0
             ? Math.round((onTime / timed) * 1000) / 10
