@@ -48,6 +48,7 @@ function candidateCard(candidate, recommendedId, assignedDriverId) {
 
   const card = document.createElement("article");
   card.className = "card";
+  card.dataset.driverId = String(candidate.id);
 
   if (isRecommended) card.classList.add("recommended");
   if (!candidate.eligible) card.classList.add("ineligible");
@@ -237,7 +238,55 @@ async function loadRecommendations() {
 )
       );
     }
+    document.getElementById("ai-review-note")?.remove();
 
+    const review = new URLSearchParams(window.location.search);
+    const reviewOrderId = Number(review.get("order"));
+    const reviewDriverId = Number(review.get("driver"));
+
+    if (
+      Number.isSafeInteger(reviewOrderId) &&
+      reviewOrderId > 0 &&
+      Number.isSafeInteger(reviewDriverId) &&
+      reviewDriverId > 0 &&
+      String(reviewOrderId) === orderSelect.value
+    ) {
+      const selected = result.candidates.find(
+        driver => Number(driver.id) === reviewDriverId
+      );
+
+      const card = candidateList.querySelector(
+        `[data-driver-id="${reviewDriverId}"]`
+      );
+
+      const note = element("p", "", "notice");
+      note.id = "ai-review-note";
+
+      if (!selected || !card) {
+        note.textContent =
+          "The requested driver is no longer in the candidate list. Review the current candidates.";
+
+        orderSummary.appendChild(note);
+      } else {
+        note.textContent =
+          Number(order.driver_id) === reviewDriverId
+            ? "This driver is currently assigned to this order."
+            : selected.eligible
+              ? "Selected for Manager review. Check the current facts before approving."
+              : "This driver is currently ineligible. Review the reasons; assignment is not allowed.";
+
+        card.prepend(note);
+        card.style.outline = "3px solid #ee4d2d";
+        card.style.outlineOffset = "3px";
+
+        const group = candidateList.closest("details");
+        if (group) group.open = true;
+
+        requestAnimationFrame(() => {
+          card.scrollIntoView({ block: "center" });
+        });
+      }
+    }
     const eligibleCount = result.candidates.filter(
       candidate => candidate.eligible
     ).length;
@@ -282,9 +331,31 @@ async function loadDispatchOrders() {
       orderSelect.appendChild(option);
     }
 
-    if (!orders.length) {
+      if (!orders.length) {
       dispatchMessage.textContent = "No orders are ready for dispatch.";
       return;
+    }
+
+    const requested = new URLSearchParams(
+      window.location.search
+    ).get("order");
+
+    if (requested !== null) {
+      const requestedId = Number(requested);
+
+      if (
+        !Number.isSafeInteger(requestedId) ||
+        requestedId <= 0 ||
+        !orders.some(order => Number(order.id) === requestedId)
+      ) {
+        orderSelect.selectedIndex = -1;
+        dispatchMessage.className = "error";
+        dispatchMessage.textContent =
+          "The requested order is not available. Select another order to continue.";
+        return;
+      }
+
+      orderSelect.value = String(requestedId);
     }
 
     await loadRecommendations();
