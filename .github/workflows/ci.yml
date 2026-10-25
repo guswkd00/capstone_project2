@@ -81,5 +81,5 @@ jobs:
           if (failed) process.exit(1);
           NODE
 
-        - name: Test dispatch rules and Manager AI
+      - name: Test dispatch rules and Manager AI
         run: node --test src/dss.test.js src/manager-ai.test.js
