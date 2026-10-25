@@ -220,7 +220,43 @@
       <button id="refresh-fleet">Refresh</button>
       <button id="add-vehicle" class="primary" hidden>+ Add Vehicle</button>
     </div>
+<section
+  class="card"
+  aria-labelledby="maintenance-alerts-title"
+  style="margin-bottom:24px"
+>
+  <h2 id="maintenance-alerts-title">Maintenance Alerts</h2>
 
+  <p class="muted">
+    Vehicles in maintenance, overdue, or due within the next 7 days.
+  </p>
+
+  <button id="refresh-maintenance" type="button" disabled>
+    Refresh Alerts
+  </button>
+
+  <p
+    id="maintenance-message"
+    role="status"
+    aria-live="polite"
+  >
+    Maintenance alerts are loading...
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Vehicle</th>
+          <th>Alert</th>
+          <th>Maintenance Due</th>
+          <th>Vehicle Status</th>
+        </tr>
+      </thead>
+      <tbody id="maintenance-alerts-body"></tbody>
+    </table>
+  </div>
+</section>
     <section class="card">
       <h2 id="section-title">Drivers</h2>
       <p id="message" role="status"></p>
