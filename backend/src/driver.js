@@ -707,5 +707,70 @@ if (!proofRows.length) {
   }
 });
 router.use(require("./delivery-proof"));
+router.get("/route-plan", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+
+  try {
+    const { planDriverRoute } = require("./route-planner");
+
+    const [orders] = await pool.execute(
+      `SELECT
+         o.id,
+         o.order_code,
+         o.delivery_address,
+         o.latitude,
+         o.longitude,
+         o.picked_up_at,
+         r.address AS pickup_address,
+         r.latitude AS pickup_latitude,
+         r.longitude AS pickup_longitude
+       FROM orders o
+       LEFT JOIN restaurants r ON r.id = o.restaurant_id
+       WHERE o.driver_id = ?
+         AND o.status IN ('assigned', 'delivering')
+       ORDER BY o.id`,
+      [req.driver.id]
+    );
+
+    let plan;
+
+    if (!orders.length) {
+      plan = {
+        stops: [],
+        estimated_total_km: 0,
+        estimated_travel_minutes: 0,
+        method: "No active deliveries."
+      };
+    } else {
+      try {
+        plan = planDriverRoute(req.driver, orders);
+      } catch (error) {
+        return res.status(422).json({
+          message: error.message
+        });
+      }
+    }
+
+    return res.json({
+      data: {
+        ...plan,
+        generated_at: new Date().toISOString(),
+        position_note:
+          "Starts from stored driver coordinates; GPS freshness is not assessed.",
+        estimate_note:
+          "Modeled distance and travel time. Excludes service time and live traffic. Not road navigation."
+      }
+    });
+  } catch (error) {
+    console.error(
+      "Driver route planning failed:",
+      error.code || error.name
+    );
+
+    return res.status(500).json({
+      message: "Unable to generate the suggested stop order."
+    });
+  }
+});
 module.exports = router;
 
