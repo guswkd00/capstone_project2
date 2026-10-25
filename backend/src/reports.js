@@ -164,7 +164,26 @@ router.get("/", async (req, res) => {
 
       LIMIT 50
     `);
+    const [fleetRows] = await connection.execute(`
+      SELECT
+        COUNT(DISTINCT v.id) AS total_vehicles,
+        COUNT(DISTINCT CASE
+          WHEN o.id IS NOT NULL THEN v.id
+          ELSE NULL
+        END) AS active_vehicles
+      FROM vehicles v
+      LEFT JOIN drivers d ON d.vehicle_id = v.id
+      LEFT JOIN orders o
+        ON o.driver_id = d.id
+        AND o.status IN ('assigned', 'delivering')
+    `);
 
+    const totalVehicles = Number(fleetRows[0].total_vehicles);
+    const activeVehicles = Number(fleetRows[0].active_vehicles);
+
+    const fleetUtilization = totalVehicles > 0
+      ? Math.round(activeVehicles / totalVehicles * 1000) / 10
+      : null;
     await connection.commit();
 
     function withRate(row) {
@@ -185,7 +204,12 @@ router.get("/", async (req, res) => {
     res.json({
       data: {
         generated_at: new Date().toISOString(),
-        summary: withRate(summary[0]),
+        summary: withRate({
+  ...summary[0],
+  total_vehicles: totalVehicles,
+  active_vehicles: activeVehicles,
+  fleet_utilization_rate: fleetUtilization
+}),
         drivers: driverRows.map(withRate),
         recent_orders: recent,
       },
