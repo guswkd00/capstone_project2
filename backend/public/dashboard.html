@@ -736,6 +736,10 @@
         ],
         ["Completed", count(s.completed_orders)],
         ["Failed", count(s.failed_orders)],
+                [
+          "Failure Rate — Completed and Failed Orders",
+          rate(s.failure_rate)
+        ],
         ["Cancelled", count(s.cancelled_orders)],
         ["On-time Rate", rate(s.on_time_rate)],
         ["Overdue Open Orders", count(s.overdue_open_orders)],
