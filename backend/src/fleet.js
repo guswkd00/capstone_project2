@@ -463,6 +463,60 @@ router.get("/vehicles/:id/expenses", async (req, res) => {
     });
   }
 });
+// Manager access is enforced in server.js.
+router.get("/maintenance-alerts", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+
+  try {
+    const [vehicles] = await pool.execute(
+      `SELECT
+         id,
+         plate_number,
+         status,
+         DATE_FORMAT(maintenance_due, '%Y-%m-%d') AS maintenance_due,
+         DATEDIFF(
+           maintenance_due,
+           DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR)
+         ) AS days_until_due
+       FROM vehicles
+       WHERE status = 'maintenance'
+          OR (
+            status = 'available'
+            AND maintenance_due <= DATE(
+              UTC_TIMESTAMP() + INTERVAL 7 HOUR
+            ) + INTERVAL 7 DAY
+          )
+       ORDER BY
+         (status = 'maintenance') DESC,
+         maintenance_due ASC,
+         plate_number ASC`
+    );
+
+    const data = vehicles.map(vehicle => {
+      let alert;
+
+      if (vehicle.status === "maintenance") {
+        alert = "In maintenance";
+      } else if (Number(vehicle.days_until_due) < 0) {
+        alert = "Maintenance overdue";
+      } else if (Number(vehicle.days_until_due) === 0) {
+        alert = "Maintenance due today";
+      } else {
+        alert = "Maintenance due soon";
+      }
+
+      return { ...vehicle, alert };
+    });
+
+    return res.json({ data });
+  } catch (error) {
+    console.error("Maintenance alerts query failed:", error.code);
+
+    return res.status(500).json({
+      message: "Unable to retrieve maintenance alerts."
+    });
+  }
+});
 module.exports = router;
 // Validate driver information.
 function validateDriver(body) {
