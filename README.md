@@ -1,31 +1,90 @@
 # ShopeeFood Delivery DSS
 
-A food-delivery dispatch decision support system for managers and drivers. Managers can review ranked driver recommendations, approve assignments, override decisions with a reason, and track delivery performance. Drivers can update the progress of their own assigned deliveries.
+A Fleet & Delivery Dispatch Decision Support System for managers and drivers.
 
-This is an academic capstone prototype. It is not an official ShopeeFood service. Demonstration records are synthetic.
+The system supports order management, driver recommendations, dispatch approval, delivery tracking, delivery evidence, COD handover, vehicle expenses and operational reporting.
 
-- Application: https://shopeefood-delivery-dss.onrender.com
+This is an academic capstone prototype. It is not an official ShopeeFood service. Demonstration orders, customers, drivers and vehicles are synthetic.
+
+## Live application
+
+- Login: https://shopee-food.onrender.com/login.html
+- Application: https://shopee-food.onrender.com
 - Deployment branch: `feature/fleet-dispatch-dss`
-- Backend: Node.js, Express and MySQL2
-- Database: local MySQL or TiDB Cloud over TLS
-- Frontend: HTML, CSS and JavaScript
-- Email: Brevo transactional HTTP API
+- Health endpoint: `/api/health`
 
-## Features and access
+Manager and Driver credentials are provided privately. Passwords are not published in this repository.
 
-| Area | Current functionality |
+## Technology stack
+
+| Component | Technology |
+| --- | --- |
+| Backend | Node.js 24, Express |
+| Database access | MySQL2 |
+| Database | TiDB Cloud or local MySQL |
+| Frontend | HTML, CSS and JavaScript |
+| Map interface | Leaflet |
+| Map tiles | OpenStreetMap |
+| Email | Brevo transactional HTTP API |
+| Hosting | Render |
+| CI | GitHub Actions |
+
+## Problem and purpose
+
+Manual dispatch can result in unsuitable assignments, uneven workloads, late deliveries and limited visibility into delivery outcomes.
+
+The system helps a Manager compare eligible drivers using operational rules and estimated distance, workload and lateness. The Manager retains control over the final assignment.
+
+It also records delivery progress, evidence, COD handover and vehicle expenses for operational review.
+
+## Features
+
+| Area | Functionality |
 | --- | --- |
 | Authentication | Manager/Driver login, server-side sessions, logout and role checks |
+| Account recovery | Email reset links, password replacement and session revocation |
+| Email notifications | Successful sign-in and password-change notices when email delivery is configured and available |
 | Orders | Create orders, review pending/all orders and view order details |
 | Dispatch | Rank eligible drivers, approve recommendations and override/reassign with a reason |
 | Dispatch history | Review decisions and stored candidate snapshots |
+| Dispatch map | Vehicle markers, driver information, assignment controls and delivery tracking |
 | Fleet | Add/edit drivers and vehicles; view service zones |
-| Driver portal | Start delivery, confirm restaurant arrival, confirm pickup, complete or fail delivery |
-| Reports | Delivery outcomes, on-time performance, delivery duration, COD and driver performance |
-| Account recovery | Email reset links, password replacement and session revocation |
-| Email notifications | Successful sign-in and password-change notices when email delivery is configured |
+| Driver portal | View own deliveries, update delivery progress and report failures |
+| GPS | Driver-controlled location sharing while the page remains open |
+| Suggested stops | Pickup-aware ordering of stops for the driver's active deliveries |
+| Delivery evidence | Required driver photo upload and protected Manager photo viewing |
+| Payments | Prepaid and cash-on-delivery orders |
+| COD handover | Manager confirmation of money received, with amount, confirmer and timestamp |
+| Vehicle expenses | Fuel, maintenance and other expense recording with per-vehicle history |
+| Maintenance alerts | Vehicles in maintenance, overdue, due today or due within seven days |
+| Reports | Delivery outcomes, on-time rate, duration, failure rate, current fleet utilization and costs |
+| Export | Dashboard KPI CSV export and browser print/Save PDF |
 
-Management APIs require a Manager account. Drivers can access their own deliveries. Zone editing, account administration and persistent alert resolution are not implemented as general CRUD APIs in this version.
+Zone editing, general account administration and persistent alert resolution are not implemented as general CRUD APIs in this version.
+
+## Roles and access
+
+### Manager
+
+- Manage orders, drivers and vehicles.
+- Review recommendations and approve assignments.
+- Record override or reassignment reasons.
+- View delivery progress and uploaded evidence.
+- Confirm COD handover.
+- Record vehicle expenses and review maintenance alerts.
+- View and export reports.
+
+### Driver
+
+- Access deliveries assigned to the linked driver account.
+- Start delivery and confirm arrival at the restaurant.
+- Confirm pickup using the matching order code.
+- Upload delivery evidence and record COD collected.
+- Complete a delivery or report failure.
+- Share device location.
+- View suggested pickup and delivery stops.
+
+Management APIs enforce Manager access on the server. Driver delivery queries enforce ownership.
 
 ## Project structure
 
@@ -36,23 +95,41 @@ backend/
   server.js                   Express entry point and route protection
   package.json
   package-lock.json
-  .env.example                Local configuration template
-  public/                     Login, Manager and Driver interfaces
-  src/                        Authentication, database, dispatch, reports and email
-  scripts/                    Account creation, schema export and TiDB migration
-  sql/                        Database schemas and sample data
+  .env.example                Configuration template
+  public/                     Manager and Driver interfaces
+  src/
+    auth.js                   Authentication and access checks
+    db.js                     Database connection
+    dss.js                    Recommendation model
+    dispatch.js               Dispatch APIs
+    driver.js                 Driver APIs and delivery workflow
+    delivery-proof.js         Photo upload API
+    route-planner.js          Suggested stop ordering
+    fleet.js                  Fleet, expenses and maintenance APIs
+    orders.js                 Orders, photo viewing and COD handover
+    reports.js                Reporting APIs
+  scripts/                    Account provisioning and database utilities
+  sql/                        Database schemas
 ```
 
-## Run locally
+## Local installation
 
-Use Node.js 24 and a MySQL-compatible database. Run these commands from the repository root:
+### 1. Install dependencies
+
+Use Node.js 24.
+
+From the repository root:
 
 ```bash
 cd backend
 npm ci
 ```
 
-Copy `backend/.env.example` to `backend/.env` and configure your own local database credentials:
+### 2. Configure the environment
+
+Copy `backend/.env.example` to `backend/.env`.
+
+Enter your own local database credentials:
 
 ```dotenv
 DATABASE_TARGET=local
@@ -61,17 +138,41 @@ DB_PORT=3306
 DB_USER=your_database_user
 DB_PASSWORD=your_database_password
 DB_NAME=shopeefood_db
+
 HOST=127.0.0.1
 PORT=3000
+TRUST_PROXY=0
+COOKIE_SECURE=0
+
+APP_PUBLIC_URL=http://127.0.0.1:3000
 ```
 
-Do not commit `.env` files or real credentials.
+Do not commit `.env` or real credentials.
 
-### Database initialization
+### 3. Initialize a new database
 
-For a **new, empty database**, create `shopeefood_db` with `utf8mb4` / `utf8mb4_unicode_ci`, then import `backend/sql/006-tidb-schema.sql`. This file defines the ten core tables. It is not a complete data seed and does not include the password reset table.
+These instructions are for a new, empty database. Do not recreate or reseed the existing deployed database.
 
-Add the password reset table after the `users` table exists:
+Create the database:
+
+```sql
+CREATE DATABASE IF NOT EXISTS shopeefood_db
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+```
+
+Import the following files in order:
+
+1. `backend/sql/006-tidb-schema.sql`
+2. `backend/sql/007-delivery-operations.sql`
+
+The core schema includes GPS metadata in the `drivers` table. The operations schema creates:
+
+- `order_delivery_proofs`
+- `order_cod_settlements`
+- `vehicle_expenses`
+
+Create the password-reset table after the `users` table exists:
 
 ```sql
 CREATE TABLE IF NOT EXISTS shopeefood_db.password_reset_tokens (
@@ -81,40 +182,66 @@ CREATE TABLE IF NOT EXISTS shopeefood_db.password_reset_tokens (
   expires_at DATETIME NOT NULL,
   used_at DATETIME DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (token_hash),
   KEY idx_password_reset_user_time (user_id, created_at),
   KEY idx_password_reset_expiry (expires_at),
+
   CONSTRAINT fk_password_reset_user
-    FOREIGN KEY (user_id) REFERENCES shopeefood_db.users (id)
+    FOREIGN KEY (user_id)
+    REFERENCES shopeefood_db.users(id)
     ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
 ```
 
-The other numbered SQL files are historical incremental changes. Do not run every SQL file indiscriminately against an existing database. In TiDB, verify that CHECK constraints are enabled and inspect `SHOW CREATE TABLE` after schema creation; older imports may have skipped them with warnings.
+The schema files do not recreate the full demonstration dataset.
 
-### Initial demonstration accounts
+The existing demonstration environment was populated separately with 200 synthetic orders and 60 additional synthetic drivers and vehicles. The core and operations schemas alone do not generate those records.
 
-For a fresh demonstration environment, set `APP_SEED_PASSWORD` privately to a password of 12–200 characters without surrounding spaces, then run:
+Other SQL files contain historical setup or incremental changes. Review them before use rather than running every SQL file against an existing database.
+
+For an existing database, compare its structure with the required schema and apply only missing changes. `CREATE TABLE IF NOT EXISTS` does not add missing columns to an existing table.
+
+### 4. Provision initial accounts
+
+For a fresh demonstration environment, set `APP_SEED_PASSWORD` privately to a password of 12–200 characters without surrounding spaces.
+
+From `backend/`, run:
 
 ```bash
 node scripts/create-accounts.js
 ```
 
-The script creates `manager@demo.local` and driver accounts using `<lowercase-driver-code>@demo.local` for drivers already in the database. Existing accounts retain their passwords. A schema-only database has no driver records, so driver accounts require driver data first.
+The script provisions `manager@demo.local` and driver accounts based on driver records already in the database. A schema-only database has no drivers.
 
-Do not rerun this provisioning script on the deployed database after replacing demonstration email addresses; it uses the original demo addresses and can create unwanted accounts or conflict with existing driver links. Use separate passwords for accounts that will be shared.
+Do not rerun this script on the existing deployment after replacing demo email addresses. It uses the original demo addresses and can create unwanted accounts or conflict with existing driver links.
 
-Start the server:
+The Manager interface also supports creating login accounts for existing synthetic demo drivers using Gmail aliases. This requires existing demo driver records.
+
+### 5. Start the application
 
 ```bash
 npm start
 ```
 
-Open http://127.0.0.1:3000/login.html. The health endpoint is `/api/health`; a healthy database connection returns `{"status":"ok"}`.
+Open:
 
-## TiDB configuration
+```text
+http://127.0.0.1:3000/login.html
+```
 
-Set the following variables in your private environment instead of the local database settings:
+A healthy database connection returns:
+
+```json
+{"status":"ok"}
+```
+
+from `/api/health`.
+
+## TiDB Cloud configuration
+
+To connect to TiDB, configure:
 
 ```dotenv
 DATABASE_TARGET=tidb
@@ -125,107 +252,329 @@ TIDB_PASSWORD=your_tidb_password
 TIDB_DATABASE=shopeefood_db
 ```
 
-Use the port and credentials supplied by your TiDB instance. The application verifies TLS certificates and uses UTC database sessions.
+Use the credentials and port supplied by your TiDB instance.
+
+The application verifies TLS certificates and uses UTC database sessions.
+
+Test connectivity from `backend/`:
 
 ```bash
 node scripts/test-tidb.js
 ```
 
-`scripts/migrate-to-tidb.js` is a separate data-copy utility. Review its configuration and destination before running it; it is not required for normal startup or CI.
+Changing the hosting account does not require changing application users or passwords when the application connects to the same TiDB database.
 
-## Email and password recovery
+All deployments connected to that database share the same records.
 
-Configure these private environment variables:
+## Email configuration
 
-| Variable | Purpose |
-| --- | --- |
-| `BREVO_API_KEY` | Brevo API key with transactional email sending access |
-| `EMAIL_FROM` | Verified sender email address |
-| `EMAIL_FROM_NAME` | Sender display name |
-| `APP_PUBLIC_URL` | Public HTTPS origin, without a page path, query or fragment |
+Configure these values privately:
 
-For this deployment, `APP_PUBLIC_URL` is `https://shopeefood-delivery-dss.onrender.com`.
+```dotenv
+BREVO_API_KEY=your_private_api_key
+EMAIL_FROM=your_verified_sender
+EMAIL_FROM_NAME=ShopeeFood Delivery DSS
+APP_PUBLIC_URL=https://shopee-food.onrender.com
+```
 
-Email delivery requires both a verified sender and an enabled Brevo transactional sending platform. The observed error **“Your sending platform is currently disabled”** requires account review/reactivation by Brevo; changing application code or regenerating the API key does not establish that the account is enabled.
+`APP_PUBLIC_URL` must be the application origin without `/login.html`, a query string or a fragment.
 
-Recovery flow:
+Email requires:
 
-1. Open `/forgot-password.html` and enter the email registered to the account.
-2. The page returns a generic response to avoid revealing whether an account exists. This response is not delivery confirmation.
-3. Open the most recently issued email link within 30 minutes.
-4. Choose a new password of 12–200 characters without surrounding spaces.
-5. Sign in again. A successful password reset invalidates the account's existing sessions.
+- A valid API key with transactional sending permission.
+- A verified sender.
+- An enabled Brevo transactional sending platform.
 
-Issuance is limited to three reset tokens per account per hour, with additional IP rate limiting. Tokens are single-use; newer tokens invalidate older outstanding tokens. `/api/auth/email-status` reports whether the required email settings are present, not whether the provider can deliver email.
+Application configuration alone does not guarantee delivery.
 
-## Dispatch model
+The `/api/auth/email-status` endpoint reports configuration availability, not successful delivery.
 
-The model in `backend/src/dss.js` filters unsuitable candidates and ranks the remaining drivers by estimated travel distance, workload and lateness.
+### Password recovery
 
-Eligibility checks cover driver availability, vehicle readiness, matching active zone, valid position, capacity, maintenance date and a maximum of three active orders.
+1. Open `/forgot-password.html`.
+2. Enter the registered account email.
+3. Open the most recent reset link from the email.
+4. Set a password of 12–200 characters without surrounding spaces.
+5. Sign in again.
 
-Estimates use Haversine distance, a road factor of 1.3, a speed of 25 km/h, five pickup minutes and five additional minutes per active order.
+Reset links expire after 30 minutes and are single-use. New links invalidate older outstanding links. Successful password reset revokes existing sessions.
+
+The recovery page returns a generic response to avoid exposing whether an account exists. That response is not proof that an email was delivered.
+
+## Driver recommendation model
+
+The rule-based model checks:
+
+- Driver availability.
+- Vehicle availability.
+- Matching active service zone.
+- Valid coordinates.
+- Vehicle payload capacity.
+- Maintenance date.
+- A maximum of three active orders.
+
+Eligible drivers are ranked using:
 
 ```text
-Score = estimated distance to restaurant
+Score = estimated pickup distance in km
         + 4 × active orders
         + 2 × predicted late minutes
 ```
 
-Lower scores rank first. These are rule-based estimates, not live traffic routing or a trained AI model. Assignment transactions lock relevant rows to guard against conflicting assignments.
+Lower scores rank first.
+
+Distance and time estimates use:
+
+- Haversine distance.
+- A road factor of 1.3.
+- Assumed speed of 25 km/h.
+- Five pickup minutes.
+- Five additional minutes per active order.
+
+The Manager approves the final assignment. Selecting an alternative driver requires the applicable override reason.
+
+The model is not a trained AI model and does not use live traffic.
+
+## Suggested stop order
+
+The driver route planner:
+
+1. Reads only the signed-in driver's active deliveries.
+2. Makes a delivery stop available only after its pickup.
+3. Chooses the nearest currently available stop.
+4. Continues until all planned deliveries are included.
+
+Already collected orders do not receive another pickup stop.
+
+Suggestions start from stored driver coordinates. Missing required coordinates produce an error rather than an incomplete route.
+
+The planner is a nearest-stop heuristic, not a guarantee of the globally shortest or fastest route. Travel-time estimates exclude service time and live traffic.
+
+Drivers should refresh suggested stops after changing delivery progress.
 
 ## Delivery workflow
 
 ```text
-pending / confirmed → assigned → delivering → completed
-                                           ↘ failed
+pending / confirmed
+        ↓
+     assigned
+        ↓
+travelling to restaurant
+        ↓
+   at restaurant
+        ↓
+food pickup confirmed
+        ↓
+delivering to customer
+        ↓
+     completed
+
+Active deliveries can also be reported as failed.
 ```
 
-Drivers start the delivery, confirm restaurant arrival, enter the order code to confirm pickup, and submit completion or failure. Completion validates the required COD amount. Progress events are recorded in `order_events`.
+The intermediate travel/pickup phases are derived from delivery status and recorded timestamps.
+
+Drivers confirm pickup by entering the matching order code.
+
+Completion requires:
+
+- Confirmed food pickup.
+- A delivery confirmation note.
+- Collected COD matching the required amount.
+- An uploaded delivery photo belonging to the assigned driver.
+
+Progress events are recorded in `order_events`.
+
+## Delivery photos
+
+- Drivers choose an image from their device.
+- The interface accepts JPEG, PNG and WebP.
+- Source files may be up to 15 MB.
+- Images are resized and converted to JPEG before upload.
+- The uploaded image must be 5 MB or smaller.
+- The server checks the image signature and delivery ownership.
+- Upload is allowed after food pickup while the order is delivering.
+- Photos are stored in TiDB.
+- Managers view photos through an authenticated API.
+
+Older completed orders may not have photos.
+
+A photo is evidence submitted by the driver. It is not independent customer confirmation or automatic verification of successful delivery.
+
+## COD handover
+
+COD collection and money handover are separate records.
+
+1. The driver records cash collected when completing a cash order.
+2. The Manager enters the amount received from the driver.
+3. The system verifies that it matches both required and collected COD.
+4. The system records the Manager and confirmation time.
+
+Only completed cash orders with a positive COD amount can be settled. Duplicate settlement is rejected.
+
+Prepaid orders do not require COD handover.
+
+This is an internal record of cash handover, not a payment gateway or bank transfer.
+
+## Vehicle expenses and maintenance
+
+Managers can record:
+
+- Fuel expenses.
+- Maintenance expenses.
+- Other vehicle expenses.
+
+Each record includes the vehicle, amount, expense date, description and recording Manager.
+
+Expense history shows up to 200 recent records per selected vehicle.
+
+Maintenance alerts identify:
+
+- Vehicles currently in maintenance.
+- Overdue maintenance.
+- Maintenance due today.
+- Maintenance due within seven days.
+
+Maintenance alerts calculate dates using Vietnam time.
+
+Recording a maintenance expense does not automatically change vehicle status or reschedule maintenance. Update those fields separately.
+
+## Reporting definitions
+
+| Metric | Definition |
+| --- | --- |
+| On-time rate | On-time completed orders divided by completed orders with both deadline and completion timestamps |
+| Average delivery duration | Average time from delivery start to completion for completed orders with valid timestamps |
+| Failure rate | Failed orders divided by completed plus failed orders |
+| Current fleet utilization | Vehicles with assigned/delivering orders divided by all vehicles |
+| Estimated completed delivery cost | Sum of recorded cost estimates for completed orders with valid estimates |
+| Estimated cost per completed delivery | Average recorded estimate among completed orders with valid estimates |
+| Recorded vehicle expenses | Sum of expense records entered by Managers |
+| Recorded COD collected | Collected COD recorded on completed orders |
+
+Reports currently cover all-time order results and expenses across all dates. Fleet utilization is a current snapshot, not an all-day utilization measurement.
+
+Actual vehicle expenses are not allocated to individual deliveries. Recorded expense totals may be incomplete if expenses have not been entered.
+
+The recent-orders table shows up to 50 records. KPI CSV exports the displayed summary metrics, not the complete order database.
+
+Use **Print / Save PDF** to print the report or save it through the browser.
+
+## Map and GPS behavior
+
+- Leaflet displays pickup, delivery and vehicle coordinates.
+- Drivers explicitly enable location sharing.
+- Location sharing requires browser permission and a secure context.
+- The driver page must remain open for updates.
+- Tracking distinguishes stored positions and GPS update freshness.
+- Progress buttons do not automatically move driver coordinates.
+- Dashed lines are schematic connections, not road navigation.
+
+A stored demo location is not live GPS. Enabling GPS on a device far from the demonstration service area can make the driver appear far from the restaurant.
+
+Map tiles require access to OpenStreetMap. DNS or network failures can leave a grey map even when markers and delivery data load.
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on pushes and pull requests, and supports manual execution from GitHub Actions. It uses Node.js 24 and performs:
+GitHub Actions runs on pushes, pull requests and manual execution.
 
-1. Dependency installation using `npm ci`.
-2. Syntax checks for JavaScript files and classic inline JavaScript in HTML.
-3. The five dispatch-model tests in `backend/src/dss.test.js`.
+The workflow performs:
 
-Run the model tests locally from `backend/`:
+1. Dependency installation with `npm ci`.
+2. JavaScript syntax checks, including classic inline HTML scripts.
+3. Dispatch-model tests.
+
+Run the model tests from `backend/`:
 
 ```bash
 node --test src/dss.test.js
 ```
 
-The current `npm test` script is a placeholder; CI invokes the real test file directly. CI does not use production database credentials, send email, run database migrations or exercise the entire browser/API workflow. A green run means these configured checks passed.
+The current `npm test` script is a placeholder. CI calls the actual test file directly.
+
+CI does not use production credentials, send email, run migrations or verify the complete browser/database workflow.
+
+A green CI run confirms the configured checks passed; it does not prove every deployed feature works.
 
 ## Render deployment
 
 | Setting | Value |
 | --- | --- |
+| Repository | `guswkd00/capstone_project2` |
 | Branch | `feature/fleet-dispatch-dss` |
-| Runtime | Node.js 24 |
+| Runtime | Node |
 | Root directory | `backend` |
 | Build command | `npm ci` |
 | Start command | `node server.js` |
-| Host | `HOST=0.0.0.0` |
-| Proxy | `TRUST_PROXY=1` |
-| HTTPS cookies | `COOKIE_SECURE=1` |
-| Environment | `NODE_ENV=production` |
+| Auto-Deploy | On Commit |
 
-Configure TiDB and email variables in Render's Environment settings. Let Render supply `PORT`.
+Configure the production environment:
 
-With Auto-Deploy set to **On Commit**, commits to the configured branch trigger deployment independently of CI results. To require successful checks first, use **After CI Checks Pass** if available and ensure Render recognizes the workflow. CI itself does not deploy the application.
+```dotenv
+DATABASE_TARGET=tidb
+HOST=0.0.0.0
+TRUST_PROXY=1
+COOKIE_SECURE=1
+NODE_ENV=production
+APP_PUBLIC_URL=https://shopee-food.onrender.com
+```
 
-If a commit does not trigger deployment, compare the GitHub branch with the Render branch, inspect Build Filters and check Render Events. If deployment succeeds but the browser shows old content, force a reload. Free Render instances can sleep when inactive, delaying the first request.
+Add the private TiDB and Brevo settings in Render Environment. Let Render provide `PORT`.
+
+With Root Directory set to `backend`, the Start Command is `node server.js`, not `node backend/server.js`.
+
+Auto-Deploy On Commit is independent of CI results. CI itself does not deploy the application.
+
+### Deployment troubleshooting
+
+If an update is missing:
+
+1. Verify the repository and branch in Render.
+2. Check whether edits were committed to a fork or patch branch.
+3. Merge the relevant Pull Request into `feature/fleet-dispatch-dss`.
+4. Check Render Events for the deployed commit and Live status.
+5. Deploy the latest commit if necessary.
+6. Reload the browser with Ctrl + Shift + R.
+
+A Live service can still be running an older commit. Compare commit IDs rather than relying only on the Live label.
+
+Free instances may sleep when inactive, delaying the first request.
+
+## Demonstration sequence
+
+Use synthetic records and private demonstration credentials.
+
+1. Sign in as Manager.
+2. Review a pending order and compare recommended drivers.
+3. Select a vehicle on the map and approve assignment.
+4. Sign in as the assigned Driver in a separate browser session.
+5. Review suggested stops and update delivery progress.
+6. Confirm pickup with the matching order code.
+7. Upload a photo, record the required COD and complete delivery.
+8. As Manager, review the photo, delivery note and completion time.
+9. Confirm a simulated COD handover for the synthetic order.
+10. Record a clearly labelled demo vehicle expense.
+11. Review Dashboard metrics and export KPI CSV.
+12. Demonstrate that Drivers cannot access Manager reports or another driver's delivery.
+
+Existing demonstration deadlines can become overdue over time. Do not present those records as evidence of real operational delivery performance.
+
+The demonstration dataset is not evidence of production load capacity or hundreds of simultaneous HTTP requests.
 
 ## Security and limitations
 
-- Passwords use salted scrypt hashes; session and password-reset tokens are stored as SHA-256 hashes.
-- Sessions expire after eight hours. Cookies use HttpOnly and SameSite=Strict, with Secure enabled for HTTPS deployments.
-- Protected write requests require CSRF validation. Management endpoints enforce server-side roles.
-- Password recovery responses do not confirm whether an email account exists.
-- Login and IP-based recovery limits are held in process memory and reset when the application restarts.
-- Never upload database credentials, API keys, session cookies or password-reset links to GitHub.
-- Database timestamps use UTC. Review local display settings when comparing UI, provider and server logs.
+- Passwords use salted scrypt hashes.
+- Session and password-reset tokens are stored as SHA-256 hashes.
+- Sessions expire after eight hours.
+- Cookies use HttpOnly and SameSite=Strict.
+- Production HTTPS cookies use Secure.
+- Protected write requests require CSRF validation.
+- Authorization is enforced on the server.
+- Login and IP-based recovery limits are held in process memory.
+- Database timestamps use UTC.
+- Browser GPS is not guaranteed background tracking.
+- Photo signatures are checked, but photo authenticity is not verified.
+- The dispatch and stop-planning algorithms are rule-based estimates.
+- Production performance and full concurrency have not been established by the synthetic dataset.
+- Never commit credentials, API keys, session cookies or password-reset links.
 - Root-level `Intro.html` is separate from the application served from `backend/public`.
