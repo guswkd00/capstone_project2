@@ -737,6 +737,36 @@
         ["On-time Rate", rate(s.on_time_rate)],
         ["Overdue Open Orders", count(s.overdue_open_orders)],
         ["Recorded COD Collected", money(s.recorded_cod_collected)],
+                [
+          "Estimated Cost — Completed Deliveries",
+          money(s.estimated_completed_delivery_cost)
+        ],
+        [
+          "Estimated Cost per Completed Delivery",
+          s.estimated_cost_per_completed_delivery == null
+            ? "—"
+            : money(s.estimated_cost_per_completed_delivery)
+        ],
+        [
+          "Completed Deliveries with Cost Estimates",
+          count(s.costed_completed_orders)
+        ],
+        [
+          "Recorded Vehicle Expenses — All Dates",
+          money(s.recorded_vehicle_expenses)
+        ],
+        [
+          "Recorded Fuel Expenses",
+          money(s.recorded_fuel_expenses)
+        ],
+        [
+          "Recorded Maintenance Expenses",
+          money(s.recorded_maintenance_expenses)
+        ],
+        [
+          "Vehicle Expense Records",
+          count(s.recorded_expense_count)
+        ],
         ["COD on Active Deliveries", money(s.active_cod_required)],
         [
           "Average Delivery Duration",
