@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS drivers (
     NOT NULL DEFAULT 'available',
   latitude DECIMAL(10,7) NOT NULL,
   longitude DECIMAL(10,7) NOT NULL,
+  location_updated_at DATETIME DEFAULT NULL,
+  location_accuracy_m INT UNSIGNED DEFAULT NULL,
   user_id INT UNSIGNED DEFAULT NULL,
 
   PRIMARY KEY (id),
