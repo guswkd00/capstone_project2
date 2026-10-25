@@ -129,7 +129,35 @@
         card.appendChild(node("p", "Currently assigned"));
       }
 
-      // Assignment review links will be added in step 08.
+            const orderId = Number(data.order?.id);
+      const driverId = Number(driver.driver_id);
+
+      if (
+        Number.isSafeInteger(orderId) && orderId > 0 &&
+        Number.isSafeInteger(driverId) && driverId > 0
+      ) {
+        const link = node(
+          "a",
+          driver.currently_assigned
+            ? "View Assignment"
+            : "Review Assignment",
+          "mai-review"
+        );
+
+        const url = new URL(
+          "/dispatch.html",
+          window.location.origin
+        );
+
+        url.searchParams.set("order", String(orderId));
+        url.searchParams.set("driver", String(driverId));
+
+        link.href = url.href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        card.appendChild(link);
+      }
       article.appendChild(card);
     }
 
