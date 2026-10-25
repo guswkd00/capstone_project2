@@ -184,6 +184,34 @@ router.get("/", async (req, res) => {
     const fleetUtilization = totalVehicles > 0
       ? Math.round(activeVehicles / totalVehicles * 1000) / 10
       : null;
+        const [deliveryCostRows] = await connection.execute(`
+      SELECT
+        COUNT(*) AS costed_completed_orders,
+        COALESCE(SUM(estimated_cost), 0)
+          AS estimated_completed_delivery_cost,
+        AVG(estimated_cost)
+          AS estimated_cost_per_completed_delivery
+      FROM orders
+      WHERE status = 'completed'
+        AND estimated_cost IS NOT NULL
+        AND estimated_cost >= 0
+    `);
+
+    const [expenseRows] = await connection.execute(`
+      SELECT
+        COUNT(*) AS recorded_expense_count,
+        COALESCE(SUM(amount), 0)
+          AS recorded_vehicle_expenses,
+        COALESCE(SUM(
+          CASE WHEN expense_type = 'fuel'
+          THEN amount ELSE 0 END
+        ), 0) AS recorded_fuel_expenses,
+        COALESCE(SUM(
+          CASE WHEN expense_type = 'maintenance'
+          THEN amount ELSE 0 END
+        ), 0) AS recorded_maintenance_expenses
+      FROM vehicle_expenses
+    `);
     await connection.commit();
 
     function withRate(row) {
@@ -206,6 +234,8 @@ router.get("/", async (req, res) => {
         generated_at: new Date().toISOString(),
         summary: withRate({
   ...summary[0],
+  ...deliveryCostRows[0],
+  ...expenseRows[0],
   total_vehicles: totalVehicles,
   active_vehicles: activeVehicles,
   fleet_utilization_rate: fleetUtilization
