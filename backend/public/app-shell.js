@@ -13,6 +13,53 @@
     if (session.user.role !== "manager") return;
 
     document.body.classList.add("sf-app");
+        // Load the assistant after verifying a Manager session.
+    (async () => {
+      if (window.sfManagerAILoading) return;
+      window.sfManagerAILoading = true;
+
+      function loadAIAsset(tag, url) {
+        return new Promise((resolve, reject) => {
+          const asset = document.createElement(tag);
+
+          if (tag === "link") {
+            asset.rel = "stylesheet";
+            asset.href = url;
+          } else {
+            asset.src = url;
+          }
+
+          asset.onload = resolve;
+
+          asset.onerror = () => reject(
+            new Error("Assistant asset failed to load.")
+          );
+
+          document.head.appendChild(asset);
+        });
+      }
+
+      try {
+        await Promise.all([
+          loadAIAsset("link", "/manager-ai-chat.css?v=1"),
+          loadAIAsset("script", "/manager-ai-widget.js?v=1")
+        ]);
+
+        window.mountManagerAIWidget();
+
+        await loadAIAsset(
+          "script",
+          "/manager-ai-chat.js?v=1"
+        );
+      } catch {
+        document.getElementById("manager-ai-widget")?.remove();
+        window.sfManagerAILoading = false;
+
+        console.warn(
+          "Manager assistant could not load. Refresh to try again."
+        );
+      }
+    })();
 
     const header = document.createElement("header");
     header.id = "sf-manager-header";
