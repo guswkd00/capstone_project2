@@ -711,6 +711,11 @@
 
     function renderReport(data) {
       const s = data.summary;
+            metrics.setAttribute(
+        "aria-label",
+        "Delivery metrics. Fleet utilization is the current share " +
+        "of all vehicles with assigned or delivering orders."
+      );
 
       metrics.replaceChildren();
 
@@ -718,6 +723,14 @@
         ["Total Orders", count(s.total_orders)],
         ["Waiting for Assignment", count(s.waiting_orders)],
         ["Active Deliveries", count(s.active_orders)],
+                [
+          "Current Fleet Utilization",
+          rate(s.fleet_utilization_rate)
+        ],
+        [
+          "Vehicles with Active Deliveries",
+          `${count(s.active_vehicles)} / ${count(s.total_vehicles)}`
+        ],
         ["Completed", count(s.completed_orders)],
         ["Failed", count(s.failed_orders)],
         ["Cancelled", count(s.cancelled_orders)],
