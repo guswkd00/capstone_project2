@@ -517,6 +517,73 @@ router.get("/maintenance-alerts", async (req, res) => {
     });
   }
 });
+router.post("/vehicles/:id/expenses", async (req, res) => {
+  if (req.user?.role !== "manager") {
+    return res.status(403).json({
+      message: "Manager access required."
+    });
+  }
+
+  const vehicleId = Number(req.params.id);
+  const { expense_type, amount, expense_date, description } =
+    req.body || {};
+
+  const note = typeof description === "string"
+    ? description.trim()
+    : "";
+
+  const date = typeof expense_date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(expense_date)
+      ? new Date(`${expense_date}T00:00:00Z`)
+      : null;
+
+  const validDate = date &&
+    Number.isFinite(date.getTime()) &&
+    date.toISOString().slice(0, 10) === expense_date;
+
+  if (
+    !Number.isSafeInteger(vehicleId) || vehicleId <= 0 ||
+    !["fuel", "maintenance", "other"].includes(expense_type) ||
+    !Number.isSafeInteger(amount) ||
+    amount <= 0 || amount > 9999999999 ||
+    !validDate || !note || note.length > 500
+  ) {
+    return res.status(400).json({
+      message: "Provide a valid vehicle, type, whole-VND amount, date and description."
+    });
+  }
+
+  try {
+    const [result] = await pool.execute(
+      `INSERT INTO vehicle_expenses
+         (vehicle_id, expense_type, amount,
+          expense_date, description, created_by)
+       SELECT id, ?, ?, ?, ?, ?
+       FROM vehicles
+       WHERE id = ?`,
+      [
+        expense_type, amount, expense_date,
+        note, req.user.id, vehicleId
+      ]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({
+        message: "Vehicle not found."
+      });
+    }
+
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(201).json({
+      message: "Vehicle expense recorded successfully."
+    });
+  } catch (error) {
+    console.error("Vehicle expense creation failed:", error.code);
+    return res.status(500).json({
+      message: "Unable to record vehicle expense."
+    });
+  }
+});
 module.exports = router;
 // Validate driver information.
 function validateDriver(body) {
