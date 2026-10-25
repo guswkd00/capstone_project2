@@ -227,7 +227,23 @@ nav a.active {
 
   <div id="map-driver-details"></div>
 </section>
-  <section id="candidate-list" aria-label="Driver recommendations"></section>    
+  <details class="card" style="margin-top:20px">
+  <summary
+    style="cursor:pointer;font-weight:600;color:#b03b24;padding:8px 0"
+  >
+    View driver recommendation details
+  </summary>
+
+  <p class="muted">
+    Compare driver scores, estimated delivery times and eligibility.
+    You can also select a vehicle directly on the map above.
+  </p>
+
+  <section
+    id="candidate-list"
+    aria-label="Driver recommendations"
+  ></section>
+</details>  
   </main>
 </body>
 </html>
