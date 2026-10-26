@@ -1160,5 +1160,103 @@ appendDetails(container, [
 
     loadOrders();
   </script>
+  <script>
+(() => {
+  function initialiseOrderSearch() {
+    const tbody = document.getElementById("orders");
+    const table = tbody?.closest(".table-wrapper");
+    if (!table || document.getElementById("order-search")) return;
+
+    const box = document.createElement("div");
+    box.style.cssText = "display:grid;gap:10px;margin-bottom:20px";
+
+    const label = document.createElement("label");
+    label.htmlFor = "order-search";
+    label.textContent = "Search orders";
+    label.style.fontWeight = "600";
+
+    const controls = document.createElement("div");
+    controls.style.cssText = "display:flex;flex-wrap:wrap;gap:10px";
+
+    const input = document.createElement("input");
+    input.id = "order-search";
+    input.type = "search";
+    input.placeholder = "Order code or customer name";
+    input.maxLength = 150;
+    input.setAttribute("aria-describedby", "order-search-status");
+    input.style.cssText =
+      "flex:1 1 220px;min-width:0;width:100%;" +
+      "padding:11px 12px;font:inherit";
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.textContent = "Clear search";
+    clear.disabled = true;
+
+    const status = document.createElement("p");
+    status.id = "order-search-status";
+    status.className = "muted";
+    status.setAttribute("role", "status");
+    status.style.margin = "0";
+
+    controls.append(input, clear);
+    box.append(label, controls, status);
+    table.before(box);
+
+    function normalise(value) {
+      return String(value).normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đĐ]/g, "d")
+        .toLowerCase().trim();
+    }
+
+    function filterOrders() {
+      const terms = normalise(input.value)
+        .split(/\s+/).filter(Boolean);
+      const rows = Array.from(tbody.rows);
+      let matched = 0;
+
+      for (const row of rows) {
+        const text = normalise([
+          row.cells[0]?.textContent || "",
+          row.cells[1]?.textContent || ""
+        ].join(" "));
+
+        const visible = terms.every(term => text.includes(term));
+        row.hidden = !visible;
+        if (visible) matched++;
+      }
+
+      clear.disabled = input.value.length === 0;
+      status.textContent = terms.length
+        ? `${matched} of ${rows.length} loaded orders match. ` +
+          (matched
+            ? "Search applies to the selected tab."
+            : "No matching orders. Try All Orders or another search.")
+        : "Search by order code or customer name in the selected tab.";
+    }
+
+    input.addEventListener("input", filterOrders);
+    clear.addEventListener("click", () => {
+      input.value = "";
+      filterOrders();
+      input.focus();
+    });
+
+    new MutationObserver(filterOrders)
+      .observe(tbody, { childList: true });
+
+    filterOrders();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded", initialiseOrderSearch, { once: true }
+    );
+  } else {
+    initialiseOrderSearch();
+  }
+})();
+</script>
 </body>
 </html>
