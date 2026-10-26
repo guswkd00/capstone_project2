@@ -176,6 +176,50 @@
     }
   </style>
   <link rel="stylesheet" href="/app-theme.css?v=3">
+  <style id="driver-layout-fix">
+  main.df-driver-main {
+    width: 100%;
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 32px 20px;
+  }
+
+  .df-driver-main > .card,
+  .df-driver-main .df-card {
+    min-width: 0;
+    padding: 22px;
+    overflow-wrap: anywhere;
+  }
+
+  .df-driver-main > .card > h2:first-child,
+  .df-driver-main .df-card > h2:first-child {
+    margin-top: 0;
+  }
+
+  .df-driver-main > .card > :last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 700px) {
+    main.df-driver-main {
+      padding: 20px 14px;
+    }
+
+    .df-driver-main > .card,
+    .df-driver-main .df-card {
+      padding: 18px;
+    }
+
+    .df-driver-main .df-card-heading {
+      flex-wrap: wrap;
+    }
+
+    .df-driver-main button {
+      max-width: 100%;
+      white-space: normal;
+    }
+  }
+</style>
 </head>
 
 <body class="sf-app">
