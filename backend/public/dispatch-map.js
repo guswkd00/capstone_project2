@@ -44,7 +44,7 @@
     }
 
     if (!map) {
-      map = L.map("dispatch-map").setView([10.78, 106.70], 12);
+      map = L.map("dispatch-map").setView([21.0285, 105.8542], 12);
 
       L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
