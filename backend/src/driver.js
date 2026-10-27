@@ -114,11 +114,15 @@ router.use(async (req, res, next) => {
 
 // Get the current driver's profile.
 // Update the authenticated driver's own GPS position.
+const lastLocationUpdates = new Map();
+
+// Update only the authenticated driver's location.
 router.post("/location", async (req, res) => {
   const {
     latitude,
     longitude,
-    accuracy_m
+    accuracy_m,
+    captured_at,
   } = req.body || {};
 
   const valid =
@@ -138,41 +142,74 @@ router.post("/location", async (req, res) => {
   if (!valid) {
     return res.status(400).json({
       message:
-        "Provide valid GPS coordinates and accuracy from 0 to 10,000 metres."
+        "Provide valid GPS coordinates and accuracy from 0 to 10,000 metres.",
+    });
+  }
+
+  if (
+    captured_at !== undefined &&
+    (
+      typeof captured_at !== "number" ||
+      !Number.isFinite(captured_at) ||
+      captured_at < Date.now() - 60000 ||
+      captured_at > Date.now() + 10000
+    )
+  ) {
+    return res.status(400).json({
+      message:
+        "GPS reading is stale or has an invalid timestamp.",
+    });
+  }
+
+  const lastUpdate =
+    lastLocationUpdates.get(req.driver.id) || 0;
+
+  if (Date.now() - lastUpdate < 5000) {
+    return res.status(429).json({
+      message:
+        "Wait before uploading another GPS position.",
     });
   }
 
   try {
     const [result] = await pool.execute(
-      `
-        UPDATE drivers
-        SET latitude = ?,
-            longitude = ?,
-            location_accuracy_m = ?,
-            location_updated_at = UTC_TIMESTAMP()
-        WHERE id = ?
-          AND user_id = ?
-      `,
+      `UPDATE drivers
+       SET latitude = ?,
+           longitude = ?,
+           location_accuracy_m = ?,
+           location_updated_at = UTC_TIMESTAMP()
+       WHERE id = ?
+         AND user_id = ?`,
       [
         latitude,
         longitude,
         Math.round(accuracy_m),
         req.driver.id,
-        req.user.id
+        req.user.id,
       ]
     );
 
     if (!result.affectedRows) {
       return res.status(403).json({
-        message: "Your driver account is no longer linked."
+        message:
+          "Your driver account is no longer linked.",
       });
     }
+
+    if (lastLocationUpdates.size > 10000) {
+      lastLocationUpdates.clear();
+    }
+
+    lastLocationUpdates.set(
+      req.driver.id,
+      Date.now()
+    );
 
     res.set("Cache-Control", "no-store");
 
     res.json({
       message: "GPS location updated.",
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     });
   } catch (error) {
     console.error(
@@ -181,12 +218,18 @@ router.post("/location", async (req, res) => {
     );
 
     res.status(500).json({
-      message: "Unable to save GPS location."
+      message: "Unable to save GPS location.",
     });
   }
 });
+
+// Retrieve the authenticated driver's profile.
 router.get("/profile", (req, res) => {
-  res.json({ data: req.driver });
+  res.set("Cache-Control", "no-store");
+
+  res.json({
+    data: req.driver,
+  });
 });
 
 // Get deliveries belonging to the current driver.
