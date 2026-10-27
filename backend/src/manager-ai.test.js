@@ -37,6 +37,7 @@ const context = () => ({
 });
 
 const answer = () => ({
+  scope: "IN_SCOPE",
   answer: "Driver 1 is eligible.",
   suggestions: [
     { driver_id: 1, reason: "Lowest supplied DSS score." }
