@@ -312,7 +312,7 @@
           "Content-Type": "application/json",
           "X-CSRF-Token": csrf
         },
-        signal: AbortSignal.timeout(25000),
+        signal: AbortSignal.timeout(55000),
         body: JSON.stringify({
           question: text,
           order_id: orderId,
