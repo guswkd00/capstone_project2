@@ -164,7 +164,8 @@ body.sf-app > header nav a.active {
   box-shadow: 0 12px 30px rgba(100, 45, 20, 0.12);
 }
 
-.sf-dropdown a {
+.sf-dropdown a,
+body.sf-app .sf-dropdown button.sf-logout {
   display: block;
   padding: 12px;
   color: #454e56;
@@ -173,7 +174,8 @@ body.sf-app > header nav a.active {
   border-radius: 7px;
 }
 
-.sf-dropdown a:hover {
+.sf-dropdown a:hover,
+body.sf-app .sf-dropdown button.sf-logout:hover:not(:disabled) {
   background: #fff0e9;
   color: #ee4d2d;
 }
@@ -278,4 +280,14 @@ body.sf-app :is(button, a, input, select, textarea):focus-visible {
 
 body.sf-app input[type="checkbox"] {
   accent-color: var(--brand);
+}
+
+body.sf-app .sf-dropdown button.sf-logout {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-weight: 400;
+  cursor: pointer;
 }
