@@ -23,7 +23,28 @@ function resultData(answer, context, source) {
     source,
     order: context.order,
     context_generated_at: context.generated_at,
-    warnings: context.warnings,
+        warnings: (context.warnings || []).map(message => {
+      if (answer.language !== "vi") return message;
+
+      const translations = {
+        "Distance, ETA and cost are estimates, not live traffic.":
+          "Khoảng cách, thời gian đến dự kiến và chi phí là số liệu ước tính, không phản ánh giao thông trực tiếp.",
+
+        "No order selected. Give general workflow guidance only.":
+          "Chưa chọn đơn hàng. Câu trả lời chỉ hướng dẫn quy trình chung.",
+
+        "This order is not open for assignment. Review only.":
+          "Đơn hàng này không còn cho phép phân công tài xế. Chỉ có thể xem lại thông tin.",
+
+        "The service zone is inactive or missing.":
+          "Khu vực phục vụ đang ngừng hoạt động hoặc chưa được xác định.",
+
+        "The order is missing valid coordinates, weight or deadline.":
+          "Đơn hàng thiếu tọa độ, khối lượng hoặc thời hạn giao hàng hợp lệ."
+      };
+
+      return translations[message] || message;
+    }),
     candidate_list_limited: context.candidate_list_limited,
     total_candidates: context.total_candidates,
     supplied_candidates: context.candidates.length
