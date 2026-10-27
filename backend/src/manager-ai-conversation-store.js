@@ -77,7 +77,7 @@ async function saveConversationTurn(db, {
     question.length > 1500 ||
     typeof answer !== "string" || !answer.trim() ||
     answer.length > 6000 ||
-    !["gemini", "dss", "error"].includes(source)
+    !["gemini", "nvidia", "dss", "error"].includes(source)
   ) {
     fail(400, "Invalid conversation message.");
   }
