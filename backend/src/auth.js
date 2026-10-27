@@ -30,13 +30,28 @@ function sessionToken(req) {
   return /^[a-f0-9]{64}$/.test(token) ? token : null;
 }
 
+function rejectUnauthenticated(req, res, message) {
+  const pagePath = (req.originalUrl || "").split("?")[0];
+
+  if (
+    ["GET", "HEAD"].includes(req.method) &&
+    /^\/driver\.html\/?$/.test(pagePath)
+  ) {
+    return res.redirect("/login.html");
+  }
+
+  return res.status(401).json({ message });
+}
+
 async function requireLogin(req, res, next) {
   const token = sessionToken(req);
 
-  if (!token) {
-    return res.status(401).json({
-      message: "Please sign in.",
-    });
+    if (!token) {
+    return rejectUnauthenticated(
+      req,
+      res,
+      "Please sign in."
+    );
   }
 
   try {
@@ -58,10 +73,12 @@ async function requireLogin(req, res, next) {
       [hashToken(token)]
     );
 
-    if (!users.length) {
-      return res.status(401).json({
-        message: "Your session has expired. Please sign in again.",
-      });
+     if (!users.length) {
+      return rejectUnauthenticated(
+        req,
+        res,
+        "Your session has expired. Please sign in again."
+      );
     }
 
     req.user = users[0];
