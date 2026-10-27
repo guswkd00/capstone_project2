@@ -90,6 +90,15 @@
     const session = await sessionReady;
     if (!session) return;
 
+    // A bare entry URL opens the Manager overview; explicit Orders links stay intact.
+    const entryUrl = new URL(window.location.href);
+    if (session.user.role === "manager" &&
+        ["/", "/index.html"].includes(entryUrl.pathname) &&
+        !entryUrl.searchParams.has("orders")) {
+      window.location.replace("/dashboard.html");
+      return;
+    }
+
     document.documentElement.style.visibility = "";
 
     const navigation = document.querySelector("header nav");
