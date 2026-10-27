@@ -1,4 +1,8 @@
 "use strict";
+const {
+  REFUSAL_MESSAGE,
+  MISSING_KNOWLEDGE_MESSAGE
+} = require("./manager-ai-knowledge");
 const { askNvidiaAI } = require("./manager-ai-nvidia-client");
 
 function getAIProvider() {
@@ -161,7 +165,29 @@ async function askManagerAI(
       throw aiError(502, "AI returned an invalid answer.");
     }
 
-    return answer;
+    if (![
+  "IN_SCOPE",
+  "OUT_OF_SCOPE",
+  "INSUFFICIENT_CONTEXT"
+].includes(answer.scope)) {
+  throw aiError(
+    502,
+    "AI returned an invalid scope classification. Use the standard DSS."
+  );
+}
+
+if (answer.scope !== "IN_SCOPE") {
+  return {
+    scope: answer.scope,
+    answer: answer.scope === "OUT_OF_SCOPE"
+      ? REFUSAL_MESSAGE
+      : MISSING_KNOWLEDGE_MESSAGE,
+    suggestions: [],
+    uncertainties: []
+  };
+}
+
+return answer;
   } catch (error) {
     if (error.name === "TimeoutError" || error.name === "AbortError") {
       throw aiError(
