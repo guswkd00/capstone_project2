@@ -41,15 +41,15 @@
 
       try {
         await Promise.all([
-          loadAIAsset("link", "/manager-ai-chat.css?v=1"),
-          loadAIAsset("script", "/manager-ai-widget.js?v=1")
+          loadAIAsset("link", "/manager-ai-chat.css?v=threads-1"),
+          loadAIAsset("script", "/manager-ai-widget.js?v=threads-1")
         ]);
 
         window.mountManagerAIWidget();
 
         await loadAIAsset(
           "script",
-          "/manager-ai-chat.js?v=1"
+          "/manager-ai-chat.js?v=threads-1"
         );
       } catch {
         document.getElementById("manager-ai-widget")?.remove();
