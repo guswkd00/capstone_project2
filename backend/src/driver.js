@@ -862,6 +862,11 @@ router.use(
   require("./driver-workspace").createWorkspaceRouter(pool)
 );
 
+// Profile photo API for the authenticated Driver.
+router.use(
+  require("./driver-profile-photo").createDriverPhotoRouter(pool)
+);
+
 router.use(require("./delivery-proof"));
 router.get("/route-plan", async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
