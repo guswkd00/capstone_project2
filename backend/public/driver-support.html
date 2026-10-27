@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Driver Support · ShopeeFood</title>
+
+  <script src="/auth-client.js" data-role="manager"></script>
+
+  <link rel="stylesheet" href="/app-theme.css">
+
+  <script src="/app-shell.js" defer></script>
+  <script src="/driver-support.js?v=1" defer></script>
+
+  <style>
+    main {
+      max-width: 1100px;
+      margin: auto;
+      padding: 24px;
+    }
+
+    section {
+      background: #ffffff;
+      border: 1px solid #eeeeee;
+      border-radius: 14px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .rows {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    td,
+    th {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eeeeee;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0;
+    }
+
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 90px;
+    }
+
+    select,
+    input {
+      max-width: 100%;
+    }
+
+    #messages {
+      max-height: 350px;
+      overflow: auto;
+      overflow-wrap: anywhere;
+    }
+
+    button {
+      margin: 4px;
+    }
+
+    dialog {
+      max-width: 90vw;
+      width: 500px;
+      max-height: 85vh;
+      overflow: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/driver-support.html">Driver Support</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Driver Support</h1>
+
+    <p>
+      Review internal wallet requests and reply to order messages.
+      This page does not initiate bank transfers or send external
+      customer messages.
+    </p>
+
+    <p id="status" role="status"></p>
+
+    <button id="refresh" type="button">
+      Refresh
+    </button>
+
+    <section aria-labelledby="wallet-heading">
+      <h2 id="wallet-heading">
+        Latest 100 wallet requests
+      </h2>
+
+      <p>
+        Approve only after verifying the external transfer.
+        Reject to release a withdrawal reservation.
+      </p>
+
+      <div class="rows">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Driver</th>
+              <th scope="col">Request</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Status</th>
+              <th scope="col">Review</th>
+            </tr>
+          </thead>
+
+          <tbody id="requests"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="messages-heading">
+      <h2 id="messages-heading">
+        Order Messages
+      </h2>
+
+      <label for="orders">
+        Assigned delivery (latest 200)
+      </label>
+
+      <select id="orders"></select>
+
+      <button id="load" type="button">
+        Load messages
+      </button>
+
+      <button id="older" type="button" hidden>
+        Older messages
+      </button>
+
+      <div
+        id="messages"
+        role="log"
+        aria-label="Order messages"
+      ></div>
+
+      <form id="reply">
+        <label for="text">
+          Reply as Manager support
+        </label>
+
+        <textarea
+          id="text"
+          maxlength="1000"
+          required
+        ></textarea>
+
+        <button type="submit">
+          Send
+        </button>
+      </form>
+    </section>
+
+    <dialog
+      id="review"
+      aria-labelledby="review-title"
+    >
+      <h2 id="review-title">
+        Review wallet request
+      </h2>
+
+      <form id="review-form">
+        <p id="review-details"></p>
+
+        <label for="decision">
+          Decision
+        </label>
+
+        <select id="decision">
+          <option value="approved">
+            Approve verified transfer
+          </option>
+
+          <option value="rejected">
+            Reject
+          </option>
+        </select>
+
+        <label for="reference">
+          External payment reference or rejection reason
+        </label>
+
+        <input
+          id="reference"
+          type="text"
+          maxlength="150"
+          required
+        >
+
+        <label>
+          <input type="checkbox" required>
+          I verified this decision and its reference.
+        </label>
+
+        <p id="review-status" role="status"></p>
+
+        <button type="submit">
+          Confirm review
+        </button>
+
+        <button id="cancel" type="button">
+          Cancel
+        </button>
+      </form>
+    </dialog>
+  </main>
+</body>
+</html>
