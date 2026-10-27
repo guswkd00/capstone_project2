@@ -327,6 +327,18 @@ router.get("/orders/:id", async (req, res) => {
 // Progress:
 // assigned -> travelling to restaurant -> arrived -> picked up -> completed.
 // A delivery in progress can also be reported as failed.
+// Accepting confirms an existing Manager assignment.
+// The progress handler validates ownership and delivery eligibility.
+router.post("/orders/:id/accept", (req, res, next) => {
+  req.body = {
+    action: "start",
+  };
+
+  req.url = `/orders/${req.params.id}/progress`;
+
+  next();
+});
+
 router.post("/orders/:id/progress", async (req, res) => {
   const orderId = validId(req.params.id);
   const body = req.body;
