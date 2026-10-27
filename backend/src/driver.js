@@ -706,6 +706,12 @@ if (!proofRows.length) {
     if (connection) connection.release();
   }
 });
+// Driver wallet, distance preferences and order messages.
+// The existing middleware has already verified the linked driver.
+router.use(
+  require("./driver-workspace").createWorkspaceRouter(pool)
+);
+
 router.use(require("./delivery-proof"));
 router.get("/route-plan", async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
