@@ -124,7 +124,7 @@
               </p>
 
               <p id="mai-privacy" class="mai-privacy">
-                Questions and limited dispatch data are sent to Google.
+                Questions and limited dispatch data may be sent to NVIDIA or Google, depending on the configured AI provider.
                 Chat history is stored when saving succeeds.
                 Do not enter personal details or secrets.
               </p>
