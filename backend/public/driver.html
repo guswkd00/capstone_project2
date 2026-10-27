@@ -6,14 +6,22 @@
 
   <title>ShopeeFood Delivery DSS — Driver App</title>
 
-  <script src="/auth-client.js" data-role="driver"></script>
+  <script
+    src="/auth-client.js?v=driver-profile-2"
+    data-role="driver"
+  ></script>
+
   <script src="/delivery-proof.js" defer></script>
   <script src="/driver-workspace-deliveries.js?v=1" defer></script>
   <script src="/driver-workspace-location.js?v=1" defer></script>
   <script src="/driver-workspace-route.js?v=1" defer></script>
-  <script src="/driver-workspace.js?v=1" defer></script>
+  <script src="/driver-workspace.js?v=profile-2" defer></script>
+  <script src="/driver-profile-photo.js?v=1" defer></script>
 
-  <link rel="stylesheet" href="/driver-workspace.css?v=1">
+  <link
+    rel="stylesheet"
+    href="/driver-workspace.css?v=profile-2"
+  >
 
   <style>
     button.df-primary:hover:not(:disabled) {
@@ -84,17 +92,23 @@
           Wallet
         </button>
 
-        <button
+           <button
           type="button"
-          class="nav-link-btn"
-          id="open-chat-btn"
+          class="nav-link-btn nav-profile"
+          id="open-profile-btn"
+          data-account-menu
+          aria-label="Open Driver Profile and Account"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4.5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
-            />
-          </svg>
-          Chat
+          <span class="avatar">D</span>
+
+          <span class="nav-profile-text">
+            <b id="nav-driver-name">Driver</b>
+            <small id="nav-driver-zone">Loading...</small>
+          </span>
+
+          <span class="profile-account-label">
+            Account
+          </span>
         </button>
 
         <button
@@ -508,6 +522,49 @@
         Close
       </button>
     </div>
+
+    <form id="driver-photo-form">
+      <div
+        class="driver-photo-preview"
+        id="driver-photo-preview"
+        aria-label="Current profile photo"
+      >
+        D
+      </div>
+
+      <label for="driver-photo-file">
+        Driver photo
+      </label>
+
+      <input
+        id="driver-photo-file"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        required
+      >
+
+      <p class="muted">
+        Choose a photo up to 10 MB.
+        It will be cropped to a square and saved
+        as a profile image.
+      </p>
+
+      <div class="btn-row">
+        <button type="submit" class="active">
+          Save photo
+        </button>
+
+        <button
+          id="driver-photo-remove"
+          type="button"
+          disabled
+        >
+          Remove photo
+        </button>
+      </div>
+
+      <p id="driver-photo-status" role="status"></p>
+    </form>
 
     <div id="profile-content">
       Loading profile...
