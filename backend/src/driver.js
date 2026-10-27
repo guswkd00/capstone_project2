@@ -438,7 +438,7 @@ router.post("/orders/:id/progress", async (req, res) => {
     // Lock the driver first, then the vehicle, then the order.
     const [drivers] = await connection.execute(
       `
-        SELECT id, status, vehicle_id
+        SELECT id, status, vehicle_id, zone_id
         FROM drivers
         WHERE id = ? AND user_id = ?
         FOR UPDATE
@@ -537,6 +537,24 @@ router.post("/orders/:id/progress", async (req, res) => {
         throw apiError(
           409,
           "This order has no pickup restaurant."
+        );
+      }
+
+            const [zoneRows] = await connection.execute(
+        `SELECT active
+         FROM zones
+         WHERE id = ?`,
+        [driver.zone_id]
+      );
+
+      if (
+        !zoneRows.length ||
+        Number(zoneRows[0].active) !== 1 ||
+        Number(driver.zone_id) !== Number(order.zone_id)
+      ) {
+        throw apiError(
+          409,
+          "The assigned delivery requires your active service zone."
         );
       }
 
