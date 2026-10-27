@@ -455,8 +455,51 @@ router.post("/orders/:id/progress", async (req, res) => {
         );
       }
 
-      if (!order.restaurant_id) {
-        throw apiError(409, "This order has no pickup restaurant.");
+           if (!order.restaurant_id) {
+        throw apiError(
+          409,
+          "This order has no pickup restaurant."
+        );
+      }
+
+      const {
+        lockWallet,
+      } = require("./driver-wallet-store");
+
+      const {
+        policy,
+        deliveryDistance,
+      } = require("./driver-workspace-policy");
+
+      const wallet = await lockWallet(
+        connection,
+        driver.id
+      );
+
+      const [pickupRows] = await connection.execute(
+        `SELECT
+           latitude AS pickup_latitude,
+           longitude AS pickup_longitude
+         FROM restaurants
+         WHERE id = ?`,
+        [order.restaurant_id]
+      );
+
+      const distance = deliveryDistance({
+        ...order,
+        ...pickupRows[0],
+      });
+
+      const distanceLimit = Math.min(
+        Number(wallet.max_delivery_km),
+        policy().max_delivery_km
+      );
+
+      if (distance > distanceLimit) {
+        throw apiError(
+          409,
+          `Delivery distance exceeds your ${distanceLimit} km limit. Ask the Manager to reassign it.`
+        );
       }
 
       const [restaurants] = await connection.execute(
