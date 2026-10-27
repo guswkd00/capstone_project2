@@ -1,7 +1,10 @@
 "use strict";
 
 const { LIMITS } = require("./manager-ai-policy");
-const { askManagerAI } = require("./manager-ai-client");
+const {
+  askManagerAI,
+  getAIProvider
+} = require("./manager-ai-client");
 const { loadManagerAIContext } = require("./manager-ai-context");
 const { validateAIAnswer } = require("./manager-ai-validation");
 const {
@@ -40,7 +43,7 @@ function fallbackData(context) {
 
   return resultData(validateAIAnswer({
     answer:
-      "AI is unavailable. These are standard DSS suggestions, not a Gemini answer.",
+      "AI is unavailable. These are standard DSS suggestions, not an AI-generated answer.",
     suggestions,
     uncertainties: []
   }, context), context, "dss");
@@ -73,6 +76,7 @@ function createManagerAIHandler({
     }
 
     const times = managers.get(id) || [];
+
     if (busy || recent.length >= 4 || times.length >= 3) {
       return false;
     }
@@ -87,7 +91,9 @@ function createManagerAIHandler({
     res.setHeader("Cache-Control", "no-store");
 
     if (!req.user) {
-      return res.status(401).json({ message: "Sign in first." });
+      return res.status(401).json({
+        message: "Sign in first."
+      });
     }
 
     if (req.user.role !== "manager") {
@@ -131,6 +137,7 @@ function createManagerAIHandler({
 
     if (!takeSlot(req.user.id)) {
       res.setHeader("Retry-After", "60");
+
       return res.status(429).json({
         message:
           "AI is busy or the local request limit was reached. Use the standard DSS or try later."
@@ -220,10 +227,12 @@ function createManagerAIHandler({
       const data = resultData(
         validate(answer, context),
         context,
-        "gemini"
+        getAIProvider()
       );
 
-      return res.json({ data: await persist(data) });
+      return res.json({
+        data: await persist(data)
+      });
     } catch (error) {
       const status = [
         400, 404, 409, 422, 429, 502, 503, 504
