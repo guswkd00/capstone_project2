@@ -105,6 +105,7 @@
 
     if (
       navigation &&
+      !navigation.querySelector("[data-account-menu]") &&
       !navigation.querySelector('a[href="/account.html"]')
     ) {
       const link = document.createElement("a");
