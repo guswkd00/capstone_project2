@@ -201,6 +201,12 @@ router.get("/orders", async (req, res) => {
           o.delivery_address,
           o.status,
           o.total_amount,
+          o.delivery_fee,
+          o.estimated_distance_km,
+          o.latitude,
+          o.longitude,
+          r.latitude AS pickup_latitude,
+          r.longitude AS pickup_longitude,
           o.payment_method,
           o.cod_amount,
           o.cod_collected,
@@ -227,11 +233,28 @@ router.get("/orders", async (req, res) => {
       [req.driver.id]
     );
 
+    const {
+      deliveryDistance,
+    } = require("./driver-workspace-policy");
+
     res.json({
-      data: orders.map((order) => ({
-        ...order,
-        phase: deliveryPhase(order),
-      })),
+      data: orders.map((order) => {
+        let distance = null;
+
+        try {
+          distance = Number(
+            deliveryDistance(order).toFixed(2)
+          );
+        } catch {
+          // Keep distance unavailable when coordinates are invalid.
+        }
+
+        return {
+          ...order,
+          phase: deliveryPhase(order),
+          delivery_distance_km: distance,
+        };
+      }),
     });
   } catch (error) {
     console.error("Driver deliveries query failed:", error.code);
