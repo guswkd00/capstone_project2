@@ -1,9 +1,22 @@
 "use strict";
+
 const {
-  REFUSAL_MESSAGE,
-  MISSING_KNOWLEDGE_MESSAGE
-} = require("./manager-ai-knowledge");
-const { askNvidiaAI } = require("./manager-ai-nvidia-client");
+  enforceLocalizedScope
+} = require("./manager-ai-language");
+
+const {
+  askNvidiaAI
+} = require("./manager-ai-nvidia-client");
+
+const {
+  LIMITS,
+  SYSTEM_INSTRUCTION,
+  RESPONSE_SCHEMA
+} = require("./manager-ai-policy");
+
+function aiError(status, message) {
+  return Object.assign(new Error(message), { status });
+}
 
 function getAIProvider() {
   const provider =
@@ -19,29 +32,26 @@ function getAIProvider() {
   return provider;
 }
 
-const {
-  LIMITS, SYSTEM_INSTRUCTION, RESPONSE_SCHEMA
-} = require("./manager-ai-policy");
-
-function aiError(status, message) {
-  return Object.assign(new Error(message), { status });
-}
-
-// Server only. Caller must validate suggested driver IDs.
+// Server only. The caller must validate suggested driver IDs.
 async function askManagerAI(
   { question, context, history = [] } = {},
   fetchImpl = fetch
 ) {
   if (getAIProvider() === "nvidia") {
-  return askNvidiaAI(
-    { question, context, history },
-    fetchImpl
-  );
-}
+    return askNvidiaAI(
+      { question, context, history },
+      fetchImpl
+    );
+  }
+
   const key = process.env.GEMINI_API_KEY?.trim();
   const model = process.env.GEMINI_MODEL?.trim();
 
-  if (!key || !model || !/^gemini-[a-z0-9._-]{1,100}$/.test(model)) {
+  if (
+    !key ||
+    !model ||
+    !/^gemini-[a-z0-9._-]{1,100}$/.test(model)
+  ) {
     throw aiError(
       503,
       "AI is not configured. Use the standard DSS recommendations."
@@ -49,13 +59,19 @@ async function askManagerAI(
   }
 
   if (
-    typeof question !== "string" || !question.trim() ||
+    typeof question !== "string" ||
+    !question.trim() ||
     question.length > LIMITS.questionChars ||
-    !context || typeof context !== "object" || Array.isArray(context) ||
-    !Array.isArray(history) || history.length > LIMITS.historyMessages ||
+    !context ||
+    typeof context !== "object" ||
+    Array.isArray(context) ||
+    !Array.isArray(history) ||
+    history.length > LIMITS.historyMessages ||
     history.some(item =>
-      !item || !["user", "assistant"].includes(item.role) ||
-      typeof item.text !== "string" || !item.text.trim() ||
+      !item ||
+      !["user", "assistant"].includes(item.role) ||
+      typeof item.text !== "string" ||
+      !item.text.trim() ||
       item.text.length > LIMITS.questionChars
     )
   ) {
@@ -120,11 +136,11 @@ async function askManagerAI(
     }
 
     if (!response.ok) {
-  throw aiError(
-    503,
-    `Gemini API returned HTTP ${response.status}. Use the standard DSS.`
-  );
-}
+      throw aiError(
+        503,
+        `Gemini API returned HTTP ${response.status}. Use the standard DSS.`
+      );
+    }
 
     const raw = await response.text();
 
@@ -151,7 +167,9 @@ async function askManagerAI(
     }
 
     const text = (candidate.content?.parts || [])
-      .filter(part => !part.thought && typeof part.text === "string")
+      .filter(part =>
+        !part.thought && typeof part.text === "string"
+      )
       .map(part => part.text)
       .join("");
 
@@ -161,42 +179,26 @@ async function askManagerAI(
 
     const answer = JSON.parse(text);
 
-    if (!answer || typeof answer !== "object" || Array.isArray(answer)) {
+    if (
+      !answer ||
+      typeof answer !== "object" ||
+      Array.isArray(answer)
+    ) {
       throw aiError(502, "AI returned an invalid answer.");
     }
 
-    if (![
-  "IN_SCOPE",
-  "OUT_OF_SCOPE",
-  "INSUFFICIENT_CONTEXT"
-].includes(answer.scope)) {
-  throw aiError(
-    502,
-    "AI returned an invalid scope classification. Use the standard DSS."
-  );
-}
-
-if (answer.scope !== "IN_SCOPE") {
-  return {
-    scope: answer.scope,
-    answer: answer.scope === "OUT_OF_SCOPE"
-      ? REFUSAL_MESSAGE
-      : MISSING_KNOWLEDGE_MESSAGE,
-    suggestions: [],
-    uncertainties: []
-  };
-}
-
-return answer;
+    return enforceLocalizedScope(answer);
   } catch (error) {
-    if (error.name === "TimeoutError" || error.name === "AbortError") {
+    if (["TimeoutError", "AbortError"].includes(error.name)) {
       throw aiError(
         504,
         "AI timed out. Use the standard DSS or try later."
       );
     }
 
-    if ([400, 422, 429, 502, 503, 504].includes(error.status)) {
+    if (
+      [400, 422, 429, 502, 503, 504].includes(error.status)
+    ) {
       throw error;
     }
 
@@ -207,4 +209,7 @@ return answer;
   }
 }
 
-module.exports = { askManagerAI, getAIProvider };
+module.exports = {
+  askManagerAI,
+  getAIProvider
+};
