@@ -19,6 +19,7 @@ Required schemas:
 1. `backend/sql/006-tidb-schema.sql`
 2. `backend/sql/007-delivery-operations.sql`
 3. `backend/sql/013-driver-workspace.sql`
+4. `backend/sql/014-driver-profile-photos.sql`
 
 For an existing installation, apply only missing migrations.
 Do not recreate or reseed the deployed database.
@@ -293,3 +294,21 @@ Browser checks are separate from the configured CI jobs.
 - No automatic historical earnings or reward backfill.
 - Delivery history and financial lists have explicit record limits.
 - GPS rate limiting is per process, not a distributed rate limiter.
+## Driver profile photo
+
+The Driver header combines profile and account access in one button.
+The profile dialog includes photo upload/removal, account settings
+and sign-out.
+
+Apply `backend/sql/014-driver-profile-photos.sql` to create the
+additional `driver_profile_photos` table.
+
+The browser accepts JPEG, PNG or WebP images up to 10 MB, crops the
+center square and exports a 384-by-384-pixel JPEG. The API accepts
+JPEG data up to 1 MB and checks framing and declared dimensions.
+
+GET, POST and DELETE `/api/driver/profile/photo` operate only on
+the authenticated Driver's photo. Writes require the existing CSRF
+token. Photos persist in the database and are not publicly accessible.
+
+Without a saved photo, the interface displays the Driver's initial.
