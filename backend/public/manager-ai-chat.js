@@ -304,46 +304,47 @@
   }
 
   function archiveFragment(rows) {
-    if (
-      !Array.isArray(rows) ||
-      rows.some(turn =>
-        typeof turn.question !== "string" ||
-        typeof turn.answer !== "string" ||
-        !["gemini", "nvidia", "dss", "error"].includes(turn.source)
-      )
-    ) {
-      throw new Error("Invalid saved messages.");
-    }
-
-    const fragment = document.createDocumentFragment();
-
-    for (const turn of rows) {
-      bubble("You", turn.question, true, fragment);
-
-      const article = bubble(
-        "Dispatch Assistant", turn.answer, false, fragment
-      );
-
-      article.prepend(node(
-        "span",
-        turn.source === "gemini"
-          ? "SAVED GEMINI ANSWER · MAY BE OUTDATED"
-          : turn.source === "dss"
-            ? "SAVED DSS FALLBACK"
-            : "SAVED ERROR",
-        "mai-source"
-      ));
-
-      article.appendChild(node(
-        "small",
-        turn.created_at
-          ? new Date(turn.created_at).toLocaleString()
-          : "Saved message"
-      ));
-    }
-
-    return fragment;
+  if (
+    !Array.isArray(rows) ||
+    rows.some(turn =>
+      typeof turn.question !== "string" ||
+      typeof turn.answer !== "string" ||
+      !["gemini", "nvidia", "dss", "error"].includes(turn.source)
+    )
+  ) {
+    throw new Error("Invalid saved messages.");
   }
+
+  const fragment = document.createDocumentFragment();
+
+  const labels = {
+    gemini: "SAVED GEMINI ANSWER · MAY BE OUTDATED",
+    nvidia: "SAVED NVIDIA ANSWER · MAY BE OUTDATED",
+    dss: "SAVED DSS FALLBACK",
+    error: "SAVED ERROR"
+  };
+
+  for (const turn of rows) {
+    bubble("You", turn.question, true, fragment);
+
+    const article = bubble(
+      "Dispatch Assistant", turn.answer, false, fragment
+    );
+
+    article.prepend(
+      node("span", labels[turn.source], "mai-source")
+    );
+
+    article.appendChild(node(
+      "small",
+      turn.created_at
+        ? new Date(turn.created_at).toLocaleString()
+        : "Saved message"
+    ));
+  }
+
+  return fragment;
+}
 
   async function openConversation(id) {
     if (!validId(id)) {
