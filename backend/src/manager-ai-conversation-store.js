@@ -37,7 +37,7 @@ async function loadConversation(db, managerId, conversationId) {
 
   for (const turn of [...turns].reverse()) {
     // DSS fallback is archived, not treated as a Gemini answer.
-    if (turn.source !== "gemini") continue;
+    if (!["gemini", "nvidia"].includes(turn.source)) continue;
 
     history.push(
       {
