@@ -1,80 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="/auth-client.js" data-role="manager"></script>
+  <script src="/auth-client.js" data-role="manager"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DispatchFlow — Drivers</title>
   <script src="/drivers.js?v=2" defer></script>
-    <script src="/demo-driver-accounts.js" defer></script>
+  <script src="/demo-driver-accounts.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --sf-primary: #ee4d2d;
+      --sf-primary-hover: #d73818;
+      --sf-primary-soft: #fff5f2;
+      --sf-dark: #0f172a;
+      --sf-dark-surface: #1e293b;
+      --sf-bg: #f1f5f9;
+      --sf-surface: #ffffff;
+      /* Hệ thống đường viền sắc nét, độ tương phản cao */
+      --sf-border-strong: #94a3b8;
+      --sf-border: #cbd5e1;
+      --sf-border-subtle: #cbd5e1;
+      --sf-text: #0f172a;
+      --sf-text-secondary: #334155;
+      --sf-text-muted: #64748b;
+      --sf-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+      --sf-shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+      --sf-shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+      --sf-radius-sm: 8px;
+      --sf-radius-md: 12px;
+      --sf-radius-lg: 16px;
+    }
+
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      background: #f4f6f8;
-      color: #23313f;
-      font-family: Arial, sans-serif;
+      background: var(--sf-bg);
+      color: var(--sf-text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
     }
 
+    /* ==================== HEADER & NAVIGATION ==================== */
     header {
-      padding: 22px 30px;
-      background: #18232e;
+      padding: 20px 36px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: white;
+      border-bottom: 3px solid var(--sf-primary);
+      box-shadow: var(--sf-shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
-    header strong { font-size: 24px; }
+    header strong {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header strong::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background: var(--sf-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.25);
+    }
 
     nav {
       display: flex;
-      gap: 20px;
-      margin-top: 18px;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
     }
 
-    nav a { color: #b8c6d3; text-decoration: none; }
-    nav a.active { color: #ff946e; }
+    nav a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--sf-radius-sm);
+      border: 1px solid transparent;
+      transition: all 0.18s ease;
+    }
 
+    nav a:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    nav a.active {
+      color: white;
+      background: rgba(238, 77, 45, 0.22);
+      border: 1.5px solid #ee4d2d;
+      font-weight: 600;
+    }
+
+    /* ==================== MAIN CONTAINER ==================== */
     main {
-      max-width: 1200px;
-      margin: 35px auto;
-      padding: 0 20px;
+      max-width: 1260px;
+      margin: 32px auto 60px;
+      padding: 0 24px;
     }
 
-    h1 { margin-bottom: 8px; }
-    .subtitle { color: #6d7c89; }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--sf-text);
+    }
 
+    .subtitle, .muted {
+      color: var(--sf-text-muted);
+      line-height: 1.6;
+      font-size: 14px;
+      margin-top: 0;
+    }
+
+    /* ==================== TOOLBAR & BUTTONS ==================== */
     .toolbar {
       display: flex;
+      flex-wrap: wrap;
+      align-items: center;
       gap: 10px;
-      margin: 25px 0;
+      margin: 24px 0;
+      background: var(--sf-surface);
+      padding: 12px 16px;
+      border-radius: var(--sf-radius-md);
+      border: 1.5px solid var(--sf-border-strong);
+      box-shadow: var(--sf-shadow-sm);
     }
 
     button {
-      padding: 11px 16px;
-      border: 1px solid #dce2e8;
-      border-radius: 7px;
-      background: white;
+      padding: 10px 16px;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      background: var(--sf-surface);
+      color: var(--sf-text);
       cursor: pointer;
       font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: #475569;
+      background: #f8fafc;
     }
 
     .primary {
-      background: #ef6b40;
-      border-color: #ef6b40;
-      color: white;
+      background: var(--sf-primary) !important;
+      border-color: #c23315 !important;
+      color: white !important;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(238, 77, 45, 0.3);
     }
 
-    button:disabled { opacity: 0.6; cursor: wait; }
+    .primary:hover:not(:disabled) {
+      background: var(--sf-primary-hover) !important;
+      border-color: #9a250d !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(238, 77, 45, 0.38);
+    }
 
+    #refresh-drivers {
+      background: var(--sf-surface);
+      color: var(--sf-text-secondary);
+      border: 1.5px solid var(--sf-border-strong);
+    }
+
+    #refresh-drivers:hover:not(:disabled) {
+      background: #f1f5f9;
+      border-color: #475569;
+      color: var(--sf-text);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* ==================== KPI METRIC CARDS ==================== */
+    .sf-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .sf-kpi-card {
+      background: var(--sf-surface);
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      padding: 16px 20px;
+      box-shadow: var(--sf-shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sf-kpi-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--sf-border-strong);
+    }
+
+    .sf-kpi-card.kpi-total::after { background: var(--sf-primary); }
+    .sf-kpi-card.kpi-available::after { background: #059669; }
+    .sf-kpi-card.kpi-offline::after { background: #dc2626; }
+    .sf-kpi-card.kpi-zones::after { background: #2563eb; }
+
+    .sf-kpi-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--sf-text-secondary);
+    }
+
+    .sf-kpi-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--sf-text);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .sf-kpi-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--sf-text-muted);
+    }
+
+    /* ==================== CARD & CONTROL PANEL ==================== */
     .card {
-      padding: 22px;
-      background: white;
-      border: 1px solid #e3e8ed;
-      border-radius: 12px;
+      padding: 24px;
+      background: var(--sf-surface);
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-lg);
+      box-shadow: var(--sf-shadow-md);
     }
 
-    .table-wrapper { overflow-x: auto; }
+    #driver-message {
+      margin: 0 0 16px 0;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border: 1px solid var(--sf-border-strong);
+      border-left: 4px solid var(--sf-primary);
+      border-radius: var(--sf-radius-sm);
+      display: inline-block;
+      color: var(--sf-text);
+    }
+
+    #driver-message:empty {
+      display: none;
+    }
+
+    #driver-message.error {
+      background: #fef2f2;
+      border-color: #f87171;
+      border-left-color: #dc2626;
+      color: #b91c1c;
+    }
+
+    /* Search, Zone Filter, Sort & Category Bar */
+    .sf-control-panel {
+      background: #f8fafc;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      padding: 16px;
+      margin-bottom: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .sf-search-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sf-search-input-wrap {
+      position: relative;
+      flex: 1 1 280px;
+      display: flex;
+      align-items: center;
+    }
+
+    .sf-search-icon {
+      position: absolute;
+      left: 13px;
+      color: #475569;
+      pointer-events: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    #driver-search {
+      padding-left: 38px !important;
+      height: 42px;
+      border-radius: var(--sf-radius-sm);
+      border: 1.5px solid var(--sf-border-strong);
+      background: white;
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+
+    #driver-search:hover {
+      border-color: #475569;
+    }
+
+    #driver-search:focus {
+      outline: none;
+      border-color: var(--sf-primary);
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.18);
+    }
+
+    .sf-filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sf-filter-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--sf-text-secondary);
+      white-space: nowrap;
+    }
+
+    .sf-filter-select {
+      width: auto !important;
+      min-width: 165px;
+      height: 42px;
+      padding: 0 28px 0 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--sf-text);
+      background-color: white;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      cursor: pointer;
+    }
+
+    .sf-filter-select:hover {
+      border-color: #475569;
+    }
+
+    .sf-category-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1.5px dashed var(--sf-border-strong);
+    }
+
+    .sf-chip {
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: white;
+      color: var(--sf-text-secondary);
+      border: 1.5px solid var(--sf-border-strong);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .sf-chip:hover:not(:disabled) {
+      border-color: var(--sf-dark);
+      color: var(--sf-dark);
+      background: #f1f5f9;
+    }
+
+    .sf-chip.active {
+      background: var(--sf-dark) !important;
+      border-color: var(--sf-dark) !important;
+      color: white !important;
+      box-shadow: var(--sf-shadow-sm);
+    }
+
+    .sf-chip-badge {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+    }
+
+    .sf-chip.active .sf-chip-badge {
+      background: rgba(255, 255, 255, 0.22);
+      color: white;
+      border-color: transparent;
+    }
+
+    /* ==================== DATA TABLE ==================== */
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      background: white;
+      box-shadow: var(--sf-shadow-sm);
+    }
 
     table {
       width: 100%;
@@ -83,68 +449,219 @@
     }
 
     th, td {
-      padding: 15px 12px;
+      padding: 14px 16px;
       text-align: left;
-      border-bottom: 1px solid #edf0f3;
+      border-bottom: 1px solid var(--sf-border);
+      border-right: 1px solid #e2e8f0;
+      font-size: 13.5px;
+    }
+
+    th:last-child, td:last-child {
+      border-right: none;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--sf-text-secondary);
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 2px solid var(--sf-border-strong);
+      user-select: none;
+    }
+
+    tbody tr {
+      transition: background-color 0.14s ease;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: #fff3ed;
+    }
+
+    /* Column Specific Styling */
+    #drivers-body td:nth-child(1) {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--sf-dark);
+    }
+
+    #drivers-body td:nth-child(2) {
+      font-weight: 600;
+      color: var(--sf-text);
+    }
+
+    #drivers-body td:nth-child(3) {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
+      color: var(--sf-text-secondary);
     }
 
-    th { background: #f8fafb; color: #6d7c89; }
+    #drivers-body td:nth-child(4) {
+      font-weight: 600;
+      color: #1e40af;
+    }
 
+    #drivers-body td:nth-child(5) {
+      font-weight: 500;
+      color: var(--sf-text);
+    }
+
+    #drivers-body td:nth-child(8) button {
+      padding: 6px 13px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #c23315;
+      background: var(--sf-primary-soft);
+      border: 1.5px solid #f97316;
+      border-radius: 6px;
+    }
+
+    #drivers-body td:nth-child(8) button:hover:not(:disabled) {
+      background: var(--sf-primary);
+      color: white;
+      border-color: #c23315;
+    }
+
+    /* ==================== STATUS BADGES ==================== */
     .badge {
-      display: inline-block;
-      padding: 5px 9px;
-      border-radius: 5px;
-      background: #eef2f6;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #334155;
       text-transform: capitalize;
+      letter-spacing: 0.01em;
+      border: 1.5px solid #94a3b8;
     }
 
-    .badge.available { background: #e8f7ef; color: #24734b; }
-    .badge.offline { background: #ffeded; color: #a84343; }
-    .badge.maintenance { background: #fff0dc; color: #97651a; }
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
 
-    .muted { color: #6d7c89; }
-    .error { color: #b53c3c; }
+    .badge.available {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #34d399;
+    }
 
+    .badge.offline {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #f87171;
+    }
+
+    .badge.maintenance {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #f59e0b;
+    }
+
+    .error {
+      color: #dc2626;
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+
+    /* ==================== DIALOG / MODAL ==================== */
     dialog {
-      width: min(650px, 92vw);
-      max-height: 85vh;
+      width: min(680px, 94vw);
+      max-height: 88vh;
       overflow-y: auto;
-      padding: 25px;
-      border: none;
-      border-radius: 12px;
+      padding: 28px;
+      border: 2px solid var(--sf-dark);
+      border-radius: var(--sf-radius-lg);
+      background: var(--sf-surface);
+      box-shadow: var(--sf-shadow-lg);
+      color: var(--sf-text);
     }
 
-    dialog::backdrop { background: #18232e88; }
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+    }
 
     .dialog-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 15px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--sf-border-strong);
+      margin-bottom: 16px;
     }
 
-    .dialog-header h2 { margin: 0; }
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+    }
+
+    #driver-dialog > p.muted {
+      background: #fff7ed;
+      border: 1.5px solid #fb923c;
+      color: #9a3412;
+      padding: 10px 14px;
+      border-radius: var(--sf-radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0 0 18px 0;
+    }
 
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 18px;
-      margin-top: 25px;
+      margin-top: 16px;
     }
 
     label {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
       font-size: 13px;
+      font-weight: 600;
+      color: var(--sf-text-secondary);
     }
 
     input, select {
       width: 100%;
-      padding: 11px;
-      border: 1px solid #dce2e8;
-      border-radius: 7px;
+      padding: 10px 13px;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      background: white;
       font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--sf-text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:hover, select:hover {
+      border-color: #475569;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--sf-primary);
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.18);
     }
 
     .full-width { grid-column: 1 / -1; }
@@ -153,14 +670,26 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
+      padding-top: 16px;
+      margin-top: 6px;
+      border-top: 2px solid var(--sf-border-strong);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 900px) {
+      .sf-kpi-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 600px) {
+      header { padding: 18px 20px; }
+      main { padding: 0 14px; margin: 20px auto; }
+      .sf-kpi-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
     }
   </style>
-<link rel="stylesheet" href="/app-theme.css">
-<script src="/app-shell.js" defer></script>
+  <link rel="stylesheet" href="/app-theme.css">
+  <script src="/app-shell.js" defer></script>
 </head>
 
 <body class="sf-app">
@@ -181,7 +710,7 @@
 
     <div class="toolbar">
       <button id="add-driver" class="primary">+ Add Driver</button>
-      <button id="refresh-drivers">Refresh</button>
+      <button id="refresh-drivers">↻ Refresh</button>
     </div>
 
     <section class="card">
@@ -297,5 +826,341 @@
       </div>
     </form>
   </dialog>
+
+  <script>
+    (() => {
+      function initialiseDriverDashboardUI() {
+        const tbody = document.getElementById("drivers-body");
+        const tableWrapper = tbody?.closest(".table-wrapper");
+        if (!tableWrapper || document.getElementById("driver-search")) return;
+
+        // 1. KPI Summary Strip
+        const kpiGrid = document.createElement("div");
+        kpiGrid.className = "sf-kpi-grid";
+        kpiGrid.innerHTML = `
+          <div class="sf-kpi-card kpi-total">
+            <span class="sf-kpi-label">Total Drivers</span>
+            <strong class="sf-kpi-value" id="kpi-driver-total">0</strong>
+            <span class="sf-kpi-sub">Registered fleet personnel</span>
+          </div>
+          <div class="sf-kpi-card kpi-available">
+            <span class="sf-kpi-label">Available Now</span>
+            <strong class="sf-kpi-value" id="kpi-driver-available">0</strong>
+            <span class="sf-kpi-sub">Ready for dispatch</span>
+          </div>
+          <div class="sf-kpi-card kpi-offline">
+            <span class="sf-kpi-label">Offline / Inactive</span>
+            <strong class="sf-kpi-value" id="kpi-driver-offline">0</strong>
+            <span class="sf-kpi-sub">Off-duty or vehicle issue</span>
+          </div>
+          <div class="sf-kpi-card kpi-zones">
+            <span class="sf-kpi-label">Active Zones</span>
+            <strong class="sf-kpi-value" id="kpi-driver-zones">0</strong>
+            <span class="sf-kpi-sub">Covered service zones</span>
+          </div>
+        `;
+        tableWrapper.before(kpiGrid);
+
+        // 2. Search, Zone Filter, Sort & Status Category Bar
+        const panel = document.createElement("div");
+        panel.className = "sf-control-panel";
+
+        const topRow = document.createElement("div");
+        topRow.className = "sf-search-top";
+
+        const searchWrap = document.createElement("div");
+        searchWrap.className = "sf-search-input-wrap";
+        searchWrap.innerHTML = `
+          <svg class="sf-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        `;
+
+        const input = document.createElement("input");
+        input.id = "driver-search";
+        input.type = "search";
+        input.placeholder = "Search by driver code, name, phone, zone or vehicle...";
+        input.maxLength = 150;
+        input.setAttribute("aria-label", "Search drivers");
+        input.setAttribute("aria-describedby", "driver-search-status");
+        searchWrap.appendChild(input);
+
+        const filterGroup = document.createElement("div");
+        filterGroup.className = "sf-filter-group";
+
+        const zoneLabel = document.createElement("label");
+        zoneLabel.htmlFor = "driver-zone-filter";
+        zoneLabel.className = "sf-filter-label";
+        zoneLabel.textContent = "Zone:";
+
+        const zoneSelect = document.createElement("select");
+        zoneSelect.id = "driver-zone-filter";
+        zoneSelect.className = "sf-filter-select";
+        zoneSelect.innerHTML = `<option value="all">All Service Zones</option>`;
+
+        const sortLabel = document.createElement("label");
+        sortLabel.htmlFor = "driver-sort";
+        sortLabel.className = "sf-filter-label";
+        sortLabel.textContent = "Sort:";
+
+        const sortSelect = document.createElement("select");
+        sortSelect.id = "driver-sort";
+        sortSelect.className = "sf-filter-select";
+        sortSelect.innerHTML = `
+          <option value="default">Default Order</option>
+          <option value="code-asc">Driver Code: A → Z</option>
+          <option value="name-asc">Full Name: A → Z</option>
+          <option value="name-desc">Full Name: Z → A</option>
+          <option value="zone-asc">Service Zone: A → Z</option>
+          <option value="status-asc">Status: Available First</option>
+        `;
+
+        const clearBtn = document.createElement("button");
+        clearBtn.type = "button";
+        clearBtn.textContent = "Reset Filters";
+        clearBtn.disabled = true;
+
+        filterGroup.append(zoneLabel, zoneSelect, sortLabel, sortSelect, clearBtn);
+        topRow.append(searchWrap, filterGroup);
+
+        // 3. Status Category Chips
+        const categoryBar = document.createElement("div");
+        categoryBar.className = "sf-category-bar";
+
+        const categories = [
+          { key: "all", label: "All Drivers" },
+          { key: "available", label: "Driver Available" },
+          { key: "offline", label: "Driver Offline" },
+          { key: "veh-available", label: "Vehicle Ready" },
+          { key: "veh-maintenance", label: "Vehicle Maintenance" }
+        ];
+
+        let activeCategory = "all";
+        const chipElements = new Map();
+
+        for (const cat of categories) {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "sf-chip" + (cat.key === "all" ? " active" : "");
+          chip.dataset.status = cat.key;
+
+          const textSpan = document.createElement("span");
+          textSpan.textContent = cat.label;
+
+          const badge = document.createElement("span");
+          badge.className = "sf-chip-badge";
+          badge.textContent = "0";
+
+          chip.append(textSpan, badge);
+          chip.addEventListener("click", () => {
+            activeCategory = cat.key;
+            for (const [k, btn] of chipElements.entries()) {
+              btn.classList.toggle("active", k === activeCategory);
+            }
+            filterAndSortDrivers();
+          });
+
+          chipElements.set(cat.key, chip);
+          categoryBar.appendChild(chip);
+        }
+
+        const statusText = document.createElement("p");
+        statusText.id = "driver-search-status";
+        statusText.className = "muted";
+        statusText.setAttribute("role", "status");
+        statusText.style.margin = "0";
+        statusText.style.fontSize = "12.5px";
+
+        panel.append(topRow, categoryBar, statusText);
+        tableWrapper.before(panel);
+
+        let isSorting = false;
+
+        function normalise(value) {
+          return String(value).normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[đĐ]/g, "d")
+            .toLowerCase().trim();
+        }
+
+        function updateZoneOptions(rows) {
+          const currentZone = zoneSelect.value;
+          const zones = new Set();
+
+          for (const row of rows) {
+            const z = (row.cells[3]?.textContent || "").trim();
+            if (z) zones.add(z);
+          }
+
+          const sortedZones = Array.from(zones).sort((a, b) => a.localeCompare(b));
+          zoneSelect.replaceChildren();
+
+          const allOpt = document.createElement("option");
+          allOpt.value = "all";
+          allOpt.textContent = "All Service Zones";
+          zoneSelect.appendChild(allOpt);
+
+          for (const z of sortedZones) {
+            const opt = document.createElement("option");
+            opt.value = z;
+            opt.textContent = z;
+            zoneSelect.appendChild(opt);
+          }
+
+          zoneSelect.value = zones.has(currentZone) ? currentZone : "all";
+          return zones.size;
+        }
+
+        function filterAndSortDrivers() {
+          if (isSorting) return;
+
+          const rows = Array.from(tbody.rows);
+
+          rows.forEach((r, idx) => {
+            if (r.dataset.origIdx === undefined) {
+              r.dataset.origIdx = String(idx);
+            }
+          });
+
+          const zoneCount = updateZoneOptions(rows);
+
+          const counts = {
+            all: rows.length,
+            available: 0,
+            offline: 0,
+            "veh-available": 0,
+            "veh-maintenance": 0
+          };
+
+          for (const row of rows) {
+            const dStatus = (row.cells[5]?.textContent || "").trim().toLowerCase();
+            const vStatus = (row.cells[6]?.textContent || "").trim().toLowerCase();
+
+            if (dStatus === "available") counts.available++;
+            else if (dStatus) counts.offline++;
+
+            if (vStatus === "available") counts["veh-available"]++;
+            else if (vStatus === "maintenance") counts["veh-maintenance"]++;
+          }
+
+          for (const [key, chip] of chipElements.entries()) {
+            const badge = chip.querySelector(".sf-chip-badge");
+            if (badge) badge.textContent = String(counts[key] ?? 0);
+          }
+
+          // Sort rows
+          const sortMode = sortSelect.value;
+          const sortedRows = [...rows].sort((a, b) => {
+            if (sortMode === "code-asc") {
+              return (a.cells[0]?.textContent || "").localeCompare(b.cells[0]?.textContent || "");
+            }
+            if (sortMode === "name-asc") {
+              return (a.cells[1]?.textContent || "").localeCompare(b.cells[1]?.textContent || "");
+            }
+            if (sortMode === "name-desc") {
+              return (b.cells[1]?.textContent || "").localeCompare(a.cells[1]?.textContent || "");
+            }
+            if (sortMode === "zone-asc") {
+              return (a.cells[3]?.textContent || "").localeCompare(b.cells[3]?.textContent || "");
+            }
+            if (sortMode === "status-asc") {
+              const stA = (a.cells[5]?.textContent || "").trim().toLowerCase() === "available" ? 0 : 1;
+              const stB = (b.cells[5]?.textContent || "").trim().toLowerCase() === "available" ? 0 : 1;
+              return stA - stB;
+            }
+            return Number(a.dataset.origIdx) - Number(b.dataset.origIdx);
+          });
+
+          const orderChanged = sortedRows.some((r, i) => r !== rows[i]);
+          if (orderChanged) {
+            isSorting = true;
+            tbody.append(...sortedRows);
+            isSorting = false;
+          }
+
+          // Filter rows
+          const terms = normalise(input.value).split(/\s+/).filter(Boolean);
+          const selectedZone = zoneSelect.value;
+          let matched = 0;
+
+          for (const row of sortedRows) {
+            const rowText = normalise([
+              row.cells[0]?.textContent || "",
+              row.cells[1]?.textContent || "",
+              row.cells[2]?.textContent || "",
+              row.cells[3]?.textContent || "",
+              row.cells[4]?.textContent || ""
+            ].join(" "));
+
+            const rowZone = (row.cells[3]?.textContent || "").trim();
+            const dStatus = (row.cells[5]?.textContent || "").trim().toLowerCase();
+            const vStatus = (row.cells[6]?.textContent || "").trim().toLowerCase();
+
+            const zoneMatch = selectedZone === "all" || rowZone === selectedZone;
+            const termMatch = terms.every(t => rowText.includes(t));
+
+            let catMatch = true;
+            if (activeCategory === "available") catMatch = dStatus === "available";
+            else if (activeCategory === "offline") catMatch = dStatus !== "available";
+            else if (activeCategory === "veh-available") catMatch = vStatus === "available";
+            else if (activeCategory === "veh-maintenance") catMatch = vStatus === "maintenance";
+
+            const visible = zoneMatch && termMatch && catMatch;
+            row.hidden = !visible;
+            if (visible) matched++;
+          }
+
+          // Update KPIs
+          document.getElementById("kpi-driver-total").textContent = String(rows.length);
+          document.getElementById("kpi-driver-available").textContent = String(counts.available);
+          document.getElementById("kpi-driver-offline").textContent = String(counts.offline);
+          document.getElementById("kpi-driver-zones").textContent = String(zoneCount);
+
+          const hasActiveFilter =
+            input.value.length > 0 ||
+            selectedZone !== "all" ||
+            activeCategory !== "all" ||
+            sortSelect.value !== "default";
+
+          clearBtn.disabled = !hasActiveFilter;
+
+          statusText.textContent = hasActiveFilter
+            ? `Showing ${matched} of ${rows.length} drivers matching current filters.`
+            : `Showing all ${rows.length} registered drivers across ${zoneCount} service zones.`;
+        }
+
+        input.addEventListener("input", filterAndSortDrivers);
+        zoneSelect.addEventListener("change", filterAndSortDrivers);
+        sortSelect.addEventListener("change", filterAndSortDrivers);
+
+        clearBtn.addEventListener("click", () => {
+          input.value = "";
+          zoneSelect.value = "all";
+          sortSelect.value = "default";
+          activeCategory = "all";
+          for (const [k, btn] of chipElements.entries()) {
+            btn.classList.toggle("active", k === "all");
+          }
+          filterAndSortDrivers();
+          input.focus();
+        });
+
+        new MutationObserver(() => {
+          if (!isSorting) filterAndSortDrivers();
+        }).observe(tbody, { childList: true });
+
+        filterAndSortDrivers();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener(
+          "DOMContentLoaded", initialiseDriverDashboardUI, { once: true }
+        );
+      } else {
+        initialiseDriverDashboardUI();
+      }
+    })();
+  </script>
 </body>
 </html>
