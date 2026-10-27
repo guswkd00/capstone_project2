@@ -13,7 +13,8 @@
     if (session.user.role !== "manager") return;
 
     document.body.classList.add("sf-app");
-        // Load the assistant after verifying a Manager session.
+
+    // Load the assistant after verifying a Manager session.
     (async () => {
       if (window.sfManagerAILoading) return;
       window.sfManagerAILoading = true;
@@ -41,15 +42,15 @@
 
       try {
         await Promise.all([
-          loadAIAsset("link", "/manager-ai-chat.css?v=threads-1"),
-          loadAIAsset("script", "/manager-ai-widget.js?v=threads-1")
+          loadAIAsset("link", "/manager-ai-chat.css?v=nvidia-1"),
+          loadAIAsset("script", "/manager-ai-widget.js?v=nvidia-1")
         ]);
 
         window.mountManagerAIWidget();
 
         await loadAIAsset(
           "script",
-          "/manager-ai-chat.js?v=threads-1"
+          "/manager-ai-chat.js?v=nvidia-1"
         );
       } catch {
         document.getElementById("manager-ai-widget")?.remove();
