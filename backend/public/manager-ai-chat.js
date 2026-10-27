@@ -309,7 +309,7 @@
       rows.some(turn =>
         typeof turn.question !== "string" ||
         typeof turn.answer !== "string" ||
-        !["gemini", "dss", "error"].includes(turn.source)
+        !["gemini", "nvidia", "dss", "error"].includes(turn.source)
       )
     ) {
       throw new Error("Invalid saved messages.");
@@ -439,7 +439,7 @@
   function showAnswer(data) {
     if (
       !data ||
-      !["gemini", "dss"].includes(data.source) ||
+      !["gemini", "nvidia", "dss"].includes(data.source) ||
       typeof data.answer !== "string" ||
       !Array.isArray(data.suggestions)
     ) {
@@ -449,12 +449,14 @@
     const article = bubble("Dispatch Assistant", data.answer);
 
     article.prepend(node(
-      "span",
-      data.source === "gemini"
-        ? "GEMINI · REVIEW BEFORE APPROVING"
-        : "STANDARD DSS · AI UNAVAILABLE",
-      "mai-source"
-    ));
+  "span",
+  {
+    gemini: "GEMINI · REVIEW BEFORE APPROVING",
+    nvidia: "NVIDIA · REVIEW BEFORE APPROVING",
+    dss: "STANDARD DSS · AI UNAVAILABLE"
+  }[data.source],
+  "mai-source"
+));
 
     for (const driver of data.suggestions) {
       const card = node("div", "", "mai-driver-card");
