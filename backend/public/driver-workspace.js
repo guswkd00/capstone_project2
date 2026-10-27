@@ -93,8 +93,12 @@
       $("nav-driver-zone").textContent =
         profile.service_zone || "No assigned hub";
 
-      document.querySelector(".avatar").textContent =
-        profile.full_name.trim().slice(0, 1);
+            const avatar = document.querySelector(".avatar");
+
+      if (!avatar.querySelector("img")) {
+        avatar.textContent =
+          profile.full_name.trim().slice(0, 1);
+      }
 
       const list = node("dl");
       list.className = "df-fields";
