@@ -448,13 +448,14 @@
 
     const article = bubble("Dispatch Assistant", data.answer);
 
-    article.prepend(node(
+   article.prepend(node(
   "span",
   {
-    gemini: "GEMINI · REVIEW BEFORE APPROVING",
-    nvidia: "NVIDIA · REVIEW BEFORE APPROVING",
-    dss: "STANDARD DSS · AI UNAVAILABLE"
-  }[data.source],
+    gemini: "SAVED GEMINI ANSWER · MAY BE OUTDATED",
+    nvidia: "SAVED NVIDIA ANSWER · MAY BE OUTDATED",
+    dss: "SAVED DSS FALLBACK",
+    error: "SAVED ERROR"
+  }[turn.source],
   "mai-source"
 ));
 
