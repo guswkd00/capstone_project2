@@ -478,23 +478,63 @@ Map tiles require access to OpenStreetMap. DNS or network failures can leave a g
 
 GitHub Actions runs on pushes, pull requests and manual execution.
 
-The workflow performs:
+The workflow contains two jobs:
 
-1. Dependency installation with `npm ci`.
-2. JavaScript syntax checks, including classic inline HTML scripts.
-3. Dispatch-model tests.
+1. **JavaScript and unit tests**
+   - Install locked dependencies with `npm ci`.
+   - Check JavaScript syntax, including inline HTML scripts.
+   - Run 5 DSS tests, 11 offline Manager AI tests and 5 Driver policy tests.
 
-Run the model tests from `backend/`:
+2. **Driver MySQL integration**
+   - Start a separate MySQL 8.4 service.
+   - Apply schemas in a disposable test database.
+   - Run 11 Driver API/database integration tests covering authorization,
+     concurrent acceptance, delivery progression, rewards, wallet requests,
+     GPS validation and order messages.
+
+Run the unit suites from `backend/`:
 
 ```bash
-node --test src/dss.test.js
+node --test \
+  src/dss.test.js \
+  src/manager-ai.test.js \
+  src/driver-workspace.test.js
 ```
 
-The current `npm test` script is a placeholder. CI calls the actual test file directly.
+The current `npm test` script remains a placeholder.
+CI runs the commands listed above directly.
 
-CI does not use production credentials, send email, run migrations or verify the complete browser/database workflow.
+Integration tests use synthetic fixtures in a disposable database.
+They do not use production credentials or the deployed TiDB database.
 
-A green CI run confirms the configured checks passed; it does not prove every deployed feature works.
+Browser checks are separate from CI. A green CI run confirms the
+configured checks passed; it does not verify every deployed feature.
+
+## Driver workspace
+
+The integrated Driver page provides:
+
+- Authenticated profile and assigned deliveries.
+- Validated delivery progression and required photo evidence.
+- GPS sharing and pickup-aware route recommendations.
+- Payment filters and configurable delivery distance limits.
+- Persisted earnings, reward points and wallet requests.
+- Order messages between Drivers and Manager support.
+
+Managers can open **Fleet & Data → Driver Support** to review
+withdrawal/top-up requests and reply to order messages.
+
+Apply `backend/sql/013-driver-workspace.sql` before deploying these
+features to an existing database with the required core schemas.
+In the TiDB SQL Editor, execute each CREATE TABLE statement separately.
+
+Bank transfers require external verification and Manager confirmation.
+Customer messaging providers and payment gateways are not connected.
+
+See [Driver workspace setup, APIs, policy and verification](docs/DRIVER_WORKSPACE.md)
+for database prerequisites, configuration, test commands and integration
+boundaries.
+
 
 ## Render deployment
 
