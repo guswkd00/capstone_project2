@@ -6,10 +6,12 @@
 
   if (!root.querySelector("#mai-recents")) {
     const status = root.querySelector("#mai-status");
+
     if (status) {
       status.textContent =
         "Assistant files are out of date. Refresh with Ctrl + F5.";
     }
+
     return;
   }
 
@@ -22,10 +24,18 @@
   const recents = get("recents");
   const form = get("form");
 
-  let csrf = "", storageKey = "";
-  let ready = false, busy = false, sending = false;
-  let active = null, recentRows = [];
-  let recentCursor = null, messageCursor = null;
+  let csrf = "";
+  let storageKey = "";
+
+  let ready = false;
+  let busy = false;
+  let sending = false;
+
+  let active = null;
+  let recentRows = [];
+
+  let recentCursor = null;
+  let messageCursor = null;
   let uncertain = false;
 
   const validId = id =>
@@ -50,14 +60,18 @@
 
     get("send").disabled =
       locked || uncertain || !question.value.trim();
+
     get("send").textContent = sending ? "Thinking..." : "Send";
 
     question.disabled = locked;
     order.disabled = locked || !!active;
 
     for (const id of [
-      "clear", "refresh-orders", "refresh-recents",
-      "more-recents", "older-messages"
+      "clear",
+      "refresh-orders",
+      "refresh-recents",
+      "more-recents",
+      "older-messages"
     ]) {
       get(id).disabled = locked;
     }
@@ -71,6 +85,7 @@
 
   async function run(task) {
     if (busy) return;
+
     busy = true;
     controls();
 
@@ -91,17 +106,22 @@
   }
 
   async function request(
-    path, method = "GET", body, timeout = 15000
+    path,
+    method = "GET",
+    body,
+    timeout = 15000
   ) {
     const response = await fetch(path, {
       method,
       credentials: "same-origin",
       cache: "no-store",
       signal: AbortSignal.timeout(timeout),
-      headers: method === "GET" ? {} : {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": csrf
-      },
+      headers: method === "GET"
+        ? {}
+        : {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrf
+        },
       ...(body === undefined
         ? {}
         : { body: JSON.stringify(body) })
@@ -175,8 +195,10 @@
       )
     ) {
       const option = node(
-        "option", `Order #${value} (saved conversation)`
+        "option",
+        `Order #${value} (saved conversation)`
       );
+
       option.value = value;
       order.appendChild(option);
     }
@@ -185,13 +207,23 @@
     describeOrder();
   }
 
-  function bubble(label, text, user = false, target = messages) {
+  function bubble(
+    label,
+    text,
+    user = false,
+    target = messages
+  ) {
     const el = node(
-      "article", "",
+      "article",
+      "",
       `mai-message ${user ? "mai-user" : "mai-assistant"}`
     );
 
-    el.append(node("strong", label), node("p", text));
+    el.append(
+      node("strong", label),
+      node("p", text)
+    );
+
     target.appendChild(el);
     return el;
   }
@@ -200,12 +232,18 @@
     recents.replaceChildren();
 
     for (const item of recentRows) {
-      const button = node("button", "", "mai-recent-item");
+      const button = node(
+        "button",
+        "",
+        "mai-recent-item"
+      );
+
       button.type = "button";
       button.title = item.title;
 
       button.setAttribute(
-        "aria-current", String(item.id === active?.id)
+        "aria-current",
+        String(item.id === active?.id)
       );
 
       const date = new Date(item.updated_at);
@@ -244,7 +282,8 @@
       if (
         !Array.isArray(result.data) ||
         result.data.some(item =>
-          !validId(item.id) || typeof item.title !== "string"
+          !validId(item.id) ||
+          typeof item.title !== "string"
         )
       ) {
         throw new Error("Invalid conversation list.");
@@ -304,47 +343,55 @@
   }
 
   function archiveFragment(rows) {
-  if (
-    !Array.isArray(rows) ||
-    rows.some(turn =>
-      typeof turn.question !== "string" ||
-      typeof turn.answer !== "string" ||
-      !["gemini", "nvidia", "dss", "error"].includes(turn.source)
-    )
-  ) {
-    throw new Error("Invalid saved messages.");
+    if (
+      !Array.isArray(rows) ||
+      rows.some(turn =>
+        typeof turn.question !== "string" ||
+        typeof turn.answer !== "string" ||
+        !["gemini", "nvidia", "dss", "error"].includes(turn.source)
+      )
+    ) {
+      throw new Error("Invalid saved messages.");
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    const labels = {
+      gemini: "SAVED GEMINI ANSWER · MAY BE OUTDATED",
+      nvidia: "SAVED NVIDIA ANSWER · MAY BE OUTDATED",
+      dss: "SAVED DSS FALLBACK",
+      error: "SAVED ERROR"
+    };
+
+    for (const turn of rows) {
+      bubble(
+        "You",
+        turn.question,
+        true,
+        fragment
+      );
+
+      const article = bubble(
+        "Dispatch Assistant",
+        turn.answer,
+        false,
+        fragment
+      );
+
+      article.prepend(
+        node("span", labels[turn.source], "mai-source")
+      );
+
+      article.appendChild(node(
+        "small",
+        turn.created_at
+          ? new Date(turn.created_at).toLocaleString()
+          : "Saved message"
+      ));
+    }
+
+    return fragment;
   }
-
-  const fragment = document.createDocumentFragment();
-
-  const labels = {
-    gemini: "SAVED GEMINI ANSWER · MAY BE OUTDATED",
-    nvidia: "SAVED NVIDIA ANSWER · MAY BE OUTDATED",
-    dss: "SAVED DSS FALLBACK",
-    error: "SAVED ERROR"
-  };
-
-  for (const turn of rows) {
-    bubble("You", turn.question, true, fragment);
-
-    const article = bubble(
-      "Dispatch Assistant", turn.answer, false, fragment
-    );
-
-    article.prepend(
-      node("span", labels[turn.source], "mai-source")
-    );
-
-    article.appendChild(node(
-      "small",
-      turn.created_at
-        ? new Date(turn.created_at).toLocaleString()
-        : "Saved message"
-    ));
-  }
-
-  return fragment;
-}
 
   async function openConversation(id) {
     if (!validId(id)) {
@@ -366,6 +413,7 @@
     active = result.conversation;
     uncertain = false;
     messageCursor = result.next_before;
+
     messages.replaceChildren(fragment);
 
     if (!result.data.length) {
@@ -421,15 +469,19 @@
     order.replaceChildren();
 
     const general = node(
-      "option", "General questions (no order)"
+      "option",
+      "General questions (no order)"
     );
+
     general.value = "";
     order.appendChild(general);
 
     for (const item of result.data) {
       const option = node(
-        "option", `${item.order_code} · ${item.status}`
+        "option",
+        `${item.order_code} · ${item.status}`
       );
+
       option.value = String(item.id);
       order.appendChild(option);
     }
@@ -447,65 +499,107 @@
       throw new Error("Invalid assistant response.");
     }
 
-    const article = bubble("Dispatch Assistant", data.answer);
+    const isVietnamese = data.language === "vi";
 
- article.prepend(node(
-  "span",
-  {
-    gemini: "GEMINI · REVIEW BEFORE APPROVING",
-    nvidia: "NVIDIA · REVIEW BEFORE APPROVING",
-    dss: "STANDARD DSS · AI UNAVAILABLE"
-  }[data.source],
-  "mai-source"
-));
+    const article = bubble(
+      "Dispatch Assistant",
+      data.answer
+    );
+
+    article.prepend(node(
+      "span",
+      {
+        gemini: "GEMINI · REVIEW BEFORE APPROVING",
+        nvidia: "NVIDIA · REVIEW BEFORE APPROVING",
+        dss: "STANDARD DSS · AI UNAVAILABLE"
+      }[data.source],
+      "mai-source"
+    ));
 
     for (const driver of data.suggestions) {
-      const card = node("div", "", "mai-driver-card");
+      const card = node(
+        "div",
+        "",
+        "mai-driver-card"
+      );
+
+      const driverLabel = driver.driver_code || (
+        isVietnamese
+          ? `Tài xế ${driver.driver_id}`
+          : `Driver ${driver.driver_id}`
+      );
+
+      const pickupText = isVietnamese
+        ? `Khoảng cách đến điểm lấy hàng: ${driver.pickup_km ?? "—"} km · Thời gian dự kiến: ${driver.eta_minutes ?? "—"} phút`
+        : `Pickup: ${driver.pickup_km ?? "—"} km · ETA: ${driver.eta_minutes ?? "—"} min`;
+
+      const workloadText = isVietnamese
+        ? `Đơn đang thực hiện: ${driver.active_orders ?? "—"} · Điểm DSS: ${driver.score ?? "—"}`
+        : `Active orders: ${driver.active_orders ?? "—"} · DSS score: ${driver.score ?? "—"}`;
 
       card.append(
-        node(
-          "strong",
-          driver.driver_code || `Driver ${driver.driver_id}`
-        ),
+        node("strong", driverLabel),
         node("p", driver.reason),
         node(
           "p",
-          `Pickup: ${driver.pickup_km ?? "—"} km · ETA: ${driver.eta_minutes ?? "—"} min`,
+          pickupText,
           "mai-driver-stats"
         ),
         node(
           "p",
-          `Active orders: ${driver.active_orders ?? "—"} · DSS score: ${driver.score ?? "—"}`,
+          workloadText,
           "mai-driver-stats"
         )
       );
 
       if (driver.is_dss_recommended) {
-        card.appendChild(node("small", "Top DSS recommendation"));
+        card.appendChild(node(
+          "small",
+          isVietnamese
+            ? "Đề xuất hàng đầu của DSS"
+            : "Top DSS recommendation"
+        ));
       }
 
       const orderId = Number(data.order?.id);
       const driverId = Number(driver.driver_id);
 
       if (
-        Number.isSafeInteger(orderId) && orderId > 0 &&
-        Number.isSafeInteger(driverId) && driverId > 0
+        Number.isSafeInteger(orderId) &&
+        orderId > 0 &&
+        Number.isSafeInteger(driverId) &&
+        driverId > 0
       ) {
+        const reviewText = isVietnamese
+          ? (
+            driver.currently_assigned
+              ? "Xem phân công"
+              : "Xem xét phân công"
+          )
+          : (
+            driver.currently_assigned
+              ? "View Assignment"
+              : "Review Assignment"
+          );
+
         const link = node(
           "a",
-          driver.currently_assigned
-            ? "View Assignment"
-            : "Review Assignment",
+          reviewText,
           "mai-review"
         );
 
-        const url = new URL("/dispatch.html", location.origin);
+        const url = new URL(
+          "/dispatch.html",
+          location.origin
+        );
+
         url.searchParams.set("order", String(orderId));
         url.searchParams.set("driver", String(driverId));
 
         link.href = url.href;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
+
         card.appendChild(link);
       }
 
@@ -517,19 +611,25 @@
       ...(data.warnings || [])
     ];
 
-       if (data.candidate_list_limited) {
+    if (data.candidate_list_limited) {
       notes.push(
-        data.language === "vi"
+        isVietnamese
           ? `Dữ liệu gửi cho AI gồm ${data.supplied_candidates} trong tổng số ${data.total_candidates} tài xế ứng viên.`
           : `Context includes ${data.supplied_candidates} of ${data.total_candidates} candidates.`
       );
     }
 
     if (notes.length) {
-      const list = node("ul", "", "mai-notes");
+      const list = node(
+        "ul",
+        "",
+        "mai-notes"
+      );
 
       for (const note of [...new Set(notes)].slice(0, 12)) {
-        list.appendChild(node("li", String(note)));
+        list.appendChild(
+          node("li", String(note))
+        );
       }
 
       article.appendChild(list);
@@ -543,6 +643,7 @@
     controls();
 
     const text = question.value.trim();
+
     let userBubble;
     let submitted = false;
     let received = false;
@@ -553,7 +654,9 @@
           "/api/manager-ai/conversations",
           "POST",
           {
-            order_id: order.value ? Number(order.value) : null
+            order_id: order.value
+              ? Number(order.value)
+              : null
           }
         );
 
@@ -563,6 +666,7 @@
 
         active = result.data;
         remember();
+
         get("thread-title").textContent = active.title;
 
         await loadRecents();
@@ -581,7 +685,8 @@
           question: text,
           conversation_id: active.id,
           order_id: active.order_id == null
-            ? null : Number(active.order_id)
+            ? null
+            : Number(active.order_id)
         },
         55000
       );
@@ -608,8 +713,10 @@
         question.value = "";
       } else {
         uncertain = true;
+
         userBubble.appendChild(node(
-          "small", "History save not confirmed."
+          "small",
+          "History save not confirmed."
         ));
       }
 
@@ -627,7 +734,9 @@
         !response.ok || !saved
       );
     } catch (error) {
-      if (submitted && !received) uncertain = true;
+      if (submitted && !received) {
+        uncertain = true;
+      }
 
       if (userBubble) {
         userBubble.appendChild(node(
@@ -640,7 +749,9 @@
 
       throw error;
     } finally {
-      if (active) await loadRecents();
+      if (active) {
+        await loadRecents();
+      }
     }
   }
 
@@ -648,8 +759,11 @@
     event.preventDefault();
 
     if (
-      !ready || busy || uncertain ||
-      !form.reportValidity() || !question.value.trim()
+      !ready ||
+      busy ||
+      uncertain ||
+      !form.reportValidity() ||
+      !question.value.trim()
     ) {
       return;
     }
@@ -660,7 +774,9 @@
   question.addEventListener("input", controls);
 
   get("clear").addEventListener("click", () => {
-    if (!busy && ready) newChat();
+    if (!busy && ready) {
+      newChat();
+    }
   });
 
   get("refresh-recents").addEventListener("click", () => {
@@ -686,7 +802,8 @@
 
   get("delete-chat").addEventListener("click", () => {
     if (
-      !active || busy ||
+      !active ||
+      busy ||
       !confirm("Delete this conversation and all its messages?")
     ) {
       return;
@@ -700,12 +817,15 @@
 
       newChat();
       await loadRecents();
+
       status("Conversation deleted.");
     });
   });
 
   root.addEventListener("mai:open", () => {
-    if (ready && !busy) run(() => loadRecents());
+    if (ready && !busy) {
+      run(() => loadRecents());
+    }
   });
 
   controls();
