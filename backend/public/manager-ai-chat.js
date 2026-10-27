@@ -517,9 +517,11 @@
       ...(data.warnings || [])
     ];
 
-    if (data.candidate_list_limited) {
+       if (data.candidate_list_limited) {
       notes.push(
-        `Context includes ${data.supplied_candidates} of ${data.total_candidates} candidates.`
+        data.language === "vi"
+          ? `Dữ liệu gửi cho AI gồm ${data.supplied_candidates} trong tổng số ${data.total_candidates} tài xế ứng viên.`
+          : `Context includes ${data.supplied_candidates} of ${data.total_candidates} candidates.`
       );
     }
 
