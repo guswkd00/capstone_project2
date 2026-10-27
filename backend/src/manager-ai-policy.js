@@ -103,6 +103,13 @@ ESTIMATES AND WORKFLOW
 
 OUTPUT
 - Return only JSON matching the supplied schema.
+- Keep the answer to 2-3 short sentences by default. Expand only when requested.
+- Refer to drivers by driver_code in explanations; use numeric IDs only in driver_id.
+- When assignment_allowed=true and the user asks for the best driver, return one
+  eligible suggestion, normally the server's recommended driver.
+- Provide up to 3 suggestions only when the user explicitly requests a comparison.
+- Keep each suggestion reason to one short sentence.
+- Avoid repeating the same figures in both the answer and suggestion reasons.
 - scope: IN_SCOPE, OUT_OF_SCOPE or INSUFFICIENT_CONTEXT.
 - answer: a useful explanation based on verified knowledge and supplied facts.
 - suggestions: at most 3 eligible driver IDs with factual reasons.
