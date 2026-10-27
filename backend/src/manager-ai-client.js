@@ -1,4 +1,19 @@
 "use strict";
+const { askNvidiaAI } = require("./manager-ai-nvidia-client");
+
+function getAIProvider() {
+  const provider =
+    process.env.AI_PROVIDER?.trim().toLowerCase() || "gemini";
+
+  if (!["gemini", "nvidia"].includes(provider)) {
+    throw aiError(
+      503,
+      "AI provider is not configured correctly. Use the standard DSS."
+    );
+  }
+
+  return provider;
+}
 
 const {
   LIMITS, SYSTEM_INSTRUCTION, RESPONSE_SCHEMA
@@ -13,6 +28,12 @@ async function askManagerAI(
   { question, context, history = [] } = {},
   fetchImpl = fetch
 ) {
+  if (getAIProvider() === "nvidia") {
+  return askNvidiaAI(
+    { question, context, history },
+    fetchImpl
+  );
+}
   const key = process.env.GEMINI_API_KEY?.trim();
   const model = process.env.GEMINI_MODEL?.trim();
 
@@ -160,4 +181,4 @@ async function askManagerAI(
   }
 }
 
-module.exports = { askManagerAI };
+module.exports = { askManagerAI, getAIProvider };
