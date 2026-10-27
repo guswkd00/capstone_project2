@@ -291,3 +291,232 @@ body.sf-app .sf-dropdown button.sf-logout {
   font-weight: 400;
   cursor: pointer;
 }
+
+/* Manager navigation: Shopee orange sidebar. Driver and login layouts stay scoped out. */
+body.sf-manager-layout {
+  --sf-sidebar-width: 256px;
+  padding-left: var(--sf-sidebar-width);
+}
+body.sf-manager-layout > #sf-manager-header {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sf-sidebar-width);
+  height: 100dvh;
+  padding: 30px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(165deg, #ee4d2d 0%, #e94322 65%, #d93818 100%);
+  color: #fff;
+  border: 0;
+  box-shadow: 5px 0 24px #9f2c1614;
+  z-index: 1100;
+}
+body.sf-manager-layout .sf-header-top { display: block; padding: 0 12px 28px; }
+body.sf-manager-layout .sf-brand {
+  display: block;
+  color: #fff;
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -.8px;
+}
+body.sf-manager-layout .sf-brand-caption {
+  display: block;
+  margin-top: 7px;
+  color: #ffe2d7;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.7px;
+}
+body.sf-manager-layout #sf-manager-header .sf-navigation {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff60 transparent;
+}
+body.sf-manager-layout #sf-manager-header .sf-navigation > a,
+body.sf-manager-layout #sf-manager-header .sf-navigation summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 12px;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: background .15s ease;
+}
+.sf-menu-icon { width: 19px; height: 19px; flex-shrink: 0; }
+body.sf-manager-layout #sf-manager-header .sf-navigation > a:hover,
+body.sf-manager-layout #sf-manager-header .sf-navigation summary:hover {
+  color: #fff;
+  background: #ffffff1f;
+}
+body.sf-manager-layout #sf-manager-header .sf-navigation > a[aria-current="page"],
+body.sf-manager-layout #sf-manager-header .sf-navigation summary.sf-current-section {
+  color: #b52d14;
+  background: #fff0e9;
+  box-shadow: 0 2px 5px #a02d1010;
+}
+body.sf-manager-layout #sf-manager-header .sf-navigation details { position: relative; flex-shrink: 0; }
+body.sf-manager-layout #sf-manager-header .sf-navigation summary::after {
+  content: "⌄";
+  color: inherit;
+  margin-left: auto;
+  transition: transform .15s ease;
+}
+body.sf-manager-layout #sf-manager-header .sf-navigation details[open] > summary::after {
+  transform: rotate(180deg);
+}
+body.sf-manager-layout #sf-manager-header .sf-dropdown {
+  position: static;
+  min-width: 0;
+  margin: 6px 0 4px 21px;
+  padding: 0 0 0 13px;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid #ffffff50;
+  border-radius: 0;
+  box-shadow: none;
+}
+body.sf-manager-layout #sf-manager-header .sf-dropdown a,
+body.sf-manager-layout #sf-manager-header .sf-dropdown button.sf-logout {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  margin: 2px 0;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: #fff4ef;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  box-shadow: none;
+  transform: none;
+}
+body.sf-manager-layout #sf-manager-header .sf-dropdown a:hover,
+body.sf-manager-layout #sf-manager-header .sf-dropdown button.sf-logout:hover:not(:disabled) {
+  background: #ffffff20;
+  color: #fff;
+}
+body.sf-manager-layout #sf-manager-header .sf-dropdown a[aria-current="page"] {
+  background: #ffffff26;
+  color: #fff;
+  font-weight: 700;
+}
+body.sf-manager-layout #sf-manager-header .sf-account-menu {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #ffffff38;
+}
+body.sf-manager-layout .sf-sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 4px 0;
+  padding: 18px 8px 0;
+  border-top: 1px solid #ffffff38;
+}
+body.sf-manager-layout .sf-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 1px solid #ffffff40;
+  border-radius: 10px;
+  background: #ffffff20;
+  font-size: 14px;
+  font-weight: 700;
+}
+body.sf-manager-layout .sf-user {
+  color: #fff2eb;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.sf-mobile-bar, .sf-sidebar-backdrop { display: none; }
+body.sf-manager-layout #sf-manager-header :is(a, button, summary):focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+}
+@media (max-width: 900px) {
+  body.sf-manager-layout { padding-left: 0; padding-top: 62px; }
+  body.sf-manager-layout > #sf-manager-header {
+    width: min(280px, 85vw);
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+  }
+  body.sf-manager-layout.sf-sidebar-open { overflow: hidden; }
+  body.sf-manager-layout.sf-sidebar-open > #sf-manager-header { transform: translateX(0); }
+  body.sf-manager-layout .sf-mobile-bar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 1000;
+    height: 62px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ee4d2d;
+    color: #fff;
+    box-shadow: 0 2px 10px #b8301420;
+  }
+  body.sf-manager-layout .sf-mobile-bar a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 21px;
+    font-weight: 800;
+  }
+  body.sf-manager-layout button.sf-sidebar-toggle {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #ffffff55;
+    background: #ffffff15;
+    color: #fff;
+    font-size: 23px;
+  }
+  body.sf-manager-layout button.sf-sidebar-backdrop:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    background: #11182780;
+    padding: 0;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.sf-manager-layout > #sf-manager-header { transition: none; }
+}
+@media print {
+  body.sf-manager-layout { padding-left: 0; padding-top: 0; }
+  body.sf-manager-layout > #sf-manager-header,
+  body.sf-manager-layout .sf-mobile-bar,
+  body.sf-manager-layout .sf-sidebar-backdrop { display: none !important; }
+}
