@@ -95,11 +95,11 @@ async function askManagerAI(
     }
 
     if (!response.ok) {
-      throw aiError(
-        503,
-        "Gemini is unavailable or access was rejected. Use the standard DSS."
-      );
-    }
+  throw aiError(
+    503,
+    `Gemini API returned HTTP ${response.status}. Use the standard DSS.`
+  );
+}
 
     const raw = await response.text();
 
