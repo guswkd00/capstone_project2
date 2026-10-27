@@ -50,7 +50,7 @@
 
         await loadAIAsset(
           "script",
-          "/manager-ai-chat.js?v=nvidia-1"
+          "/manager-ai-chat.js?v=nvidia-2"
         );
       } catch {
         document.getElementById("manager-ai-widget")?.remove();
