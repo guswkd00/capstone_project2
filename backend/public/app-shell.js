@@ -13,8 +13,7 @@
     if (session.user.role !== "manager") return;
 
     document.body.classList.add("sf-app");
-
-    // Load the assistant after verifying a Manager session.
+        // Load the assistant after verifying a Manager session.
     (async () => {
       if (window.sfManagerAILoading) return;
       window.sfManagerAILoading = true;
@@ -42,15 +41,15 @@
 
       try {
         await Promise.all([
-          loadAIAsset("link", "/manager-ai-chat.css?v=nvidia-1"),
-          loadAIAsset("script", "/manager-ai-widget.js?v=nvidia-1")
+          loadAIAsset("link", "/manager-ai-chat.css?v=threads-1"),
+          loadAIAsset("script", "/manager-ai-widget.js?v=threads-1")
         ]);
 
         window.mountManagerAIWidget();
 
         await loadAIAsset(
           "script",
-          "/manager-ai-chat.js?v=nvidia-2"
+          "/manager-ai-chat.js?v=threads-1"
         );
       } catch {
         document.getElementById("manager-ai-widget")?.remove();
@@ -93,7 +92,10 @@
       return link;
     }
 
-    addLink(navigation, "Dashboard", "/dashboard.html");
+    const dashboardLink = addLink(navigation, "Dashboard & Reports", "/dashboard.html");
+    if (window.location.pathname === "/dashboard.html") {
+      dashboardLink.setAttribute("aria-current", "page");
+    }
 
     const menus = [
       ["Orders", [
@@ -109,13 +111,15 @@
         ["Drivers", "/drivers.html"],
         ["Vehicles", "/fleet.html"]
       ]],
-      ["Reports", [
-        ["Delivery Performance", "/dashboard.html"]
-      ]],
       ["Account", [
-        ["Profile", "/account.html"]
+        ["Account", "/account.html"]
       ]]
     ];
+
+    const logout = document.createElement("button");
+    logout.type = "button";
+    logout.className = "sf-logout";
+    logout.textContent = "Logout";
 
     for (const [label, links] of menus) {
       const group = document.createElement("details");
@@ -129,6 +133,8 @@
         addLink(dropdown, name, url);
       }
 
+      if (label === "Account") dropdown.appendChild(logout);
+
       group.append(summary, dropdown);
       navigation.appendChild(group);
 
@@ -141,12 +147,6 @@
       });
     }
 
-    const logout = addLink(
-      navigation,
-      "Logout",
-      "/account.html"
-    );
-
     let signingOut = false;
 
     logout.addEventListener("click", async event => {
@@ -156,6 +156,7 @@
 
       signingOut = true;
       logout.textContent = "Signing out…";
+      logout.disabled = true;
 
       try {
         const result = await fetch("/api/auth/logout", {
@@ -175,6 +176,7 @@
         window.alert(error.message);
       } finally {
         signingOut = false;
+        logout.disabled = false;
       }
     });
 
