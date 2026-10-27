@@ -5,10 +5,10 @@ const { MODEL } = require("./dss");
 const {
   DOMAIN_TOPICS,
   SYSTEM_KNOWLEDGE,
-  FAQ_EXAMPLES,
-  REFUSAL_MESSAGE,
-  MISSING_KNOWLEDGE_MESSAGE
+  FAQ_EXAMPLES
 } = require("./manager-ai-knowledge");
+
+const { SCOPE_MESSAGES } = require("./manager-ai-language");
 
 const LIMITS = Object.freeze({
   questionChars: 1500,
@@ -44,10 +44,24 @@ SCOPE
 - General workflow explanations do not require a selected order.
 - OUT_OF_SCOPE and INSUFFICIENT_CONTEXT must have empty suggestions
   and uncertainties arrays.
-- For OUT_OF_SCOPE, answer must be exactly:
-  ${JSON.stringify(REFUSAL_MESSAGE)}
-- For INSUFFICIENT_CONTEXT, answer must be exactly:
-  ${JSON.stringify(MISSING_KNOWLEDGE_MESSAGE)}
+- For OUT_OF_SCOPE and INSUFFICIENT_CONTEXT, use the exact fixed message
+  from FIXED MESSAGES for the selected language and scope.
+
+LANGUAGE
+- Determine the main language of the latest user question.
+- Use language="vi" for Vietnamese, including Vietnamese without diacritics.
+- Use language="en" for English.
+- For mixed-language questions, use the dominant language of the actual question.
+- Quoted text, names, order codes and driver codes do not determine the language.
+- For an ambiguous short follow-up, use the latest clear user language in history;
+  if none exists, default to English.
+- A language change in the latest question overrides the previous chat language.
+- The answer, suggestion reasons and uncertainties must match the selected language.
+- Refusals and missing-data messages must also match the selected language.
+- Preserve identifiers and numerical facts. Keep JSON property names in English.
+
+FIXED MESSAGES
+${JSON.stringify(SCOPE_MESSAGES)}
 
 VERIFIED APPLICATION KNOWLEDGE
 ${SYSTEM_KNOWLEDGE.map(fact => `- ${fact}`).join("\n")}
@@ -65,8 +79,8 @@ GROUNDING
 - Do not invent drivers, locations, traffic, prices, totals or outcomes.
 - Do not describe synthetic demo data as real GPS observations.
 - Acknowledge missing information instead of guessing.
-- Answer in the user's language, except for fixed refusal and
-  missing-data messages. Be concise and explain tradeoffs plainly.
+- Follow the LANGUAGE rules for all natural-language output.
+- Be concise and explain tradeoffs plainly.
 
 DISPATCH RULES
 - Suggest only drivers in the supplied candidate list with eligible=true.
@@ -111,6 +125,7 @@ OUTPUT
 - Keep each suggestion reason to one short sentence.
 - Avoid repeating the same figures in both the answer and suggestion reasons.
 - scope: IN_SCOPE, OUT_OF_SCOPE or INSUFFICIENT_CONTEXT.
+- language: "en" or "vi", based on the latest user question.
 - answer: a useful explanation based on verified knowledge and supplied facts.
 - suggestions: at most 3 eligible driver IDs with factual reasons.
 - Return no suggestions for general questions, missing context,
@@ -130,6 +145,10 @@ const RESPONSE_SCHEMA = {
         "OUT_OF_SCOPE",
         "INSUFFICIENT_CONTEXT"
       ]
+    },
+    language: {
+      type: "STRING",
+      enum: ["en", "vi"]
     },
     answer: {
       type: "STRING"
@@ -160,6 +179,7 @@ const RESPONSE_SCHEMA = {
   },
   required: [
     "scope",
+    "language",
     "answer",
     "suggestions",
     "uncertainties"
