@@ -7,7 +7,7 @@ const LIMITS = Object.freeze({
   historyMessages: 6,
   candidates: 12,
   outputTokens: 1800,
-  timeoutMs: 15000,
+  timeoutMs: 45000,
 });
 
 const SYSTEM_INSTRUCTION = `
