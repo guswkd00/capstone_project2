@@ -629,6 +629,17 @@ if (!proofRows.length) {
         [deliveryNote, collected, order.id]
       );
 
+      // Credit earnings and rewards inside the completion transaction.
+      const {
+        creditCompletion,
+      } = require("./driver-wallet-store");
+
+      await creditCompletion(
+        connection,
+        driver.id,
+        order
+      );
+
       eventType = "delivery_completed";
       note = deliveryNote;
     }
