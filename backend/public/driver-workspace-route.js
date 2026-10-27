@@ -19,8 +19,8 @@
       document.getElementById("route-panel") ||
       node("section", "", "df-card");
 
-    panel.style.marginTop = "20px";
-    panel.style.marginBottom = "20px";
+    panel.style.marginTop = "0";
+    panel.style.marginBottom = "0";
 
     const title = node("h2", "Suggested Stop Order");
 
