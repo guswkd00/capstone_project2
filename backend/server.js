@@ -1,3 +1,5 @@
+"use strict";
+
 const path = require("node:path");
 const express = require("express");
 
@@ -17,6 +19,10 @@ const driverRouter = require("./src/driver");
 const reportsRouter = require("./src/reports");
 const managerAIRouter = require("./src/manager-ai");
 
+const {
+  createWorkspaceRouter,
+} = require("./src/driver-workspace");
+
 const app = express();
 
 app.disable("x-powered-by");
@@ -31,7 +37,9 @@ app.get("/api/health", async (req, res) => {
   try {
     await pool.query("SELECT 1");
 
-    res.json({ status: "ok" });
+    res.json({
+      status: "ok",
+    });
   } catch (error) {
     res.status(503).json({
       message: "Database is unavailable.",
@@ -87,6 +95,7 @@ app.use(
   protectWrites,
   reportsRouter
 );
+
 app.use(
   "/api/manager-ai",
   requireLogin,
@@ -94,12 +103,45 @@ app.use(
   protectWrites,
   managerAIRouter
 );
-app.use(express.static(path.join(__dirname, "public")));
+
+// Manager-only wallet reviews and order support messages.
+app.use(
+  "/api/driver-support",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  createWorkspaceRouter(pool, {
+    manager: true,
+  })
+);
+
+// Protect the Driver page using the existing session.
+app.get(
+  "/driver.html",
+  requireLogin,
+  (req, res, next) => {
+    if (req.user.role !== "driver") {
+      return res.redirect("/account.html");
+    }
+
+    res.set("Cache-Control", "no-store");
+    next();
+  }
+);
+
+app.use(
+  express.static(path.join(__dirname, "public"))
+);
 
 app.use((error, req, res, next) => {
-  if (res.headersSent) return next(error);
+  if (res.headersSent) {
+    return next(error);
+  }
 
-  console.error("Request failed:", error.code || error.name);
+  console.error(
+    "Request failed:",
+    error.code || error.name
+  );
 
   const status = error.status === 400 ? 400 : 500;
 
@@ -124,7 +166,10 @@ async function start() {
     });
 
     server.on("error", async (error) => {
-      console.error("Server failed to start:", error.code);
+      console.error(
+        "Server failed to start:",
+        error.code
+      );
 
       await pool.end();
       process.exitCode = 1;
@@ -139,11 +184,21 @@ async function start() {
       });
     }
   } catch (error) {
-    console.error("MySQL connection failed:", error.code);
+    console.error(
+      "MySQL connection failed:",
+      error.code
+    );
 
     await pool.end();
     process.exitCode = 1;
   }
 }
 
-start();
+if (require.main === module) {
+  start();
+}
+
+module.exports = {
+  app,
+  start,
+};
