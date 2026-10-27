@@ -97,6 +97,7 @@ function validateAIAnswer(answer, context) {
   });
 
   return {
+    language: answer.language === "vi" ? "vi" : "en",
     answer: text,
     suggestions,
     uncertainties,
