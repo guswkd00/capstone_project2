@@ -852,3 +852,15 @@ body.sf-app .manager-report-main {
     widows: 3;
   }
 }
+/* Print only the report document, including when the shared shell is unavailable. */
+@media print {
+  body:has(#mr-preview) {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body:has(#mr-preview) > :not(.manager-report-main) {
+    display: none !important;
+  }
+}
