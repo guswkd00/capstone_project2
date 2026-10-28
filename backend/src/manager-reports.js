@@ -13,6 +13,10 @@ const {
   validateAttachment
 } = require("./manager-report-policy");
 
+const {
+  validateDocument
+} = require("./manager-report-document");
+
 function createManagerReportsRouter(pool) {
   const router = express.Router();
 
@@ -46,7 +50,7 @@ function createManagerReportsRouter(pool) {
   }
 
   function sendError(error, res) {
-    const allowedStatuses = [
+    const allowed = [
       400,
       403,
       404,
@@ -56,7 +60,7 @@ function createManagerReportsRouter(pool) {
       503
     ];
 
-    const status = allowedStatuses.includes(
+    const status = allowed.includes(
       error.status
     )
       ? error.status
@@ -77,27 +81,41 @@ function createManagerReportsRouter(pool) {
   }
 
   async function transaction(task) {
-    const connection = await pool.getConnection();
+    const db = await pool.getConnection();
 
     try {
-      await connection.beginTransaction();
+      await db.beginTransaction();
 
-      const result = await task(connection);
+      const result = await task(db);
 
-      await connection.commit();
+      await db.commit();
 
       return result;
     } catch (error) {
       try {
-        await connection.rollback();
+        await db.rollback();
       } catch {
         // Preserve the original error.
       }
 
       throw error;
     } finally {
-      connection.release();
+      db.release();
     }
+  }
+
+  function jsonValue(value) {
+    if (value == null) return null;
+
+    return typeof value === "string"
+      ? JSON.parse(value)
+      : value;
+  }
+
+  function jsonParameter(value) {
+    return value == null
+      ? null
+      : JSON.stringify(value);
   }
 
   async function loadReport(
@@ -120,6 +138,8 @@ function createManagerReportsRouter(pool) {
            '%Y-%m-%d'
          ) AS period_end,
          content,
+         editor_document,
+         page_settings,
          data_snapshot,
          status,
          version,
@@ -130,7 +150,10 @@ function createManagerReportsRouter(pool) {
        WHERE id = ?
          AND manager_id = ?
        ${lock ? "FOR UPDATE" : ""}`,
-      [reportId, managerId]
+      [
+        reportId,
+        managerId
+      ]
     );
 
     if (!rows.length) {
@@ -142,12 +165,28 @@ function createManagerReportsRouter(pool) {
 
     const report = rows[0];
 
-    if (
-      typeof report.data_snapshot === "string"
-    ) {
-      report.data_snapshot = JSON.parse(
-        report.data_snapshot
+    report.data_snapshot = jsonValue(
+      report.data_snapshot
+    );
+
+    report.editor_document = jsonValue(
+      report.editor_document
+    );
+
+    report.page_settings = jsonValue(
+      report.page_settings
+    );
+
+    if (report.editor_document !== null) {
+      const rich = validateDocument(
+        report.editor_document
       );
+
+      // A plain-text generator may have replaced the content.
+      // Do not return an outdated formatted document.
+      if (rich.text !== report.content) {
+        report.editor_document = null;
+      }
     }
 
     return report;
@@ -204,7 +243,8 @@ function createManagerReportsRouter(pool) {
     }
 
     if (
-      Number(report.version) !== expectedVersion
+      Number(report.version) !==
+      expectedVersion
     ) {
       throw httpError(
         409,
@@ -242,15 +282,118 @@ function createManagerReportsRouter(pool) {
     );
   }
 
-  // List only reports owned by the signed-in Manager.
-  router.get("/", handle(async (req, res) => {
-    const status = req.query.status || "all";
-    const type = req.query.type || "all";
-    const search = req.query.q || "";
+  async function checkImageAttachments(
+    db,
+    managerId,
+    reportId,
+    document
+  ) {
+    if (document === null) return;
+
+    const rich = validateDocument(
+      document
+    );
+
+    const ids = rich.attachment_ids;
+
+    if (!ids.length) return;
 
     if (
-      !["all", ...REPORT_STATES].includes(status) ||
-      !["all", ...REPORT_TYPES].includes(type) ||
+      ids.length > LIMITS.filesPerReport
+    ) {
+      throw httpError(
+        400,
+        "The document references too many image attachments."
+      );
+    }
+
+    const placeholders = ids.map(
+      () => "?"
+    ).join(", ");
+
+    const [files] = await db.execute(
+      `SELECT
+         CAST(f.id AS CHAR) AS id,
+         f.content_type
+       FROM manager_report_files f
+       JOIN manager_reports r
+         ON r.id = f.report_id
+       WHERE r.id = ?
+         AND r.manager_id = ?
+         AND f.id IN (${placeholders})`,
+      [
+        reportId,
+        managerId,
+        ...ids
+      ]
+    );
+
+    if (
+      files.length !== ids.length ||
+      files.some(file =>
+        ![
+          "image/png",
+          "image/jpeg"
+        ].includes(file.content_type)
+      )
+    ) {
+      throw httpError(
+        400,
+        "Images must use PNG or JPG attachments uploaded to this report."
+      );
+    }
+  }
+
+  function nextDocument(input, report) {
+    if (
+      Object.hasOwn(
+        input,
+        "editor_document"
+      )
+    ) {
+      return input.editor_document;
+    }
+
+    // Preserve formatting when a legacy client only changes metadata.
+    if (
+      input.content === report.content
+    ) {
+      return report.editor_document;
+    }
+
+    return null;
+  }
+
+  function nextPageSettings(
+    input,
+    report
+  ) {
+    return Object.hasOwn(
+      input,
+      "page_settings"
+    )
+      ? input.page_settings
+      : report.page_settings;
+  }
+
+  // List reports owned by the current Manager.
+  router.get("/", handle(async (req, res) => {
+    const status =
+      req.query.status || "all";
+
+    const type =
+      req.query.type || "all";
+
+    const search =
+      req.query.q || "";
+
+    if (
+      !["all", ...REPORT_STATES].includes(
+        status
+      ) ||
+      !["all", ...REPORT_TYPES].includes(
+        type
+      ) ||
       typeof search !== "string" ||
       search.length > 100
     ) {
@@ -260,9 +403,10 @@ function createManagerReportsRouter(pool) {
       );
     }
 
-    const before = req.query.before === undefined
-      ? null
-      : parseId(req.query.before);
+    const before =
+      req.query.before === undefined
+        ? null
+        : parseId(req.query.before);
 
     const conditions = [
       "r.manager_id = ?"
@@ -273,12 +417,18 @@ function createManagerReportsRouter(pool) {
     ];
 
     if (status !== "all") {
-      conditions.push("r.status = ?");
+      conditions.push(
+        "r.status = ?"
+      );
+
       values.push(status);
     }
 
     if (type !== "all") {
-      conditions.push("r.report_type = ?");
+      conditions.push(
+        "r.report_type = ?"
+      );
+
       values.push(type);
     }
 
@@ -291,7 +441,10 @@ function createManagerReportsRouter(pool) {
     }
 
     if (before) {
-      conditions.push("r.id < ?");
+      conditions.push(
+        "r.id < ?"
+      );
+
       values.push(before);
     }
 
@@ -333,6 +486,7 @@ function createManagerReportsRouter(pool) {
         0,
         LIMITS.listSize
       ),
+
       next_before:
         rows.length > LIMITS.listSize
           ? rows[LIMITS.listSize - 1].id
@@ -346,6 +500,15 @@ function createManagerReportsRouter(pool) {
       req.body
     );
 
+    if (
+      input.image_attachment_ids?.length
+    ) {
+      throw httpError(
+        400,
+        "Save the draft and upload its images before inserting them into the document."
+      );
+    }
+
     const data = await transaction(
       async db => {
         await db.execute(
@@ -356,9 +519,11 @@ function createManagerReportsRouter(pool) {
              period_start,
              period_end,
              content,
+             editor_document,
+             page_settings,
              status
            ) VALUES (
-             ?, ?, ?, ?, ?, ?, 'draft'
+             ?, ?, ?, ?, ?, ?, ?, ?, 'draft'
            )`,
           [
             req.user.id,
@@ -366,13 +531,18 @@ function createManagerReportsRouter(pool) {
             input.report_type,
             input.period_start,
             input.period_end,
-            input.content
+            input.content,
+            jsonParameter(
+              input.editor_document
+            ),
+            jsonParameter(
+              input.page_settings
+            )
           ]
         );
 
-        const reportId = await lastInsertedId(
-          db
-        );
+        const reportId =
+          await lastInsertedId(db);
 
         return reportDetails(
           db,
@@ -388,100 +558,128 @@ function createManagerReportsRouter(pool) {
     });
   }));
 
-  // View an owned report and its attachment metadata.
-  router.get("/:id", handle(async (req, res) => {
-    const reportId = parseId(
-      req.params.id
-    );
+  // Read an owned report.
+  router.get(
+    "/:id",
+    handle(async (req, res) => {
+      const reportId = parseId(
+        req.params.id
+      );
 
-    const data = await transaction(
-      db => reportDetails(
-        db,
-        req.user.id,
-        reportId
-      )
-    );
-
-    res.json({ data });
-  }));
-
-  // Update an editable draft.
-  router.put("/:id", handle(async (req, res) => {
-    const reportId = parseId(
-      req.params.id
-    );
-
-    const input = validateReportInput(
-      req.body,
-      {
-        requireVersion: true
-      }
-    );
-
-    const data = await transaction(
-      async db => {
-        const report = await loadReport(
-          db,
-          req.user.id,
-          reportId,
-          true
-        );
-
-        requireEditable(
-          report,
-          input.version
-        );
-
-        const contextChanged =
-          report.report_type !==
-            input.report_type ||
-          report.period_start !==
-            input.period_start ||
-          report.period_end !==
-            input.period_end;
-
-        await db.execute(
-          `UPDATE manager_reports
-           SET
-             title = ?,
-             report_type = ?,
-             period_start = ?,
-             period_end = ?,
-             content = ?,
-             data_snapshot = CASE
-               WHEN ? = 1 THEN NULL
-               ELSE data_snapshot
-             END,
-             version = version + 1
-           WHERE id = ?
-             AND manager_id = ?`,
-          [
-            input.title,
-            input.report_type,
-            input.period_start,
-            input.period_end,
-            input.content,
-            contextChanged ? 1 : 0,
-            reportId,
-            req.user.id
-          ]
-        );
-
-        return reportDetails(
+      const data = await transaction(
+        db => reportDetails(
           db,
           req.user.id,
           reportId
-        );
-      }
-    );
+        )
+      );
 
-    res.json({
-      data,
-      message: "Draft saved."
-    });
-  }));
+      res.json({ data });
+    })
+  );
 
-  // Submit a report. Retrying an already completed submission is safe.
+  // Save a draft and its formatting.
+  router.put(
+    "/:id",
+    handle(async (req, res) => {
+      const reportId = parseId(
+        req.params.id
+      );
+
+      const input = validateReportInput(
+        req.body,
+        {
+          requireVersion: true
+        }
+      );
+
+      const data = await transaction(
+        async db => {
+          const report = await loadReport(
+            db,
+            req.user.id,
+            reportId,
+            true
+          );
+
+          requireEditable(
+            report,
+            input.version
+          );
+
+          const document = nextDocument(
+            input,
+            report
+          );
+
+          const pageSettings =
+            nextPageSettings(
+              input,
+              report
+            );
+
+          await checkImageAttachments(
+            db,
+            req.user.id,
+            reportId,
+            document
+          );
+
+          const contextChanged =
+            report.report_type !==
+              input.report_type ||
+            report.period_start !==
+              input.period_start ||
+            report.period_end !==
+              input.period_end;
+
+          await db.execute(
+            `UPDATE manager_reports
+             SET
+               title = ?,
+               report_type = ?,
+               period_start = ?,
+               period_end = ?,
+               content = ?,
+               editor_document = ?,
+               page_settings = ?,
+               data_snapshot = CASE
+                 WHEN ? = 1 THEN NULL
+                 ELSE data_snapshot
+               END,
+               version = version + 1
+             WHERE id = ?
+               AND manager_id = ?`,
+            [
+              input.title,
+              input.report_type,
+              input.period_start,
+              input.period_end,
+              input.content,
+              jsonParameter(document),
+              jsonParameter(pageSettings),
+              contextChanged ? 1 : 0,
+              reportId,
+              req.user.id
+            ]
+          );
+
+          return reportDetails(
+            db,
+            req.user.id,
+            reportId
+          );
+        }
+      );
+
+      res.json({
+        data,
+        message: "Draft saved."
+      });
+    })
+  );
+
+  // Submit a draft.
   router.post(
     "/:id/submit",
     handle(async (req, res) => {
@@ -502,7 +700,9 @@ function createManagerReportsRouter(pool) {
             true
           );
 
-          if (report.status === "submitted") {
+          if (
+            report.status === "submitted"
+          ) {
             return reportDetails(
               db,
               req.user.id,
@@ -513,6 +713,13 @@ function createManagerReportsRouter(pool) {
           requireEditable(
             report,
             version
+          );
+
+          await checkImageAttachments(
+            db,
+            req.user.id,
+            reportId,
+            report.editor_document
           );
 
           const files = await loadFiles(
@@ -559,7 +766,7 @@ function createManagerReportsRouter(pool) {
     })
   );
 
-  // Delete an owned draft. Submitted reports remain available.
+  // Delete an owned draft.
   router.delete(
     "/:id",
     handle(async (req, res) => {
@@ -601,12 +808,12 @@ function createManagerReportsRouter(pool) {
     })
   );
 
-  // Upload binary attachment data after authentication.
   const uploadBody = express.raw({
     type: () => true,
     limit: LIMITS.fileBytes
   });
 
+  // Upload a file to an owned draft.
   router.post(
     "/:id/files",
     uploadBody,
@@ -671,9 +878,8 @@ function createManagerReportsRouter(pool) {
             ]
           );
 
-          const fileId = await lastInsertedId(
-            db
-          );
+          const fileId =
+            await lastInsertedId(db);
 
           await db.execute(
             `UPDATE manager_reports
@@ -691,6 +897,7 @@ function createManagerReportsRouter(pool) {
               id: fileId,
               ...file
             },
+
             report_version:
               Number(report.version) + 1
           };
@@ -704,7 +911,7 @@ function createManagerReportsRouter(pool) {
     })
   );
 
-  // Download only attachments belonging to an owned report.
+  // Download an attachment from an owned report.
   router.get(
     "/:id/files/:fileId",
     handle(async (req, res) => {
@@ -755,7 +962,7 @@ function createManagerReportsRouter(pool) {
 
       res.set(
         "Content-Type",
-        extensions[file.content_type]
+        extension
           ? file.content_type
           : "application/octet-stream"
       );
@@ -780,7 +987,7 @@ function createManagerReportsRouter(pool) {
     })
   );
 
-  // Remove an attachment only while its report is a draft.
+  // Remove an attachment only if it is not used by the document.
   router.delete(
     "/:id/files/:fileId",
     handle(async (req, res) => {
@@ -809,6 +1016,26 @@ function createManagerReportsRouter(pool) {
             report,
             version
           );
+
+          if (
+            report.editor_document !== null
+          ) {
+            const rich =
+              validateDocument(
+                report.editor_document
+              );
+
+            if (
+              rich.attachment_ids.includes(
+                fileId
+              )
+            ) {
+              throw httpError(
+                400,
+                "Remove this image from the editor and save the draft before deleting its attachment."
+              );
+            }
+          }
 
           const [deleted] = await db.execute(
             `DELETE FROM manager_report_files
@@ -852,23 +1079,24 @@ function createManagerReportsRouter(pool) {
     })
   );
 
-  // Convert raw upload errors into readable API responses.
-  router.use((error, req, res, next) => {
-    if (res.headersSent) {
-      return next(error);
-    }
+  router.use(
+    (error, req, res, next) => {
+      if (res.headersSent) {
+        return next(error);
+      }
 
-    if (
-      error.type === "entity.too.large" ||
-      error.status === 413
-    ) {
-      return res.status(413).json({
-        message: "Choose a file up to 5 MB."
-      });
-    }
+      if (
+        error.type === "entity.too.large" ||
+        error.status === 413
+      ) {
+        return res.status(413).json({
+          message: "Choose a file up to 5 MB."
+        });
+      }
 
-    sendError(error, res);
-  });
+      sendError(error, res);
+    }
+  );
 
   return router;
 }
