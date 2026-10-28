@@ -144,9 +144,10 @@
         ["Reassign / Override", "/dispatch.html"],
         ["Dispatch History", "/dispatch-history.html"]
       ]],
-      ["Fleet & Data", [
+     ["Fleet & Data", [
         ["Drivers", "/drivers.html"],
-        ["Vehicles", "/fleet.html"]
+        ["Vehicles", "/fleet.html"],
+        ["Driver Support", "/driver-support.html"]
       ]],
       ["Account", [
         ["Account", "/account.html"]
