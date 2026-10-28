@@ -1,309 +1,488 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="/auth-client.js" data-role="manager"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Your Account — ShopeeFood Delivery DSS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/app-theme.css?v=4">
+  <script src="/app-shell.js" defer></script>
 
   <style>
-    :root {
-      --sf-primary: #ee4d2d;
-      --sf-primary-hover: #d73818;
-      --sf-primary-soft: #fff5f2;
-      --sf-dark: #0f172a;
-      --sf-dark-surface: #1e293b;
-      --sf-bg: #f1f5f9;
-      --sf-surface: #ffffff;
-      --sf-border-strong: #94a3b8;
-      --sf-border: #cbd5e1;
-      --sf-text: #0f172a;
-      --sf-text-secondary: #334155;
-      --sf-text-muted: #64748b;
-      --sf-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
-      --sf-shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
-      --sf-shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
-      --sf-radius-sm: 8px;
-      --sf-radius-md: 12px;
-      --sf-radius-lg: 16px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
+    body.account-page {
       margin: 0;
-      background: var(--sf-bg);
-      color: var(--sf-text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      line-height: 1.5;
+      background: #fff8f5;
+      color: #263344;
+      font-family: "Segoe UI", Arial, sans-serif;
     }
 
-    /* ==================== HEADER ==================== */
-    header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: white;
-      padding: 20px 36px;
-      font-size: 22px;
+    .account-page > header {
+      display: none;
+    }
+
+    .account-page main {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Orange banner */
+    .account-hero {
+      min-height: 210px;
+      padding: 46px 48px 38px;
+      color: #ffffff;
+      background: linear-gradient(
+        110deg,
+        #ee4d2d,
+        #df3c1e
+      );
+      border: 0;
+      border-radius: 0;
+    }
+
+    .account-eyebrow {
+      margin: 0 0 12px;
+      font-size: 10px;
       font-weight: 700;
-      border-bottom: 3px solid var(--sf-primary);
-      box-shadow: var(--sf-shadow-md);
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      letter-spacing: 2px;
     }
 
-    header::before {
-      content: "";
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      background: var(--sf-primary);
-      border-radius: 3px;
-      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.25);
+    .account-hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 4vw, 42px);
+      letter-spacing: -1px;
     }
 
-    main {
-      max-width: 900px;
-      margin: 36px auto;
-      padding: 0 24px;
-    }
-
-    h1 {
-      margin: 0 0 6px 0;
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-    }
-
-    .muted {
-      color: var(--sf-text-muted);
+    .account-hero .account-status {
+      margin: 0;
+      color: #fff1e9;
       font-size: 14px;
-      margin-top: 0;
+      line-height: 1.6;
     }
 
-    /* ==================== CARD & PROFILE LAYOUT ==================== */
-    .card {
-      padding: 32px;
-      background: var(--sf-surface);
-      border: 1.5px solid var(--sf-border-strong);
-      border-radius: var(--sf-radius-lg);
-      box-shadow: var(--sf-shadow-md);
-      margin-top: 20px;
-    }
-
-    .profile-header {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding-bottom: 24px;
-      border-bottom: 2px solid var(--sf-border);
-      margin-bottom: 24px;
-    }
-
-    .profile-avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      border: 2px solid var(--sf-primary);
-      object-fit: cover;
-      box-shadow: var(--sf-shadow-sm);
-    }
-
-    .profile-meta h2 {
-      margin: 0 0 4px 0;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--sf-text);
-    }
-
-    .profile-meta p {
-      margin: 0;
-      font-size: 13px;
-      color: var(--sf-text-muted);
-    }
-
-    dl {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 16px 20px;
-      margin: 0 0 28px 0;
-      background: #f8fafc;
-      padding: 20px 24px;
-      border-radius: var(--sf-radius-md);
-      border: 1.5px solid var(--sf-border-strong);
-    }
-
-    dt {
-      color: var(--sf-text-secondary);
+    .account-hero .account-status.error {
+      color: #ffffff;
       font-weight: 600;
-      font-size: 13.5px;
     }
 
-    dd {
-      margin: 0;
-      overflow-wrap: anywhere;
+    /* Account panel */
+    .account-content {
+      max-width: 1500px;
+      margin: auto;
+      padding: 34px 44px 50px;
+    }
+
+    .account-page .account-card {
+      display: grid;
+      grid-template-columns:
+        minmax(220px, 0.85fr)
+        minmax(0, 2fr);
+      min-height: 460px;
+      overflow: hidden;
+      padding: 0;
+      background: #ffffff;
+      border: 1px solid #efdfd7;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px #8b3c1c08;
+    }
+
+    /* Profile */
+    .account-profile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 28px;
+      text-align: center;
+      background: #fffaf7;
+      border-right: 1px solid #f0e2dc;
+    }
+
+    .account-avatar {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      margin-bottom: 24px;
+      background: #ffebe1;
+      color: #c84223;
+      border: 6px solid #ffffff;
+      outline: 1px solid #f1dacd;
+      border-radius: 50%;
+      font-size: 45px;
       font-weight: 700;
+    }
+
+    .account-avatar img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .account-profile h2 {
+      margin: 0 0 12px;
+      font-size: 23px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .account-role-badge {
+      padding: 6px 15px;
+      border: 1px solid #f5c9b6;
+      border-radius: 30px;
+      color: #b43b21;
+      background: #fff0e9;
+      text-transform: capitalize;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .account-profile p {
+      margin: 24px 0 0;
+      max-width: 210px;
+      color: #7e716b;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    /* Account information */
+    .account-details {
+      min-width: 0;
+      padding: 40px;
+    }
+
+    .account-details h2 {
+      margin: 0 0 8px;
+      font-size: 23px;
+      letter-spacing: -0.4px;
+    }
+
+    .account-page .muted {
+      color: #7b838c;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .account-details > p {
+      margin: 0 0 30px;
+    }
+
+    .account-details dl {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      margin: 0;
+    }
+
+    .account-details dt,
+    .account-details dd {
+      margin: 0;
+      padding: 18px 0;
+      border-bottom: 1px solid #f0e9e5;
       font-size: 14px;
-      color: var(--sf-text);
+      line-height: 1.6;
+    }
+
+    .account-details dt {
+      color: #7b838c;
+    }
+
+    .account-details dd {
+      color: #263344;
+      font-weight: 600;
+      overflow-wrap: anywhere;
     }
 
     #account-role {
       text-transform: capitalize;
-      display: inline-block;
-      padding: 2px 10px;
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1.5px solid #bfdbfe;
-      border-radius: 999px;
-      font-size: 12px;
     }
 
-    /* ==================== LINKS & BUTTONS SECTION ==================== */
-    .section-title {
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--sf-text-secondary);
-      margin: 0 0 12px 0;
-    }
-
-    .links {
+    /* Action buttons */
+    .account-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin: 0 0 28px 0;
+      gap: 12px;
+      margin-top: 28px;
     }
 
-    a, button {
+    .account-page .account-actions a {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 10px 16px;
-      background: var(--sf-primary);
-      color: white;
-      border: 1.5px solid #c23315;
-      border-radius: var(--sf-radius-sm);
+      padding: 12px 20px;
+      background: #ee4d2d;
+      color: #ffffff;
+      border-radius: 9px;
       text-decoration: none;
-      font: inherit;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      box-shadow: 0 2px 6px rgba(238, 77, 45, 0.25);
     }
 
-    a:hover {
-      background: var(--sf-primary-hover);
-      border-color: #9a250d;
-      transform: translateY(-1px);
+    .account-page .account-actions a:hover {
+      background: #d93818;
     }
 
-    button {
-      background: var(--sf-surface);
-      color: var(--sf-text-secondary);
-      border: 1.5px solid var(--sf-border-strong);
-      box-shadow: var(--sf-shadow-sm);
+    .account-page .account-actions button {
+      padding: 12px 20px;
+      font-size: 13px;
     }
 
-    button:hover:not(:disabled) {
-      background: #f1f5f9;
-      border-color: #475569;
-      color: var(--sf-text);
-      transform: translateY(-1px);
+    /* Quick access */
+    .account-workspace {
+      margin-top: 30px;
     }
 
-    #sign-out-button {
-      background: #fef2f2;
-      color: #991b1b;
-      border-color: #f87171;
-      width: 100%;
-      margin-top: 8px;
-      padding: 12px;
-      font-size: 14px;
-      font-weight: 700;
+    .account-workspace h2 {
+      margin: 0 0 5px;
+      font-size: 18px;
     }
 
-    #sign-out-button:hover:not(:disabled) {
-      background: #fee2e2;
-      border-color: #dc2626;
-      color: #7f1d1d;
+    .account-page .account-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
     }
 
-    button:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+    .account-page .account-links a {
+      padding: 10px 14px;
+      color: #a8422c;
+      border: 1px solid #efd9ce;
+      border-radius: 8px;
+      background: #ffffff;
+      text-decoration: none;
+      font-size: 12px;
+    }
 
-    .error { color: #dc2626 !important; font-weight: 600; }
-    [hidden] { display: none !important; }
+    .account-page .account-links a:hover {
+      background: #fff0e9;
+    }
 
-    @media (max-width: 600px) {
-      dl { grid-template-columns: 1fr; gap: 8px; padding: 16px; }
-      dd { margin-bottom: 8px; }
-      .card { padding: 20px; }
+    .account-page [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 1100px) {
+      .account-hero {
+        padding: 36px 30px;
+      }
+
+      .account-content {
+        padding: 28px;
+      }
+
+      .account-details {
+        padding: 30px;
+      }
+
+      .account-page .account-card {
+        grid-template-columns:
+          minmax(190px, 0.8fr)
+          minmax(0, 1.5fr);
+      }
+    }
+
+    @media (max-width: 650px) {
+      .account-hero {
+        min-height: 180px;
+        padding: 28px 22px;
+      }
+
+      .account-content {
+        padding: 20px 14px 36px;
+      }
+
+      .account-page .account-card {
+        grid-template-columns: 1fr;
+      }
+
+      .account-profile {
+        padding: 30px 22px;
+        border-right: 0;
+        border-bottom: 1px solid #f0e2dc;
+      }
+
+      .account-avatar {
+        width: 130px;
+        height: 130px;
+        margin-bottom: 16px;
+      }
+
+      .account-profile p {
+        margin-top: 16px;
+        max-width: none;
+      }
+
+      .account-details {
+        padding: 26px 22px;
+      }
+
+      .account-details dl {
+        grid-template-columns: 95px minmax(0, 1fr);
+      }
     }
   </style>
-  <link rel="stylesheet" href="/app-theme.css?v=3">
-  <script src="/app-shell.js" defer></script>
 </head>
 
-<body class="sf-app">
-  <header>ShopeeFood Delivery DSS</header>
-
+<body class="sf-app account-page">
   <main>
-    <h1>Your Account</h1>
-    <p id="account-message" class="muted" role="status">
-      Checking your session...
-    </p>
+    <section
+      class="account-hero"
+      aria-labelledby="account-title"
+    >
+      <p class="account-eyebrow">PERSONAL WORKSPACE</p>
 
-    <section id="account-card" class="card" hidden>
-      <div class="profile-header">
-        <img class="profile-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="User Avatar">
-        <div class="profile-meta">
-          <h2 id="profile-display-name">Mai Anh và Hồng Anh Lalalala</h2>
-          <p>Hoạt động từ: <strong style="color: var(--sf-text);">15/10/2026</strong></p>
-        </div>
-      </div>
+      <h1 id="account-title">Your Account</h1>
 
-      <dl>
-        <dt>Full Name</dt>
-        <dd id="account-name"></dd>
-
-        <dt>Email</dt>
-        <dd id="account-email"></dd>
-
-        <dt>Role</dt>
-        <dd><span id="account-role"></span></dd>
-      </dl>
-
-      <div id="manager-nav-container">
-        <p class="section-title">Quản lý hệ thống nhanh</p>
-        <nav id="manager-links" class="links" hidden>
-          <a href="/">Orders</a>
-          <a href="/fleet.html">Fleet Management</a>
-          <a href="/drivers.html">Manage Drivers</a>
-          <a href="/dispatch.html">Dispatch</a>
-          <a href="/dispatch-history.html">Dispatch History</a>
-        </nav>
-      </div>
-
-      <button id="sign-out-button" type="button">Sign Out</button>
+      <p
+        id="account-message"
+        class="account-status"
+        role="status"
+        aria-live="polite"
+      >
+        Checking your session...
+      </p>
     </section>
+
+    <div class="account-content">
+      <section
+        id="account-card"
+        class="card account-card"
+        aria-label="Account profile"
+        hidden
+      >
+        <div class="account-profile">
+          <div class="account-avatar">
+            <span
+              id="profile-initials"
+              aria-hidden="true"
+            ></span>
+
+            <img
+              id="profile-photo"
+              alt="Profile picture"
+              hidden
+            >
+          </div>
+
+          <h2 id="profile-name"></h2>
+
+          <span
+            id="profile-role"
+            class="account-role-badge"
+          ></span>
+
+          <p>
+            Your profile and access details for
+            ShopeeFood Delivery DSS.
+          </p>
+        </div>
+
+        <div class="account-details">
+          <h2>Account Information</h2>
+
+          <p class="muted">
+            Review the details associated with
+            your signed-in account.
+          </p>
+
+          <dl>
+            <dt>Full Name</dt>
+            <dd id="account-name"></dd>
+
+            <dt>Email Address</dt>
+            <dd id="account-email"></dd>
+
+            <dt>Account Role</dt>
+            <dd id="account-role"></dd>
+          </dl>
+
+          <div class="account-actions">
+            <a
+              id="workspace-link"
+              href="/dashboard.html"
+            >
+              Open Workspace →
+            </a>
+
+            <button
+              id="sign-out-button"
+              type="button"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="manager-links"
+        class="account-workspace"
+        aria-labelledby="workspace-title"
+        hidden
+      >
+        <h2 id="workspace-title">Quick Access</h2>
+
+        <p class="muted">
+          Continue managing your delivery operations.
+        </p>
+
+        <nav
+          class="account-links"
+          aria-label="Manager workspace shortcuts"
+        >
+          <a href="/dashboard.html">
+            Dashboard &amp; Reports
+          </a>
+
+          <a href="/?orders=all">Orders</a>
+
+          <a href="/fleet.html">Fleet Management</a>
+
+          <a href="/drivers.html">Manage Drivers</a>
+
+          <a href="/dispatch.html">Dispatch</a>
+
+          <a href="/dispatch-history.html">
+            Dispatch History
+          </a>
+        </nav>
+      </section>
+    </div>
   </main>
 
   <script>
-    const accountMessage = document.getElementById("account-message");
-    const accountCard = document.getElementById("account-card");
-    const signOutButton = document.getElementById("sign-out-button");
+    const accountMessage =
+      document.getElementById("account-message");
+
+    const accountCard =
+      document.getElementById("account-card");
+
+    const signOutButton =
+      document.getElementById("sign-out-button");
 
     let csrfToken = "";
 
+    function showAccountError(error, fallbackMessage) {
+      accountMessage.className = "account-status error";
+
+      accountMessage.textContent =
+        error instanceof TypeError
+          ? "Unable to connect. Please check your connection and try again."
+          : fallbackMessage;
+    }
+
     async function loadAccount() {
       try {
-        const response = await fetch("/api/auth/me");
-        const result = await response.json();
+        const response = await fetch("/api/auth/me", {
+          credentials: "same-origin",
+          cache: "no-store"
+        });
 
         if (response.status === 401) {
           window.location.replace("/login.html");
@@ -311,57 +490,125 @@
         }
 
         if (!response.ok) {
-          throw new Error(result.message || "Unable to load your account.");
+          throw new Error("Account request failed.");
         }
-
-        csrfToken = result.csrf_token;
-
-        // Gán tên đầy đủ hệ thống trả về, đồng thời hỗ trợ cập nhật theo yêu cầu hiển thị
-        const fullName = result.user.full_name || "Mai Anh và Hồng Anh Lalalala";
-        document.getElementById("account-name").textContent = fullName;
-        document.getElementById("profile-display-name").textContent = fullName;
-
-        document.getElementById("account-email").textContent =
-          result.user.email;
-
-        document.getElementById("account-role").textContent =
-          result.user.role;
-
-        document.getElementById("manager-links").hidden =
-          result.user.role !== "manager";
-
-        accountCard.hidden = false;
-        accountMessage.className = "muted";
-        accountMessage.textContent = "You are signed in.";
-      } catch (error) {
-        accountMessage.className = "error";
-        accountMessage.textContent = error.message;
-      }
-    }
-
-    signOutButton.addEventListener("click", async () => {
-      signOutButton.disabled = true;
-
-      try {
-        const response = await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: { "X-CSRF-Token": csrfToken }
-        });
 
         const result = await response.json();
 
-        if (!response.ok) {
-          throw new Error(result.message || "Unable to sign out.");
+        csrfToken = result.csrf_token;
+
+        const displayName =
+          result.user.role === "manager" &&
+          /^demo manager$/i.test(
+            (result.user.full_name || "").trim()
+          )
+            ? "Mai Anh & Hồng Anh lalala"
+            : result.user.full_name;
+
+        document.getElementById("account-name")
+          .textContent = displayName;
+
+        document.getElementById("profile-name")
+          .textContent = displayName;
+
+        const initials =
+          document.getElementById("profile-initials");
+
+        initials.textContent = (displayName || "U")
+          .trim()
+          .slice(0, 1)
+          .toUpperCase();
+
+        const photo =
+          document.getElementById("profile-photo");
+
+        photo.addEventListener(
+          "load",
+          () => {
+            photo.hidden = false;
+            initials.hidden = true;
+          },
+          { once: true }
+        );
+
+        photo.addEventListener(
+          "error",
+          () => {
+            photo.hidden = true;
+            initials.hidden = false;
+          },
+          { once: true }
+        );
+
+        if (result.user.role === "manager") {
+          photo.src = "/images/account-avatar.jpg";
         }
 
-        window.location.replace("/login.html");
+        document.getElementById("profile-role")
+          .textContent = result.user.role;
+
+        document.getElementById("workspace-link")
+          .href = result.user.role === "manager"
+            ? "/dashboard.html"
+            : "/driver.html";
+
+        document.getElementById("account-email")
+          .textContent = result.user.email;
+
+        document.getElementById("account-role")
+          .textContent = result.user.role;
+
+        document.getElementById("manager-links")
+          .hidden = result.user.role !== "manager";
+
+        accountCard.hidden = false;
+
+        accountMessage.className = "account-status";
+        accountMessage.textContent = "You are signed in.";
       } catch (error) {
-        accountMessage.className = "error";
-        accountMessage.textContent = error.message;
-      } finally {
-        signOutButton.disabled = false;
+        showAccountError(
+          error,
+          "Unable to load your account. Please refresh and try again."
+        );
       }
-    });
+    }
+
+    signOutButton.addEventListener(
+      "click",
+      async () => {
+        if (signOutButton.disabled) return;
+
+        signOutButton.disabled = true;
+        signOutButton.textContent = "Signing out...";
+
+        try {
+          const response = await fetch(
+            "/api/auth/logout",
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "X-CSRF-Token": csrfToken
+              }
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Sign-out request failed.");
+          }
+
+          window.location.replace("/login.html");
+        } catch (error) {
+          showAccountError(
+            error,
+            "Unable to sign out. Please try again."
+          );
+        } finally {
+          signOutButton.disabled = false;
+          signOutButton.textContent = "Sign Out";
+        }
+      }
+    );
 
     loadAccount();
   </script>
