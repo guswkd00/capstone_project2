@@ -28,7 +28,7 @@
       "p",
       "Refresh after updating delivery progress. " +
         "Suggested stops use stored coordinates, not road navigation.",
-      "df-muted"
+      "df-muted route-note"
     );
 
     const refresh = node(
@@ -38,19 +38,34 @@
 
     refresh.type = "button";
 
-    const message = node("p", "");
+    const message = node("p", "", "route-message");
     message.setAttribute("role", "status");
 
-    const summary = node("p", "");
+    // Two stat boxes: estimated distance and travel time.
+    const summary = node("div", "", "route-sum");
+    summary.hidden = true;
+
+    function stat(value, label) {
+      const box = node("div", "", "route-stat");
+
+      box.append(
+        node("b", value),
+        node("small", label)
+      );
+
+      return box;
+    }
+
     const stops = document.createElement("ol");
 
+    // Order: title, note, stats, stops, status message, refresh button.
     panel.append(
       title,
       note,
-      refresh,
-      message,
       summary,
-      stops
+      stops,
+      message,
+      refresh
     );
 
     let loading = false;
@@ -62,7 +77,8 @@
       refresh.disabled = true;
 
       message.textContent = "Loading suggested stops...";
-      summary.textContent = "";
+      summary.replaceChildren();
+      summary.hidden = true;
       stops.replaceChildren();
 
       try {
@@ -93,8 +109,6 @@
         for (const stop of plan.stops) {
           const item = document.createElement("li");
 
-          item.style.marginBottom = "16px";
-
           item.append(
             node(
               "strong",
@@ -120,10 +134,18 @@
           stops.appendChild(item);
         }
 
-        summary.textContent =
-          `Estimated distance: ${plan.estimated_total_km} km. ` +
-          `Estimated travel time: ${plan.estimated_travel_minutes} min ` +
-          "(excludes pickup and handover time).";
+        summary.append(
+          stat(
+            `${plan.estimated_total_km} km`,
+            "Estimated distance"
+          ),
+          stat(
+            `${plan.estimated_travel_minutes} min`,
+            "Travel time (excl. pickup and handover)"
+          )
+        );
+
+        summary.hidden = false;
 
         message.textContent =
           `${plan.position_note} ${plan.estimate_note}`;
