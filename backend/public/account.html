@@ -1,89 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="/auth-client.js" data-role="manager"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Your Account — ShopeeFood Delivery DSS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --sf-primary: #ee4d2d;
+      --sf-primary-hover: #d73818;
+      --sf-primary-soft: #fff5f2;
+      --sf-dark: #0f172a;
+      --sf-dark-surface: #1e293b;
+      --sf-bg: #f1f5f9;
+      --sf-surface: #ffffff;
+      --sf-border-strong: #94a3b8;
+      --sf-border: #cbd5e1;
+      --sf-text: #0f172a;
+      --sf-text-secondary: #334155;
+      --sf-text-muted: #64748b;
+      --sf-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+      --sf-shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+      --sf-shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+      --sf-radius-sm: 8px;
+      --sf-radius-md: 12px;
+      --sf-radius-lg: 16px;
+    }
+
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      background: #f4f6f8;
-      color: #23313f;
-      font-family: Arial, sans-serif;
+      background: var(--sf-bg);
+      color: var(--sf-text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
     }
 
+    /* ==================== HEADER ==================== */
     header {
-      background: #18232e;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: white;
-      padding: 22px 30px;
-      font-size: 24px;
-      font-weight: bold;
+      padding: 20px 36px;
+      font-size: 22px;
+      font-weight: 700;
+      border-bottom: 3px solid var(--sf-primary);
+      box-shadow: var(--sf-shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background: var(--sf-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.25);
     }
 
     main {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 20px;
+      max-width: 900px;
+      margin: 36px auto;
+      padding: 0 24px;
     }
 
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .muted {
+      color: var(--sf-text-muted);
+      font-size: 14px;
+      margin-top: 0;
+    }
+
+    /* ==================== CARD & PROFILE LAYOUT ==================== */
     .card {
-      padding: 28px;
-      background: white;
-      border: 1px solid #e3e8ed;
-      border-radius: 12px;
+      padding: 32px;
+      background: var(--sf-surface);
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-lg);
+      box-shadow: var(--sf-shadow-md);
+      margin-top: 20px;
     }
 
-    .muted { color: #6d7c89; }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid var(--sf-border);
+      margin-bottom: 24px;
+    }
+
+    .profile-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid var(--sf-primary);
+      object-fit: cover;
+      box-shadow: var(--sf-shadow-sm);
+    }
+
+    .profile-meta h2 {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--sf-text);
+    }
+
+    .profile-meta p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--sf-text-muted);
+    }
 
     dl {
       display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 18px;
+      grid-template-columns: 160px 1fr;
+      gap: 16px 20px;
+      margin: 0 0 28px 0;
+      background: #f8fafc;
+      padding: 20px 24px;
+      border-radius: var(--sf-radius-md);
+      border: 1.5px solid var(--sf-border-strong);
     }
 
-    dt { color: #6d7c89; }
-    dd { margin: 0; overflow-wrap: anywhere; }
-    #account-role { text-transform: capitalize; }
+    dt {
+      color: var(--sf-text-secondary);
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--sf-text);
+    }
+
+    #account-role {
+      text-transform: capitalize;
+      display: inline-block;
+      padding: 2px 10px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    /* ==================== LINKS & BUTTONS SECTION ==================== */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--sf-text-secondary);
+      margin: 0 0 12px 0;
+    }
 
     .links {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin: 25px 0;
+      gap: 10px;
+      margin: 0 0 28px 0;
     }
 
     a, button {
-      display: inline-block;
-      padding: 11px 16px;
-      background: #ef6b40;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      background: var(--sf-primary);
       color: white;
-      border: none;
-      border-radius: 7px;
+      border: 1.5px solid #c23315;
+      border-radius: var(--sf-radius-sm);
       text-decoration: none;
       font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
       cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 2px 6px rgba(238, 77, 45, 0.25);
+    }
+
+    a:hover {
+      background: var(--sf-primary-hover);
+      border-color: #9a250d;
+      transform: translateY(-1px);
     }
 
     button {
-      background: #eef2f6;
-      color: #23313f;
+      background: var(--sf-surface);
+      color: var(--sf-text-secondary);
+      border: 1.5px solid var(--sf-border-strong);
+      box-shadow: var(--sf-shadow-sm);
     }
 
-    button:disabled { opacity: 0.6; cursor: wait; }
+    button:hover:not(:disabled) {
+      background: #f1f5f9;
+      border-color: #475569;
+      color: var(--sf-text);
+      transform: translateY(-1px);
+    }
 
-    .error { color: #b53c3c; }
+    #sign-out-button {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #f87171;
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    #sign-out-button:hover:not(:disabled) {
+      background: #fee2e2;
+      border-color: #dc2626;
+      color: #7f1d1d;
+    }
+
+    button:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+
+    .error { color: #dc2626 !important; font-weight: 600; }
     [hidden] { display: none !important; }
 
-    @media (max-width: 500px) {
-      dl { grid-template-columns: 1fr; gap: 8px; }
-      dd { margin-bottom: 12px; }
+    @media (max-width: 600px) {
+      dl { grid-template-columns: 1fr; gap: 8px; padding: 16px; }
+      dd { margin-bottom: 8px; }
+      .card { padding: 20px; }
     }
   </style>
-<link rel="stylesheet" href="/app-theme.css?v=3">
-<script src="/app-shell.js" defer></script>
+  <link rel="stylesheet" href="/app-theme.css?v=3">
+  <script src="/app-shell.js" defer></script>
 </head>
 
 <body class="sf-app">
@@ -96,6 +259,14 @@
     </p>
 
     <section id="account-card" class="card" hidden>
+      <div class="profile-header">
+        <img class="profile-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="User Avatar">
+        <div class="profile-meta">
+          <h2 id="profile-display-name">Mai Anh và Hồng Anh Lalalala</h2>
+          <p>Hoạt động từ: <strong style="color: var(--sf-text);">15/10/2026</strong></p>
+        </div>
+      </div>
+
       <dl>
         <dt>Full Name</dt>
         <dd id="account-name"></dd>
@@ -104,18 +275,21 @@
         <dd id="account-email"></dd>
 
         <dt>Role</dt>
-        <dd id="account-role"></dd>
+        <dd><span id="account-role"></span></dd>
       </dl>
 
-      <nav id="manager-links" class="links" hidden>
-        <a href="/">Orders</a>
-        <a href="/fleet.html">Fleet Management</a>
-        <a href="/drivers.html">Manage Drivers</a>
-        <a href="/dispatch.html">Dispatch</a>
-        <a href="/dispatch-history.html">Dispatch History</a>
-      </nav>
+      <div id="manager-nav-container">
+        <p class="section-title">Quản lý hệ thống nhanh</p>
+        <nav id="manager-links" class="links" hidden>
+          <a href="/">Orders</a>
+          <a href="/fleet.html">Fleet Management</a>
+          <a href="/drivers.html">Manage Drivers</a>
+          <a href="/dispatch.html">Dispatch</a>
+          <a href="/dispatch-history.html">Dispatch History</a>
+        </nav>
+      </div>
 
-      <button id="sign-out-button">Sign Out</button>
+      <button id="sign-out-button" type="button">Sign Out</button>
     </section>
   </main>
 
@@ -142,8 +316,10 @@
 
         csrfToken = result.csrf_token;
 
-        document.getElementById("account-name").textContent =
-          result.user.full_name;
+        // Gán tên đầy đủ hệ thống trả về, đồng thời hỗ trợ cập nhật theo yêu cầu hiển thị
+        const fullName = result.user.full_name || "Mai Anh và Hồng Anh Lalalala";
+        document.getElementById("account-name").textContent = fullName;
+        document.getElementById("profile-display-name").textContent = fullName;
 
         document.getElementById("account-email").textContent =
           result.user.email;
