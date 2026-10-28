@@ -483,3 +483,16 @@
     height: calc(100dvh - 100px);
   }
 }
+/* Hide secondary text for a cleaner chat interface. */
+#manager-ai-widget .mai-send-row > small,
+#manager-ai-widget #mai-privacy,
+#manager-ai-widget #mai-order-info,
+#manager-ai-widget .mai-source,
+#manager-ai-widget #mai-status:not(.mai-error) {
+  display: none;
+}
+
+/* Keep the Send button aligned to the right. */
+#manager-ai-widget .mai-send-row {
+  justify-content: flex-end;
+}
