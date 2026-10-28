@@ -98,7 +98,7 @@
 
     const user = document.createElement("span");
 user.className = "sf-user";
-user.textContent = "Mai Anh & Hồng Anh lalala · Manager";
+user.textContent = "Mai Anh & Hong Anh Lalala · Manager";
 
 const profile = document.createElement("div");
 profile.className = "sf-sidebar-profile";
