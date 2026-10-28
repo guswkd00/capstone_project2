@@ -23,6 +23,10 @@ const {
   createWorkspaceRouter,
 } = require("./src/driver-workspace");
 
+const {
+  createManagerNotificationsRouter,
+} = require("./src/manager-notifications");
+
 const app = express();
 
 app.disable("x-powered-by");
@@ -113,6 +117,15 @@ app.use(
   createWorkspaceRouter(pool, {
     manager: true,
   })
+);
+
+// Manager-owned notifications; all writes require CSRF protection.
+app.use(
+  "/api/manager-notifications",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  createManagerNotificationsRouter(pool)
 );
 
 // Protect the Driver page using the existing session.
