@@ -403,7 +403,20 @@
         notificationList.appendChild(empty);
       }
 
+      const categories = new Map([
+        ["overdue_order", { label: "Overdue Order", style: "overdue" }],
+        ["wallet_request", { label: "Wallet Request", style: "wallet" }],
+        ["driver_message", { label: "Driver Message", style: "message" }]
+      ]);
+
       for (const item of notificationRows) {
+        const category = categories.get(item.notification_type) || {
+          label: "System", style: "system"
+        };
+        const categoryBadge = document.createElement("span");
+        categoryBadge.className = `sf-notification-category sf-notification-category-${category.style}`;
+        categoryBadge.textContent = category.label;
+
         const article = document.createElement("article");
         article.className = "sf-notification-item";
         article.classList.toggle("sf-notification-unread", !item.read_at);
@@ -441,7 +454,10 @@
           actions.appendChild(markRead);
         }
 
-        article.append(heading, description, time, actions);
+        const itemHeading = document.createElement("div");
+        itemHeading.className = "sf-notification-item-heading";
+        itemHeading.append(categoryBadge, heading);
+        article.append(itemHeading, description, time, actions);
         notificationList.appendChild(article);
       }
       notificationControls();
