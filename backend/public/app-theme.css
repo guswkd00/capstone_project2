@@ -520,3 +520,49 @@ body.sf-manager-layout #sf-manager-header :is(a, button, summary):focus-visible 
   body.sf-manager-layout .sf-mobile-bar,
   body.sf-manager-layout .sf-sidebar-backdrop { display: none !important; }
 }
+
+
+/* Notification category labels. */
+body.sf-manager-layout .sf-notification-item-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+body.sf-manager-layout .sf-notification-category {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+body.sf-manager-layout .sf-notification-category-overdue {
+  background: #fee4e2;
+  border-color: #fecdca;
+  color: #b42318;
+}
+
+body.sf-manager-layout .sf-notification-category-wallet {
+  background: #fff4d6;
+  border-color: #f9dfa0;
+  color: #854a0e;
+}
+
+body.sf-manager-layout .sf-notification-category-message {
+  background: #e7f0ff;
+  border-color: #c5daff;
+  color: #1d4d9b;
+}
+
+body.sf-manager-layout .sf-notification-category-system {
+  background: #f2f4f7;
+  border-color: #d0d5dd;
+  color: #344054;
+}
