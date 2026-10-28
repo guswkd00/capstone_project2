@@ -24,6 +24,7 @@
 
     let session = null;
     let report = null;
+    let rich = null;
     let ready = false;
     let busy = false;
     let dirty = false;
@@ -89,6 +90,8 @@
       const editLocked = locked || readonly();
 
       get("fields").disabled = editLocked;
+
+      rich?.setReadonly(editLocked);
 
       for (const id of [
         "save",
@@ -191,17 +194,25 @@
     }
 
     function currentInput() {
-      return {
+      const input = {
         title: fields.title.value.trim(),
-        report_type:
-          fields.report_type.value,
-        period_start:
-          fields.period_start.value,
-        period_end:
-          fields.period_end.value,
-        content:
-          fields.content.value
+        report_type: fields.report_type.value,
+        period_start: fields.period_start.value,
+        period_end: fields.period_end.value,
+        content: rich
+          ? rich.getPlainText()
+          : fields.content.value
       };
+
+      if (rich) {
+        input.editor_document =
+          rich.getDocument();
+
+        input.page_settings =
+          rich.getPageSettings();
+      }
+
+      return input;
     }
 
     function inputValid() {
@@ -225,18 +236,21 @@
     }
 
     function updatePreview() {
-      const input = currentInput();
+      const title =
+        fields.title.value.trim();
 
       get("preview-title").textContent =
-        input.title || "Untitled Report";
+        title || "Untitled Report";
 
       get("preview-type").textContent =
-        TYPE_LABELS[input.report_type] ||
-        "General Operations";
+        TYPE_LABELS[
+          fields.report_type.value
+        ] || "General Operations";
 
       get("preview-period").textContent =
-        input.period_start && input.period_end
-          ? `${input.period_start} to ${input.period_end}`
+        fields.period_start.value &&
+        fields.period_end.value
+          ? `${fields.period_start.value} to ${fields.period_end.value}`
           : "—";
 
       get("preview-author").textContent =
@@ -249,53 +263,33 @@
           new Date().toISOString()
         );
 
-      let content = input.content;
-
-      const lines = content.split("\n");
-
-      // Generated drafts may already include the report title.
-      if (
-        input.title &&
-        lines[0]?.trim() === input.title
-      ) {
-        lines.shift();
-
-        while (
-          lines.length &&
-          !lines[0].trim()
-        ) {
-          lines.shift();
-        }
-
-        content = lines.join("\n");
+      if (rich) {
+        rich.renderPreview(title);
+      } else {
+        get("preview-content").textContent =
+          fields.content.value.trim()
+            ? fields.content.value
+            : "Your report content will appear here.";
       }
-
-      get("preview-content").textContent =
-        content.trim()
-          ? content
-          : "Your report content will appear here.";
 
       const snapshot =
         report?.data_snapshot;
 
-      if (snapshot && !contextChanged()) {
-        const sourceText =
+      if (
+        snapshot &&
+        !contextChanged()
+      ) {
+        get("preview-source").textContent =
           `System data snapshot: ${
             dateTime(snapshot.generated_at)
-          }. ${
-            snapshot.basis || ""
-          }`;
-
-        get("preview-source").textContent =
-          sourceText;
+          }. ${snapshot.basis || ""}`;
 
         get("data-status").textContent =
           snapshot.draft_method === "gemini"
             ? `AI draft based on system data generated at ${dateTime(snapshot.generated_at)}.`
             : `System data generated at ${dateTime(snapshot.generated_at)}.`;
       } else {
-        get("preview-source").textContent =
-          "";
+        get("preview-source").textContent = "";
 
         get("data-status").textContent =
           contextChanged()
@@ -414,7 +408,10 @@
         options
       );
 
-    function applyReport(data) {
+    async function applyReport(
+      data,
+      { replaceEditor = true } = {}
+    ) {
       if (
         !data ||
         !validId(data.id) ||
@@ -440,30 +437,33 @@
           : []
       };
 
-      fields.title.value =
-        report.title;
-
+      fields.title.value = report.title;
       fields.report_type.value =
         report.report_type;
-
       fields.period_start.value =
         report.period_start;
-
       fields.period_end.value =
         report.period_end;
-
-      fields.content.value =
-        report.content;
-
       fields.period_end.min =
         report.period_start;
+
+      if (replaceEditor) {
+        fields.content.value =
+          report.content;
+
+        if (rich) {
+          await rich.setDocument(
+            report.editor_document || null,
+            report.content,
+            report.page_settings || null
+          );
+        }
+      }
 
       dirty = false;
       uncertain = false;
 
-      const url = new URL(
-        location.href
-      );
+      const url = new URL(location.href);
 
       url.searchParams.set(
         "id",
@@ -481,14 +481,19 @@
       controls();
     }
 
-    async function loadReport() {
+    async function loadReport(
+      { replaceEditor = true } = {}
+    ) {
       if (!report) return;
 
       const result = await api(
         `/${report.id}`
       );
 
-      applyReport(result.data);
+      await applyReport(
+        result.data,
+        { replaceEditor }
+      );
     }
 
     async function ensureSaved() {
@@ -515,7 +520,10 @@
           }
         );
 
-        applyReport(result.data);
+        await applyReport(
+          result.data,
+          { replaceEditor: false }
+        );
 
         return report;
       }
@@ -532,7 +540,10 @@
           }
         );
 
-        applyReport(result.data);
+        await applyReport(
+          result.data,
+          { replaceEditor: false }
+        );
       }
 
       return report;
@@ -623,10 +634,9 @@
                   }
                 );
 
-                report.version =
-                  Number(
-                    result.report_version
-                  );
+                report.version = Number(
+                  result.report_version
+                );
 
                 report.files =
                   report.files.filter(
@@ -636,7 +646,9 @@
 
                 renderFiles();
 
-                await loadReport();
+                await loadReport({
+                  replaceEditor: false
+                });
 
                 message(
                   "Attachment removed."
@@ -724,6 +736,105 @@
       }[extension] || "";
     }
 
+    function validateFiles(files) {
+      const existing =
+        report?.files?.length || 0;
+
+      if (
+        files.length + existing > 3
+      ) {
+        throw new Error(
+          "A report can contain up to 3 attachments, including inserted images."
+        );
+      }
+
+      for (const file of files) {
+        if (
+          !file.size ||
+          file.size > 5 * 1024 * 1024
+        ) {
+          throw new Error(
+            "Choose non-empty files up to 5 MB each."
+          );
+        }
+
+        if (
+          file.name.length > 255 ||
+          !fileContentType(file)
+        ) {
+          throw new Error(
+            "Choose PDF, PNG or JPG files with valid filenames."
+          );
+        }
+      }
+    }
+
+    async function uploadFile(file) {
+      const result = await api(
+        `/${report.id}/files?name=${
+          encodeURIComponent(file.name)
+        }`,
+        {
+          method: "POST",
+          body: file,
+
+          headers: {
+            "Content-Type":
+              fileContentType(file),
+            "X-Report-Version":
+              String(report.version)
+          },
+
+          timeout: 45000
+        }
+      );
+
+      report.version = Number(
+        result.report_version
+      );
+
+      report.files.push(
+        result.data
+      );
+
+      renderFiles();
+
+      return result.data;
+    }
+
+    async function uploadEditorImage(file) {
+      if (
+        !ready ||
+        busy ||
+        readonly() ||
+        uncertain
+      ) {
+        return null;
+      }
+
+      if (!inputValid()) return null;
+
+      let asset = null;
+
+      await run(async () => {
+        validateFiles([file]);
+
+        message(
+          "Uploading report image..."
+        );
+
+        await ensureSaved();
+
+        asset = await uploadFile(file);
+
+        message(
+          "Image uploaded. Save Draft after inserting it."
+        );
+      });
+
+      return asset;
+    }
+
     form.addEventListener(
       "submit",
       event => {
@@ -736,7 +847,9 @@
 
           await ensureSaved();
 
-          message("Draft saved.");
+          message(
+            "Draft and formatting saved."
+          );
         });
       }
     );
@@ -747,9 +860,9 @@
         if (!inputValid()) return;
 
         if (
-          fields.content.value.trim() &&
+          currentInput().content.trim() &&
           !confirm(
-            "Generate a new data draft and replace the current report content?"
+            "Generate a new data draft? This replaces the current report content and its formatting."
           )
         ) {
           return;
@@ -773,7 +886,7 @@
             }
           );
 
-          applyReport({
+          await applyReport({
             ...report,
             ...result.data
           });
@@ -792,9 +905,9 @@
         if (!inputValid()) return;
 
         if (
-          fields.content.value.trim() &&
+          currentInput().content.trim() &&
           !confirm(
-            "Create an AI draft and replace the current report content?"
+            "Create an AI draft? This replaces the current report content and its formatting."
           )
         ) {
           return;
@@ -820,7 +933,7 @@
             }
           );
 
-          applyReport({
+          await applyReport({
             ...report,
             ...result.data
           });
@@ -844,47 +957,9 @@
 
         if (!selected.length) return;
 
-        const existing =
-          report?.files?.length || 0;
-
-        if (
-          selected.length + existing > 3
-        ) {
-          message(
-            "A report can contain up to 3 attachments.",
-            true
-          );
-
-          return;
-        }
-
-        for (const file of selected) {
-          if (
-            !file.size ||
-            file.size > 5 * 1024 * 1024
-          ) {
-            message(
-              "Choose non-empty files up to 5 MB each.",
-              true
-            );
-
-            return;
-          }
-
-          if (
-            file.name.length > 255 ||
-            !fileContentType(file)
-          ) {
-            message(
-              "Choose PDF, PNG or JPG files with valid filenames.",
-              true
-            );
-
-            return;
-          }
-        }
-
         run(async () => {
+          validateFiles(selected);
+
           await ensureSaved();
 
           for (
@@ -895,36 +970,14 @@
               `Uploading ${index + 1} of ${selected.length}...`
             );
 
-            const result = await api(
-              `/${report.id}/files?name=${
-                encodeURIComponent(file.name)
-              }`,
-              {
-                method: "POST",
-                body: file,
-                headers: {
-                  "Content-Type":
-                    fileContentType(file),
-                  "X-Report-Version":
-                    String(report.version)
-                },
-                timeout: 45000
-              }
-            );
-
-            report.version =
-              Number(
-                result.report_version
-              );
-
-            report.files.push(
-              result.data
-            );
+            await uploadFile(file);
           }
 
           get("files").value = "";
 
-          await loadReport();
+          await loadReport({
+            replaceEditor: false
+          });
 
           message(
             "Attachments uploaded."
@@ -939,7 +992,7 @@
         if (!inputValid()) return;
 
         if (
-          !fields.content.value.trim() &&
+          !currentInput().content.trim() &&
           !report?.files?.length
         ) {
           message(
@@ -975,7 +1028,9 @@
             }
           );
 
-          applyReport(result.data);
+          await applyReport(
+            result.data
+          );
 
           message(
             "Report submitted. You can view it in My Reports or export a PDF."
@@ -1012,19 +1067,23 @@
     get("export").addEventListener(
       "click",
       () => {
-        if (!ready || busy) return;
+        run(async () => {
+          updatePreview();
 
-        updatePreview();
+          if (rich) {
+            await rich.whenImagesReady();
+          }
 
-        document.title = (
-          fields.title.value.trim() ||
-          "Report"
-        ).replace(
-          /[\\/:*?"<>|]/g,
-          "-"
-        );
+          document.title = (
+            fields.title.value.trim() ||
+            "Report"
+          ).replace(
+            /[\\/:*?"<>|]/g,
+            "-"
+          );
 
-        window.print();
+          window.print();
+        });
       }
     );
 
@@ -1058,21 +1117,31 @@
       }
     );
 
+    function changed() {
+      dirty = true;
+
+      fields.period_end.min =
+        fields.period_start.value;
+
+      try {
+        updatePreview();
+      } catch (error) {
+        message(
+          error.message,
+          true
+        );
+      }
+
+      controls();
+    }
+
     for (
       const element
       of Object.values(fields)
     ) {
       element.addEventListener(
         "input",
-        () => {
-          dirty = true;
-
-          fields.period_end.min =
-            fields.period_start.value;
-
-          updatePreview();
-          controls();
-        }
+        changed
       );
     }
 
@@ -1125,6 +1194,58 @@
 
         session = result;
 
+        if (
+          !window.ManagerReportRichText?.create
+        ) {
+          throw new Error(
+            "The rich text editor script is missing. Refresh the page."
+          );
+        }
+
+        message(
+          "Loading rich text editor..."
+        );
+
+        rich =
+          await window.ManagerReportRichText.create({
+            textarea: fields.content,
+            preview: get("preview-content"),
+            paper: get("preview"),
+
+            getReportId: () =>
+              report?.id || null,
+
+            onChange: () => {
+              if (!rich) return;
+
+              fields.content.dispatchEvent(
+                new Event("input", {
+                  bubbles: true
+                })
+              );
+            },
+
+            onUploadImage:
+              uploadEditorImage,
+
+            onError: error => {
+              if (
+                ready &&
+                !readonly() &&
+                !busy
+              ) {
+                dirty = true;
+              }
+
+              message(
+                error.message,
+                true
+              );
+
+              controls();
+            }
+          });
+
         const selectedId =
           new URLSearchParams(
             location.search
@@ -1141,12 +1262,19 @@
             `/${selectedId}`
           );
 
-          applyReport(
+          await applyReport(
             loaded.data
+          );
+        } else {
+          await rich.setDocument(
+            null,
+            "",
+            null
           );
         }
 
         ready = true;
+        dirty = false;
 
         updatePreview();
         controls();
