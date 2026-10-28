@@ -203,20 +203,36 @@
     accountActions.appendChild(logout);
     navigation.appendChild(accountActions);
 
-    // Keep the existing dashboard reminders available in the shared shell.
-    const notificationButton = document.createElement("button");
-    notificationButton.type = "button";
-    notificationButton.id = "sf-notification-toggle";
-    notificationButton.className = "sf-notification-toggle";
-    notificationButton.title = "Notifications";
-    notificationButton.setAttribute("aria-label", "Open notifications");
-    notificationButton.setAttribute("aria-haspopup", "dialog");
-    notificationButton.setAttribute("aria-controls", "sf-notification-dialog");
-    notificationButton.setAttribute("aria-expanded", "false");
-
+    // Shared notification center backed by Manager-owned API records.
     iconPaths.notifications =
       "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9 M10 21h4";
-    notificationButton.appendChild(icon("notifications"));
+
+    const notificationButtons = [];
+    const notificationBadges = [];
+
+    function createNotificationButton(id) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.id = id;
+      button.className = "sf-notification-toggle";
+      button.title = "Notifications";
+      button.setAttribute("aria-label", "Open notifications");
+      button.setAttribute("aria-haspopup", "dialog");
+      button.setAttribute("aria-controls", "sf-notification-dialog");
+      button.setAttribute("aria-expanded", "false");
+
+      const badge = document.createElement("span");
+      badge.className = "sf-notification-badge";
+      badge.hidden = true;
+      badge.setAttribute("aria-hidden", "true");
+      button.append(icon("notifications"), badge);
+      notificationButtons.push(button);
+      notificationBadges.push(badge);
+      button.addEventListener("click", openNotifications);
+      return button;
+    }
+
+    const notificationButton = createNotificationButton("sf-notification-toggle");
     top.appendChild(notificationButton);
 
     const notificationDialog = document.createElement("dialog");
@@ -228,67 +244,303 @@
     notificationHeading.className = "sf-notification-heading";
     const notificationTitle = document.createElement("h2");
     notificationTitle.id = "sf-notification-title";
-    notificationTitle.textContent = "System Notifications";
+    notificationTitle.textContent = "Notifications";
 
-    const closeNotifications = document.createElement("button");
-    closeNotifications.type = "button";
-    closeNotifications.className = "sf-notification-close";
-    closeNotifications.textContent = "Close";
+    function notificationAction(text, className) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = className;
+      button.textContent = text;
+      return button;
+    }
+
+    const closeNotifications = notificationAction("Close", "sf-notification-close");
     notificationHeading.append(notificationTitle, closeNotifications);
+
+    const notificationTools = document.createElement("div");
+    notificationTools.className = "sf-notification-tools";
+    const refreshNotificationsButton = notificationAction("Refresh", "sf-notification-action");
+    const markAllNotificationsButton = notificationAction("Mark all as read", "sf-notification-action");
+    notificationTools.append(refreshNotificationsButton, markAllNotificationsButton);
+
+    const notificationStatus = document.createElement("p");
+    notificationStatus.className = "sf-notification-status";
+    notificationStatus.setAttribute("role", "status");
+    notificationStatus.textContent = "Loading notifications...";
 
     const notificationList = document.createElement("div");
     notificationList.className = "sf-notification-list";
+    notificationList.setAttribute("aria-label", "Notifications");
+    const olderNotificationsButton = notificationAction("Load earlier", "sf-notification-action");
+    olderNotificationsButton.hidden = true;
 
-    for (const [title, message] of [
-      [
-        "ShopeeFood DSS",
-        "Refresh the report to retrieve the latest recorded delivery metrics and COD records."
-      ],
-      [
-        "Dispatch Reminder",
-        "Check overdue open orders in the metrics summary."
-      ]
-    ]) {
-      const item = document.createElement("article");
-      item.className = "sf-notification-item";
-      const heading = document.createElement("strong");
-      heading.textContent = title;
-      const description = document.createElement("p");
-      description.textContent = message;
-      item.append(heading, description);
-      notificationList.appendChild(item);
-    }
-
-    const reportLink = addLink(
-      notificationList, "Open Dashboard & Reports", "/dashboard.html"
+    notificationDialog.append(
+      notificationHeading, notificationTools, notificationStatus,
+      notificationList, olderNotificationsButton
     );
-    reportLink.className = "sf-notification-report";
-    notificationDialog.append(notificationHeading, notificationList);
     document.body.appendChild(notificationDialog);
 
-    notificationButton.addEventListener("click", () => {
+    let notificationRows = [];
+    let notificationCursor = null;
+    let notificationHasOlder = false;
+    let notificationUnread = 0;
+    let notificationBusy = false;
+    let notificationStopped = false;
+    let notificationTimer = null;
+    let notificationController = null;
+
+    const validNotificationId = value =>
+      typeof value === "string" && /^[1-9][0-9]{0,19}$/.test(value) &&
+      BigInt(value) <= 18446744073709551615n;
+
+    function notificationTarget(value) {
+      if (typeof value !== "string" || !value.startsWith("/")) return null;
+      const url = new URL(value, location.origin);
+      if (url.origin !== location.origin ||
+          !["/dispatch.html", "/driver-support.html"].includes(url.pathname)) {
+        return null;
+      }
+      return url.href;
+    }
+
+    function notificationMessage(text, error = false) {
+      notificationStatus.textContent = text;
+      notificationStatus.classList.toggle("sf-notification-error", error);
+    }
+
+    function notificationControls() {
+      refreshNotificationsButton.disabled = notificationBusy || notificationStopped;
+      markAllNotificationsButton.disabled =
+        notificationBusy || notificationStopped || !notificationUnread || !notificationRows.length;
+      olderNotificationsButton.disabled = notificationBusy || notificationStopped;
+      olderNotificationsButton.hidden = !notificationCursor;
+      notificationList.querySelectorAll("button").forEach(button => {
+        button.disabled = notificationBusy || notificationStopped;
+      });
+    }
+
+    function updateNotificationBadge(count) {
+      notificationUnread = count;
+      notificationBadges.forEach(badge => {
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.hidden = count === 0;
+      });
+      notificationButtons.forEach(button => {
+        button.classList.remove("sf-notification-unavailable");
+        button.title = count ? `Notifications (${count} unread)` : "Notifications";
+        button.setAttribute("aria-label", count
+          ? `Open notifications, ${count} unread`
+          : "Open notifications, none unread");
+      });
+    }
+
+    async function notificationRequest(path, method = "GET", body) {
+      const controller = new AbortController();
+      notificationController = controller;
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
+      try {
+        const response = await fetch(`/api/manager-notifications${path}`, {
+          method,
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: controller.signal,
+          headers: method === "GET" ? {} : {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": session.csrf_token
+          },
+          ...(body === undefined ? {} : { body: JSON.stringify(body) })
+        });
+
+        if ([401, 403].includes(response.status)) {
+          notificationStopped = true;
+          clearInterval(notificationTimer);
+          throw new Error("Your session or security token expired. Refresh the page or sign in again.");
+        }
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Notifications are unavailable. Please retry.");
+        }
+        return result;
+      } finally {
+        clearTimeout(timeout);
+        if (notificationController === controller) notificationController = null;
+      }
+    }
+
+    function acceptNotifications(result, older = false) {
+      if (!result || !Array.isArray(result.data) || result.data.length > 50 ||
+          !Number.isSafeInteger(result.unread_count) || result.unread_count < 0 ||
+          (result.next_before != null && !validNotificationId(result.next_before)) ||
+          result.data.some(item => !item || !validNotificationId(item.id) ||
+            typeof item.title !== "string" || typeof item.message !== "string" ||
+            !notificationTarget(item.target_url))) {
+        throw new Error("The server returned invalid notification data.");
+      }
+
+      if (older || notificationHasOlder) {
+        const merged = new Map(notificationRows.map(item => [item.id, item]));
+        result.data.forEach(item => merged.set(item.id, item));
+        notificationRows = [...merged.values()].sort((a, b) =>
+          BigInt(a.id) > BigInt(b.id) ? -1 : BigInt(a.id) < BigInt(b.id) ? 1 : 0);
+      } else {
+        notificationRows = result.data;
+      }
+
+      if (older || !notificationHasOlder) notificationCursor = result.next_before || null;
+      if (older) notificationHasOlder = true;
+      updateNotificationBadge(result.unread_count);
+      renderNotifications();
+    }
+
+    function renderNotifications() {
+      notificationList.replaceChildren();
+      if (!notificationRows.length) {
+        const empty = document.createElement("p");
+        empty.className = "sf-notification-empty";
+        empty.textContent = "No notifications yet.";
+        notificationList.appendChild(empty);
+      }
+
+      for (const item of notificationRows) {
+        const article = document.createElement("article");
+        article.className = "sf-notification-item";
+        article.classList.toggle("sf-notification-unread", !item.read_at);
+        const heading = document.createElement("strong");
+        heading.textContent = item.title;
+        const description = document.createElement("p");
+        description.textContent = item.message;
+        const time = document.createElement("small");
+        const date = new Date(item.created_at);
+        time.textContent = Number.isNaN(date.getTime()) ? "Saved notification" : date.toLocaleString();
+        const actions = document.createElement("div");
+        actions.className = "sf-notification-item-actions";
+
+        const link = document.createElement("a");
+        link.href = notificationTarget(item.target_url);
+        link.textContent = "View details";
+        link.addEventListener("click", event => {
+          if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+          if (item.read_at) return;
+          event.preventDefault();
+          notificationTask(async () => {
+            await markNotificationRead(item);
+            window.location.assign(link.href);
+          });
+        });
+        actions.appendChild(link);
+
+        if (!item.read_at) {
+          const markRead = notificationAction("Mark as read", "sf-notification-action");
+          markRead.addEventListener("click", () => notificationTask(async () => {
+            await markNotificationRead(item);
+            acceptNotifications(await notificationRequest("/"));
+            notificationMessage("Notification marked as read.");
+          }));
+          actions.appendChild(markRead);
+        }
+
+        article.append(heading, description, time, actions);
+        notificationList.appendChild(article);
+      }
+      notificationControls();
+    }
+
+    async function markNotificationRead(item) {
+      await notificationRequest(`/${item.id}/read`, "POST");
+      const updated = notificationRows.find(row => row.id === item.id);
+      if (updated && !updated.read_at) {
+        updated.read_at = new Date().toISOString();
+        updateNotificationBadge(Math.max(0, notificationUnread - 1));
+      }
+    }
+
+    async function notificationTask(task) {
+      if (notificationBusy || notificationStopped) return;
+      notificationBusy = true;
+      notificationControls();
+      try {
+        await task();
+      } catch (error) {
+        notificationMessage(error.name === "AbortError"
+          ? "Notifications timed out. Use Refresh to retry."
+          : error.message, true);
+        notificationButtons.forEach(button => {
+          button.classList.add("sf-notification-unavailable");
+          button.title = "Notifications could not be updated";
+          button.setAttribute("aria-label", "Open notifications, update unavailable");
+        });
+      } finally {
+        notificationBusy = false;
+        notificationControls();
+      }
+    }
+
+    function refreshNotifications() {
+      if (document.hidden) return;
+      return notificationTask(async () => {
+        acceptNotifications(await notificationRequest("/sync", "POST"));
+        notificationMessage("");
+      });
+    }
+
+    function openNotifications() {
       if (notificationDialog.open) return;
       notificationDialog.showModal();
-      notificationButton.setAttribute("aria-expanded", "true");
-    });
+      notificationButtons.forEach(button => button.setAttribute("aria-expanded", "true"));
+      refreshNotifications();
+    }
 
-    closeNotifications.addEventListener("click", () => {
-      notificationDialog.close();
-    });
+    refreshNotificationsButton.addEventListener("click", refreshNotifications);
+    markAllNotificationsButton.addEventListener("click", () => notificationTask(async () => {
+      const throughId = notificationRows[0]?.id;
+      if (!validNotificationId(throughId)) return;
+      await notificationRequest("/read-all", "POST", { through_id: throughId });
+      notificationRows.forEach(item => {
+        if (BigInt(item.id) <= BigInt(throughId)) item.read_at ||= new Date().toISOString();
+      });
+      acceptNotifications(await notificationRequest("/"));
+      notificationMessage("Notifications marked as read.");
+    }));
 
+    olderNotificationsButton.addEventListener("click", () => notificationTask(async () => {
+      if (!notificationCursor) return;
+      acceptNotifications(await notificationRequest(
+        `/?before=${encodeURIComponent(notificationCursor)}`
+      ), true);
+      notificationMessage("");
+    }));
+
+    closeNotifications.addEventListener("click", () => notificationDialog.close());
     notificationDialog.addEventListener("close", () => {
-      notificationButton.setAttribute("aria-expanded", "false");
+      notificationButtons.forEach(button => button.setAttribute("aria-expanded", "false"));
     });
-
     notificationDialog.addEventListener("click", event => {
       if (event.target !== notificationDialog) return;
       const rect = notificationDialog.getBoundingClientRect();
-      if (
-        event.clientX < rect.left || event.clientX > rect.right ||
-        event.clientY < rect.top || event.clientY > rect.bottom
-      ) {
+      if (event.clientX < rect.left || event.clientX > rect.right ||
+          event.clientY < rect.top || event.clientY > rect.bottom) {
         notificationDialog.close();
       }
+    });
+
+    function startNotificationPolling() {
+      clearInterval(notificationTimer);
+      if (notificationStopped) return;
+      refreshNotifications();
+      notificationTimer = setInterval(refreshNotifications, 30000);
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshNotifications();
+    });
+    window.addEventListener("pagehide", () => {
+      clearInterval(notificationTimer);
+      notificationController?.abort();
+    });
+    window.addEventListener("pageshow", event => {
+      if (event.persisted) startNotificationPolling();
     });
 
     let signingOut = false;
@@ -347,7 +599,8 @@
     const mobileBrand = document.createElement("a");
     mobileBrand.href = "/dashboard.html";
     mobileBrand.textContent = "ShopeeFood";
-    mobileBar.append(menuToggle, mobileBrand);
+    const mobileNotificationButton = createNotificationButton("sf-mobile-notification-toggle");
+    mobileBar.append(menuToggle, mobileBrand, mobileNotificationButton);
     const backdrop = document.createElement("button");
     backdrop.type = "button";
     backdrop.className = "sf-sidebar-backdrop";
@@ -400,6 +653,8 @@
         }
       }
     });
+
+    startNotificationPolling();
 
     const orderView =
       new URLSearchParams(window.location.search).get("orders");
