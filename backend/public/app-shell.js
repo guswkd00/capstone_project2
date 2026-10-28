@@ -97,21 +97,18 @@
     top.appendChild(brand);
 
     const user = document.createElement("span");
-    user.className = "sf-user";
-    user.textContent = Mai Anh & Hong Anh Lalala
-      `${session.user.full_name} · Manager`;
+user.className = "sf-user";
+user.textContent = "Mai Anh & Hồng Anh lalala · Manager";
 
-    const profile = document.createElement("div");
-    profile.className = "sf-sidebar-profile";
+const profile = document.createElement("div");
+profile.className = "sf-sidebar-profile";
 
-    const avatar = document.createElement("span");
-    avatar.className = "sf-avatar";
-    avatar.setAttribute("aria-hidden", "true");
-   avatar.textContent = "MA";
-      session.user.full_name || "M"
-    ).trim().slice(0, 1).toUpperCase();
+const avatar = document.createElement("span");
+avatar.className = "sf-avatar";
+avatar.setAttribute("aria-hidden", "true");
+avatar.textContent = "MA";
 
-    profile.append(avatar, user);
+profile.append(avatar, user);
 
     const navigation = document.createElement("nav");
     navigation.className = "sf-navigation";
