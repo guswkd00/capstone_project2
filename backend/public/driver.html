@@ -24,12 +24,97 @@
   >
 
   <style>
-    button.df-primary:hover:not(:disabled) {
-      background: #d73a1a;
-      border-color: #d73a1a;
-      color: #ffffff;
-    }
-  </style>
+  :root {
+    --shopee-orange: #ee4d2d;
+    --shopee-orange-dark: #d73a1a;
+    --shopee-bg: #fff1ec;      
+    --shopee-border: #f6c9bb;  
+  }
+
+  body.sf-app {
+    background: var(--shopee-bg);
+  }
+
+  body.sf-app header {
+    background: var(--shopee-orange);
+    border-bottom: none;
+    box-shadow: 0 2px 8px rgba(238, 77, 45, 0.25);
+  }
+
+  body.sf-app .top-accent-bar {
+    background: var(--shopee-orange-dark);
+  }
+
+  body.sf-app header .brand-title,
+  body.sf-app header .brand-sub,
+  body.sf-app header nav a,
+  body.sf-app header nav .nav-link-btn,
+  body.sf-app header .nav-profile-text b,
+  body.sf-app header .nav-profile-text small,
+  body.sf-app header .profile-account-label {
+    color: #ffffff;
+  }
+
+  body.sf-app header nav svg,
+  body.sf-app header .app-logo svg {
+    stroke: #ffffff;
+  }
+
+  body.sf-app header nav a,
+  body.sf-app header nav .nav-link-btn {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  body.sf-app header nav a:hover,
+  body.sf-app header nav .nav-link-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+  }
+
+  body.sf-app header .role-chip {
+    background: #ffffff;
+    color: var(--shopee-orange);
+  }
+
+  body.sf-app header .avatar {
+    background: #ffffff;
+    color: var(--shopee-orange);
+  }
+
+  body.sf-app .card,
+  body.sf-app .metric,
+  body.sf-app .wallet-item,
+  body.sf-app .points-box,
+  body.sf-app .toolbar,
+  body.sf-app .deliveries > *,
+  body.sf-app dialog {
+    background: #ffffff;
+    border: 1px solid var(--shopee-border);
+    border-radius: 12px;
+  }
+
+  body.sf-app .toolbar {
+    padding: 10px 14px;
+  }
+
+  button.df-primary:hover:not(:disabled) {
+    background: var(--shopee-orange-dark);
+    border-color: var(--shopee-orange-dark);
+    color: #ffffff;
+  }
+
+  body.sf-app main button.active {
+    background: var(--shopee-orange);
+    border-color: var(--shopee-orange);
+    color: #ffffff;
+  }
+
+  body.sf-app .points-box strong,
+  body.sf-app .metric strong {
+    color: var(--shopee-orange);
+  }
+</style>
 </head>
 
 <body class="sf-app">
