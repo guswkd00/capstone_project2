@@ -353,6 +353,186 @@ function createWorkspaceRouter(
     );
   }
 
+  if (manager) {
+    router.get(
+      "/orders/:id",
+      handle(async (req, res) => {
+        const orderId = id(req.params.id);
+
+        const [rows] = await pool.execute(
+          `SELECT
+             o.id,
+             o.order_code,
+             o.status,
+             o.customer_name,
+             o.delivery_address,
+             o.total_amount,
+             o.payment_method,
+             o.cod_amount,
+             o.due_at,
+             o.delivery_fee,
+             d.driver_code,
+             d.full_name AS driver_name,
+             r.name AS restaurant_name,
+             r.address AS pickup_address
+           FROM orders o
+           LEFT JOIN drivers d ON d.id = o.driver_id
+           LEFT JOIN restaurants r ON r.id = o.restaurant_id
+           WHERE o.id = ?`,
+          [orderId]
+        );
+
+        if (!rows.length) {
+          throw error(404, "Order not found.");
+        }
+
+        const [items] = await pool.execute(
+          `SELECT
+             item_name,
+             quantity,
+             unit_price
+           FROM order_items
+           WHERE order_id = ?
+           ORDER BY id`,
+          [orderId]
+        );
+
+        res.json({
+          data: rows[0],
+          items,
+        });
+      })
+    );
+
+    router.post(
+      "/orders/:id/messages/read",
+      handle(async (req, res) => {
+        const throughId = id(req.body?.through_id);
+        const orderId = id(req.params.id);
+
+        await pool.execute(
+          `UPDATE manager_notifications n
+           JOIN driver_order_messages m
+             ON n.event_key = CONCAT('driver-message:', m.id)
+             AND n.notification_type = 'driver_message'
+           SET n.read_at = COALESCE(
+             n.read_at,
+             UTC_TIMESTAMP()
+           )
+           WHERE n.manager_id = ?
+             AND m.order_id = ?
+             AND m.id <= ?`,
+          [req.user.id, orderId, throughId]
+        );
+
+        res.json({
+          message: "Conversation marked as read.",
+        });
+      })
+    );
+  } else {
+    router.get(
+      "/messages/unread",
+      handle(async (req, res) => {
+        const [rows] = await pool.execute(
+          `SELECT
+             o.id AS order_id,
+             o.order_code,
+             COUNT(*) AS unread_count
+           FROM orders o
+           JOIN driver_order_messages m
+             ON m.order_id = o.id
+             AND m.sender_role = 'manager'
+             AND m.created_at >= COALESCE(
+               o.assigned_at,
+               m.created_at
+             )
+           LEFT JOIN order_message_reads r
+             ON r.user_id = ?
+             AND r.order_id = o.id
+           WHERE o.driver_id = ?
+             AND m.id > COALESCE(r.last_message_id, 0)
+           GROUP BY o.id, o.order_code
+           ORDER BY o.id DESC`,
+          [req.user.id, req.driver.id]
+        );
+
+        const data = rows.map(row => ({
+          order_id: Number(row.order_id),
+          order_code: row.order_code,
+          unread_count: Number(row.unread_count),
+        }));
+
+        res.json({
+          data,
+          unread_count: data.reduce(
+            (sum, row) => sum + row.unread_count,
+            0
+          ),
+        });
+      })
+    );
+
+    router.post(
+      "/orders/:id/messages/read",
+      handle(async (req, res) => {
+        const throughId = id(req.body?.through_id);
+
+        await transaction(async db => {
+          await lockDriver(db, req);
+
+          const order = await authorizedOrder(
+            db,
+            req,
+            true
+          );
+
+          const [rows] = await db.execute(
+            `SELECT id
+             FROM driver_order_messages
+             WHERE id = ?
+               AND order_id = ?
+               AND created_at >= COALESCE(
+                 ?,
+                 created_at
+               )`,
+            [
+              throughId,
+              order.id,
+              order.assigned_at,
+            ]
+          );
+
+          if (!rows.length) {
+            throw error(404, "Message not found.");
+          }
+
+          await db.execute(
+            `INSERT INTO order_message_reads (
+               user_id,
+               order_id,
+               last_message_id
+             ) VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+               last_message_id = GREATEST(
+                 last_message_id,
+                 VALUES(last_message_id)
+               )`,
+            [
+              req.user.id,
+              order.id,
+              throughId,
+            ]
+          );
+        });
+
+        res.json({
+          message: "Conversation marked as read.",
+        });
+      })
+    );
+  }
+
   async function authorizedOrder(
     db,
     req,
@@ -425,13 +605,18 @@ function createWorkspaceRouter(
            LIMIT 51`,
           manager
             ? [order.id, before]
-            : [order.id, before, order.assigned_at]
+            : [
+              order.id,
+              before,
+              order.assigned_at,
+            ]
         );
 
         const more = rows.length > 50;
 
         return {
           messages: rows.slice(0, 50).reverse(),
+          order_status: order.status,
           next_cursor: more
             ? String(rows[49].id)
             : null,
@@ -441,6 +626,7 @@ function createWorkspaceRouter(
       res.json({
         data: data.messages,
         next_cursor: data.next_cursor,
+        order_status: data.order_status,
         channel:
           "Manager support; external customer messaging is not connected.",
       });
@@ -484,7 +670,10 @@ function createWorkspaceRouter(
            FROM driver_order_messages
            WHERE sender_id = ?
              AND message_key = ?`,
-          [req.user.id, req.body.message_key]
+          [
+            req.user.id,
+            req.body.message_key,
+          ]
         );
 
         if (existing.length) {
@@ -549,6 +738,47 @@ function createWorkspaceRouter(
             text.trim(),
           ]
         );
+
+        if (!manager) {
+          // Commit the message and its Manager notifications together.
+          await db.execute(
+            `INSERT INTO manager_notifications (
+               manager_id,
+               event_key,
+               notification_type,
+               title,
+               message,
+               target_url
+             )
+             SELECT
+               u.id,
+               CONCAT('driver-message:', ?),
+               'driver_message',
+               'Driver support message',
+               CONCAT(
+                 'A Driver sent a message about order ',
+                 o.order_code,
+                 '. Open Driver Support to view the conversation.'
+               ),
+               CONCAT(
+                 '/driver-support.html?order=',
+                 o.id,
+                 '&message=',
+                 ?
+               )
+             FROM users u
+             JOIN orders o ON o.id = ?
+             WHERE u.role = 'manager'
+               AND u.active = 1
+             ON DUPLICATE KEY UPDATE
+               event_key = VALUES(event_key)`,
+            [
+              result.insertId,
+              result.insertId,
+              order.id,
+            ]
+          );
+        }
 
         return {
           id: result.insertId,
