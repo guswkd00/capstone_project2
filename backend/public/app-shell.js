@@ -4,24 +4,23 @@ window.sfManagerShellReady = (async () => {
   if (document.getElementById("sf-manager-header")) return true;
 
   try {
-    let session;
-
-if (window.sfSessionReady) {
-  session = await window.sfSessionReady;
-} else {
+    const sessionReady = window.sfSessionReady || (async () => {
   const response = await fetch("/api/auth/me", {
     cache: "no-store"
   });
 
-  if (!response.ok) return false;
+  return response.ok ? response.json() : null;
+})();
 
-  session = await response.json();
+let session;
+
+if (!window.sfManagerPresentation) {
+  session = await sessionReady;
+
+  if (!session || session.user.role !== "manager") {
+    return false;
+  }
 }
-
-if (!session || session.user.role !== "manager") {
-  return false;
-}
-
     document.body.classList.add(
       "sf-app",
       "sf-manager-layout"
