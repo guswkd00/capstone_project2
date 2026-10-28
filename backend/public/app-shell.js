@@ -1,18 +1,26 @@
-(async () => {
+window.sfManagerShellReady = (async () => {
   "use strict";
 
-  if (document.getElementById("sf-manager-header")) return;
+  if (document.getElementById("sf-manager-header")) return true;
 
   try {
-    const response = await fetch("/api/auth/me", {
-      cache: "no-store"
-    });
+    let session;
 
-    if (!response.ok) return;
+if (window.sfSessionReady) {
+  session = await window.sfSessionReady;
+} else {
+  const response = await fetch("/api/auth/me", {
+    cache: "no-store"
+  });
 
-    const session = await response.json();
+  if (!response.ok) return false;
 
-    if (session.user.role !== "manager") return;
+  session = await response.json();
+}
+
+if (!session || session.user.role !== "manager") {
+  return false;
+}
 
     document.body.classList.add(
       "sf-app",
@@ -1653,9 +1661,12 @@ profile.append(avatar, user);
 
       button?.click();
     }
+     return true;
   } catch {
     console.error(
       "Unable to load shared navigation."
     );
+
+    return false;
   }
 })();
