@@ -98,7 +98,7 @@
 
     const user = document.createElement("span");
     user.className = "sf-user";
-    user.textContent =
+    user.textContent = Mai Anh & Hong Anh Lalala
       `${session.user.full_name} · Manager`;
 
     const profile = document.createElement("div");
@@ -107,7 +107,7 @@
     const avatar = document.createElement("span");
     avatar.className = "sf-avatar";
     avatar.setAttribute("aria-hidden", "true");
-    avatar.textContent = (
+   avatar.textContent = "MA";
       session.user.full_name || "M"
     ).trim().slice(0, 1).toUpperCase();
 
