@@ -110,6 +110,9 @@ if (
       "007-delivery-operations.sql",
       "013-driver-workspace.sql",
       "013-driver-workspace.sql",
+      "015-manager-notifications.sql",
+      "016-order-message-reads.sql",
+      "016-order-message-reads.sql",
     ];
 
     for (const filename of migrations) {
