@@ -194,7 +194,88 @@ profile.append(avatar, user);
         "page"
       );
     }
+    // Keep Dashboard and Reports as separate navigation entries.
+    dashboardLink.replaceChildren(
+      icon("dashboard"),
+      document.createTextNode("Dashboard")
+    );
 
+    const reportsGroup = document.createElement(
+      "details"
+    );
+
+    reportsGroup.className = "sf-reports-menu";
+
+    const reportsSummary = document.createElement(
+      "summary"
+    );
+
+    reportsSummary.append(
+      icon("orders"),
+      document.createTextNode("Reports")
+    );
+
+    const reportsDropdown = document.createElement(
+      "div"
+    );
+
+    reportsDropdown.className = "sf-dropdown";
+
+    const reportNavigation = [
+      ["Create Report", "/report-editor.html"],
+      ["My Reports", "/my-reports.html"]
+    ];
+
+    for (const [label, href] of reportNavigation) {
+      const link = addLink(
+        reportsDropdown,
+        label,
+        href
+      );
+
+      const destination = new URL(
+        href,
+        window.location.origin
+      );
+
+      if (
+        destination.pathname ===
+        window.location.pathname
+      ) {
+        link.setAttribute(
+          "aria-current",
+          "page"
+        );
+
+        reportsSummary.classList.add(
+          "sf-current-section"
+        );
+
+        reportsGroup.open = true;
+      }
+    }
+
+    reportsGroup.append(
+      reportsSummary,
+      reportsDropdown
+    );
+
+    navigation.appendChild(reportsGroup);
+
+    reportsGroup.addEventListener(
+      "toggle",
+      () => {
+        if (!reportsGroup.open) return;
+
+        navigation.querySelectorAll(
+          "details"
+        ).forEach(other => {
+          if (other !== reportsGroup) {
+            other.open = false;
+          }
+        });
+      }
+    );
     const menus = [
       [
         "Orders",
