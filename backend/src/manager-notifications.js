@@ -18,11 +18,15 @@ function createManagerNotificationsRouter(pool) {
     res.set("Cache-Control", "no-store");
 
     if (!req.user) {
-      return res.status(401).json({ message: "Sign in first." });
+      return res.status(401).json({
+        message: "Sign in first."
+      });
     }
 
     if (req.user.role !== "manager") {
-      return res.status(403).json({ message: "Manager access is required." });
+      return res.status(403).json({
+        message: "Manager access is required."
+      });
     }
 
     next();
@@ -33,7 +37,11 @@ function createManagerNotificationsRouter(pool) {
       try {
         await task(req, res);
       } catch (error) {
-        console.error("Manager notifications failed:", error.code || error.name);
+        console.error(
+          "Manager notifications failed:",
+          error.code || error.name
+        );
+
         res.status(503).json({
           message: "Notifications are unavailable. Please try again."
         });
@@ -46,8 +54,11 @@ function createManagerNotificationsRouter(pool) {
 
     try {
       await connection.beginTransaction();
+
       const result = await task(connection);
+
       await connection.commit();
+
       return result;
     } catch (error) {
       try {
@@ -55,162 +66,302 @@ function createManagerNotificationsRouter(pool) {
       } catch {
         // Preserve the original error.
       }
+
       throw error;
     } finally {
       connection.release();
     }
   }
 
-  async function list(managerId, before = null) {
+  function filters(query) {
+    const type = query.type || "all";
+    const state = query.state || "all";
+    const q = query.q || "";
+    const before = query.before || null;
+
+    if (
+      ![
+        "all",
+        "overdue_order",
+        "wallet_request",
+        "driver_message"
+      ].includes(type) ||
+      !["all", "unread", "read"].includes(state) ||
+      typeof q !== "string" ||
+      q.length > 100 ||
+      (before !== null && !validId(before))
+    ) {
+      return null;
+    }
+
+    return {
+      type,
+      state,
+      q: q.trim(),
+      before
+    };
+  }
+
+  async function list(managerId, filter = {}) {
     return transaction(async connection => {
       const [[counts]] = await connection.execute(
-        `SELECT COUNT(*) AS unread_count
+        `SELECT
+           COUNT(
+             CASE WHEN read_at IS NULL THEN 1 END
+           ) AS unread_count,
+           CAST(MAX(id) AS CHAR) AS latest_id
          FROM manager_notifications
-         WHERE manager_id = ? AND read_at IS NULL`,
+         WHERE manager_id = ?`,
         [managerId]
       );
 
+      const conditions = ["n.manager_id = ?"];
+      const values = [managerId];
+
+      if (filter.type && filter.type !== "all") {
+        conditions.push("n.notification_type = ?");
+        values.push(filter.type);
+      }
+
+      if (filter.state === "unread") {
+        conditions.push("n.read_at IS NULL");
+      }
+
+      if (filter.state === "read") {
+        conditions.push("n.read_at IS NOT NULL");
+      }
+
+      if (filter.q) {
+        conditions.push(
+          "LOCATE(?, CONCAT(n.title, ' ', n.message)) > 0"
+        );
+
+        values.push(filter.q);
+      }
+
+      if (filter.before) {
+        conditions.push("n.id < ?");
+        values.push(filter.before);
+      }
+
       const [rows] = await connection.execute(
         `SELECT
-           CAST(id AS CHAR) AS id,
-           notification_type, title, message, target_url,
-           created_at, read_at
-         FROM manager_notifications
-         WHERE manager_id = ?
-           ${before ? "AND id < ?" : ""}
-         ORDER BY id DESC
+           CAST(n.id AS CHAR) AS id,
+           n.notification_type,
+           n.title,
+           n.message,
+           n.created_at,
+           n.read_at,
+           CASE
+             WHEN m.id IS NOT NULL THEN
+               CONCAT(
+                 '/driver-support.html?order=',
+                 m.order_id,
+                 '&message=',
+                 m.id
+               )
+             ELSE n.target_url
+           END AS target_url
+         FROM manager_notifications n
+         LEFT JOIN driver_order_messages m
+           ON n.notification_type = 'driver_message'
+           AND n.event_key = CONCAT('driver-message:', m.id)
+         WHERE ${conditions.join(" AND ")}
+         ORDER BY n.id DESC
          LIMIT 51`,
-        before ? [managerId, before] : [managerId]
+        values
       );
 
       return {
         data: rows.slice(0, 50),
         unread_count: Number(counts.unread_count),
-        next_before: rows.length > 50 ? rows[49].id : null
+        latest_id: counts.latest_id || null,
+        next_before: rows.length > 50
+          ? rows[49].id
+          : null
       };
     });
   }
 
   async function synchronize(managerId) {
     return transaction(async connection => {
-      const [orders] = await connection.execute(
-        `SELECT o.id, o.order_code,
-           CONCAT('overdue:', o.id, ':',
-             DATE_FORMAT(o.due_at, '%Y%m%d%H%i%s')) AS event_key
+      // Capture the initial backlog without reintroducing old batches
+      // after the Manager marks all existing notifications as read.
+      await connection.execute(
+        `INSERT INTO manager_notifications (
+           manager_id,
+           event_key,
+           notification_type,
+           title,
+           message,
+           target_url
+         )
+         SELECT
+           ?,
+           CONCAT(
+             'overdue:',
+             o.id,
+             ':',
+             DATE_FORMAT(o.due_at, '%Y%m%d%H%i%s')
+           ),
+           'overdue_order',
+           'Overdue delivery',
+           CONCAT(
+             'Order ',
+             o.order_code,
+             ' has passed its delivery deadline and is still open. Review its current status.'
+           ),
+           CONCAT('/dispatch.html?order=', o.id)
          FROM orders o
-         WHERE o.status IN ('pending','confirmed','assigned','delivering')
+         WHERE o.status IN (
+           'pending',
+           'confirmed',
+           'assigned',
+           'delivering'
+         )
            AND o.due_at < UTC_TIMESTAMP()
            AND NOT EXISTS (
-             SELECT 1 FROM manager_notifications n
+             SELECT 1
+             FROM manager_notifications n
              WHERE n.manager_id = ?
-               AND n.event_key = CONCAT('overdue:', o.id, ':',
-                 DATE_FORMAT(o.due_at, '%Y%m%d%H%i%s'))
+               AND n.event_key = CONCAT(
+                 'overdue:',
+                 o.id,
+                 ':',
+                 DATE_FORMAT(o.due_at, '%Y%m%d%H%i%s')
+               )
            )
-         ORDER BY o.due_at, o.id
-         LIMIT 100`,
-        [managerId]
+         ON DUPLICATE KEY UPDATE
+           event_key = VALUES(event_key)`,
+        [managerId, managerId]
       );
 
-      const [requests] = await connection.execute(
-        `SELECT r.id, r.request_type, r.amount, d.driver_code,
-           CONCAT('wallet:', r.id) AS event_key
+      await connection.execute(
+        `INSERT INTO manager_notifications (
+           manager_id,
+           event_key,
+           notification_type,
+           title,
+           message,
+           target_url
+         )
+         SELECT
+           ?,
+           CONCAT('wallet:', r.id),
+           'wallet_request',
+           'Wallet request awaiting review',
+           CONCAT(
+             d.driver_code,
+             ' submitted a ',
+             r.request_type,
+             ' request for ',
+             r.amount,
+             ' VND. Request #',
+             r.id,
+             ' is awaiting Manager review.'
+           ),
+           '/driver-support.html'
          FROM driver_wallet_requests r
          JOIN drivers d ON d.id = r.driver_id
          WHERE r.status = 'pending'
            AND NOT EXISTS (
-             SELECT 1 FROM manager_notifications n
+             SELECT 1
+             FROM manager_notifications n
              WHERE n.manager_id = ?
                AND n.event_key = CONCAT('wallet:', r.id)
            )
-         ORDER BY r.id
-         LIMIT 100`,
-        [managerId]
+         ON DUPLICATE KEY UPDATE
+           event_key = VALUES(event_key)`,
+        [managerId, managerId]
       );
 
-      const [messages] = await connection.execute(
-        `SELECT m.id, o.order_code,
-           CONCAT('driver-message:', m.id) AS event_key
+      await connection.execute(
+        `INSERT INTO manager_notifications (
+           manager_id,
+           event_key,
+           notification_type,
+           title,
+           message,
+           target_url
+         )
+         SELECT
+           ?,
+           CONCAT('driver-message:', m.id),
+           'driver_message',
+           'Driver support message',
+           CONCAT(
+             'A Driver sent a message about order ',
+             o.order_code,
+             '. Open Driver Support to view the conversation.'
+           ),
+           CONCAT(
+             '/driver-support.html?order=',
+             o.id,
+             '&message=',
+             m.id
+           )
          FROM driver_order_messages m
          JOIN orders o ON o.id = m.order_id
          WHERE m.sender_role = 'driver'
-           AND m.created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY)
-           AND NOT EXISTS (
-             SELECT 1 FROM manager_notifications n
-             WHERE n.manager_id = ?
-               AND n.event_key = CONCAT('driver-message:', m.id)
+           AND m.created_at >= DATE_SUB(
+             UTC_TIMESTAMP(),
+             INTERVAL 7 DAY
            )
-         ORDER BY m.id
-         LIMIT 100`,
-        [managerId]
+           AND NOT EXISTS (
+             SELECT 1
+             FROM manager_notifications n
+             WHERE n.manager_id = ?
+               AND n.event_key = CONCAT(
+                 'driver-message:',
+                 m.id
+               )
+           )
+         ON DUPLICATE KEY UPDATE
+           event_key = VALUES(event_key)`,
+        [managerId, managerId]
       );
-
-      const notifications = [
-        ...orders.map(order => ({
-          event_key: order.event_key,
-          type: "overdue_order",
-          title: "Overdue delivery",
-          message: `Order ${order.order_code} has passed its delivery deadline and is still open. Review its current status.`,
-          url: `/dispatch.html?order=${order.id}`
-        })),
-        ...requests.map(request => ({
-          event_key: request.event_key,
-          type: "wallet_request",
-          title: "Wallet request awaiting review",
-          message: `${request.driver_code} submitted a ${request.request_type} request for ${Number(request.amount).toLocaleString("en-US")} VND. Request #${request.id} is awaiting Manager review.`,
-          url: "/driver-support.html"
-        })),
-        ...messages.map(message => ({
-          event_key: message.event_key,
-          type: "driver_message",
-          title: "Driver support message",
-          message: `A Driver sent a message about order ${message.order_code}. Open Driver Support to view the conversation.`,
-          url: "/driver-support.html"
-        }))
-      ];
-
-      if (notifications.length) {
-        const placeholders = notifications.map(() => "(?, ?, ?, ?, ?, ?)");
-        const values = notifications.flatMap(item => [
-          managerId, item.event_key, item.type,
-          item.title, item.message, item.url
-        ]);
-
-        await connection.execute(
-          `INSERT INTO manager_notifications (
-             manager_id, event_key, notification_type,
-             title, message, target_url
-           ) VALUES ${placeholders.join(", ")}
-           ON DUPLICATE KEY UPDATE id = id`,
-          values
-        );
-      }
     });
   }
 
   router.get("/", handle(async (req, res) => {
-    const before = req.query.before;
+    const filter = filters(req.query);
 
-    if (before !== undefined && !validId(before)) {
-      return res.status(400).json({ message: "Invalid notification cursor." });
+    if (!filter) {
+      return res.status(400).json({
+        message: "Invalid notification filters."
+      });
     }
 
-    res.json(await list(req.user.id, before || null));
+    res.json(await list(req.user.id, filter));
   }));
 
   router.post("/sync", handle(async (req, res) => {
+    const filter = filters(req.query);
+
+    if (!filter) {
+      return res.status(400).json({
+        message: "Invalid notification filters."
+      });
+    }
+
     const managerId = req.user.id;
     const now = Date.now();
     const previous = recentSyncs.get(managerId);
 
     if (!previous || now - previous >= 25000) {
-      // Reserve the slot before awaiting to limit concurrent browser tabs.
+      // Reserve the slot before awaiting to limit concurrent tabs.
       recentSyncs.set(managerId, now);
 
       for (const [id, timestamp] of recentSyncs) {
-        if (now - timestamp > 600000) recentSyncs.delete(id);
+        if (now - timestamp > 600000) {
+          recentSyncs.delete(id);
+        }
       }
+
       if (recentSyncs.size > 10000) {
-        recentSyncs.delete(recentSyncs.keys().next().value);
+        recentSyncs.delete(
+          recentSyncs.keys().next().value
+        );
       }
 
       try {
@@ -221,54 +372,71 @@ function createManagerNotificationsRouter(pool) {
       }
     }
 
-    res.json(await list(managerId));
+    res.json(await list(managerId, filter));
   }));
 
   router.post("/read-all", handle(async (req, res) => {
     const throughId = req.body?.through_id;
 
     if (!validId(throughId)) {
-      return res.status(400).json({ message: "Invalid notification boundary." });
+      return res.status(400).json({
+        message: "Invalid notification boundary."
+      });
     }
 
     await pool.execute(
       `UPDATE manager_notifications
        SET read_at = UTC_TIMESTAMP()
-       WHERE manager_id = ? AND id <= ? AND read_at IS NULL`,
+       WHERE manager_id = ?
+         AND id <= ?
+         AND read_at IS NULL`,
       [req.user.id, throughId]
     );
 
-    res.json({ message: "Notifications marked as read." });
+    res.json({
+      message: "Notifications marked as read."
+    });
   }));
 
   router.post("/:id/read", handle(async (req, res) => {
     if (!validId(req.params.id)) {
-      return res.status(400).json({ message: "Invalid notification ID." });
+      return res.status(400).json({
+        message: "Invalid notification ID."
+      });
     }
 
     const [result] = await pool.execute(
       `UPDATE manager_notifications
        SET read_at = COALESCE(read_at, UTC_TIMESTAMP())
-       WHERE id = ? AND manager_id = ?`,
+       WHERE id = ?
+         AND manager_id = ?`,
       [req.params.id, req.user.id]
     );
 
     if (!result.affectedRows) {
       const [rows] = await pool.execute(
-        `SELECT id FROM manager_notifications
-         WHERE id = ? AND manager_id = ?`,
+        `SELECT id
+         FROM manager_notifications
+         WHERE id = ?
+           AND manager_id = ?`,
         [req.params.id, req.user.id]
       );
 
       if (!rows.length) {
-        return res.status(404).json({ message: "Notification not found." });
+        return res.status(404).json({
+          message: "Notification not found."
+        });
       }
     }
 
-    res.json({ message: "Notification marked as read." });
+    res.json({
+      message: "Notification marked as read."
+    });
   }));
 
   return router;
 }
 
-module.exports = { createManagerNotificationsRouter };
+module.exports = {
+  createManagerNotificationsRouter
+};
