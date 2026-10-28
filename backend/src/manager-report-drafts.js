@@ -621,9 +621,10 @@ function createManagerReportDraftsRouter(
       );
 
       await db.execute(
-        `UPDATE manager_reports
+               `UPDATE manager_reports
          SET
            content = ?,
+           editor_document = NULL,
            data_snapshot = ?,
            version = version + 1
          WHERE id = ?
@@ -636,9 +637,10 @@ function createManagerReportDraftsRouter(
         ]
       );
 
-      return {
+           return {
         id: report.id,
         content,
+        editor_document: null,
         data_snapshot: snapshot,
         version: Number(report.version) + 1
       };
