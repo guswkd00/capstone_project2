@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Create Report · ShopeeFood</title>
+
+  <script
+    src="/auth-client.js"
+    data-role="manager"
+  ></script>
+
+  <link
+    rel="stylesheet"
+    href="/app-theme.css?v=reports-1"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/manager-reports.css?v=1"
+  >
+
+  <script
+    src="/app-shell.js?v=reports-1"
+    defer
+  ></script>
+
+  <script
+    src="/report-editor.js?v=1"
+    defer
+  ></script>
+</head>
+
+<body class="sf-app">
+  <header>
+    <nav aria-label="Main navigation">
+      <a href="/dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="/my-reports.html">
+        My Reports
+      </a>
+    </nav>
+  </header>
+
+  <main class="manager-report-main">
+    <div class="mr-page-heading">
+      <div>
+        <h1 id="mr-page-title">
+          Create Report
+        </h1>
+
+        <p id="mr-page-description">
+          Prepare a report, preview the document and
+          submit it to your report history.
+        </p>
+      </div>
+
+      <div class="mr-page-actions">
+        <a
+          class="mr-button mr-button-secondary"
+          href="/my-reports.html"
+        >
+          My Reports
+        </a>
+
+        <button
+          id="mr-toggle-preview"
+          class="mr-button mr-button-secondary"
+          type="button"
+          aria-controls="mr-preview-section"
+          aria-expanded="true"
+          disabled
+        >
+          Hide Preview
+        </button>
+
+        <button
+          id="mr-export"
+          class="mr-button mr-button-secondary"
+          type="button"
+          disabled
+        >
+          Export PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="mr-state-row">
+      <span
+        id="mr-state"
+        class="mr-state mr-state-draft"
+      >
+        Draft
+      </span>
+
+      <span id="mr-dirty">
+        New report
+      </span>
+    </div>
+
+    <p
+      id="mr-status"
+      class="mr-status"
+      role="status"
+      aria-live="polite"
+    >
+      Preparing report editor...
+    </p>
+
+    <p
+      id="mr-readonly"
+      class="mr-readonly"
+      hidden
+    >
+      This report has been submitted.
+      You can view the report and export a PDF.
+    </p>
+
+    <div
+      id="mr-workspace"
+      class="mr-workspace"
+      data-preview-hidden="false"
+    >
+      <section
+        class="mr-editor-panel"
+        aria-labelledby="mr-editor-heading"
+      >
+        <div class="mr-panel-heading">
+          <h2 id="mr-editor-heading">
+            Report Editor
+          </h2>
+
+          <p>
+            Add verified information and review the
+            content before submitting.
+          </p>
+        </div>
+
+        <form id="mr-form">
+          <fieldset
+            id="mr-fields"
+            class="mr-fields"
+            disabled
+          >
+            <div class="mr-field">
+              <label for="mr-title">
+                Report title
+                <span aria-hidden="true">*</span>
+              </label>
+
+              <input
+                id="mr-title"
+                name="title"
+                type="text"
+                maxlength="160"
+                placeholder="Enter a report title"
+                required
+              >
+            </div>
+
+            <div class="mr-field">
+              <label for="mr-type">
+                Report type
+              </label>
+
+              <select
+                id="mr-type"
+                name="report_type"
+                required
+              >
+                <option value="delivery">
+                  Delivery Operations
+                </option>
+
+                <option value="cod">
+                  COD
+                </option>
+
+                <option value="maintenance">
+                  Vehicle Maintenance
+                </option>
+
+                <option value="expense">
+                  Expenses
+                </option>
+
+                <option value="incident">
+                  Incidents
+                </option>
+
+                <option value="general">
+                  General Operations
+                </option>
+              </select>
+            </div>
+
+            <div class="mr-field-grid">
+              <div class="mr-field">
+                <label for="mr-start">
+                  Start date
+                  <span aria-hidden="true">*</span>
+                </label>
+
+                <input
+                  id="mr-start"
+                  name="period_start"
+                  type="date"
+                  required
+                >
+              </div>
+
+              <div class="mr-field">
+                <label for="mr-end">
+                  End date
+                  <span aria-hidden="true">*</span>
+                </label>
+
+                <input
+                  id="mr-end"
+                  name="period_end"
+                  type="date"
+                  required
+                >
+              </div>
+            </div>
+
+            <p class="mr-help">
+              Reporting dates use Vietnam time.
+              Generated figures include a description
+              of the records and dates used.
+            </p>
+
+            <div class="mr-generation-panel">
+              <div class="mr-field">
+                <label for="mr-language">
+                  AI draft language
+                </label>
+
+                <select id="mr-language">
+                  <option value="en">
+                    English
+                  </option>
+
+                  <option value="vi">
+                    Vietnamese
+                  </option>
+                </select>
+              </div>
+
+              <div class="mr-generation-actions">
+                <button
+                  id="mr-generate"
+                  class="mr-button mr-button-secondary"
+                  type="button"
+                >
+                  Generate from Data
+                </button>
+
+                <button
+                  id="mr-ai"
+                  class="mr-button mr-button-primary"
+                  type="button"
+                >
+                  AI Draft
+                </button>
+              </div>
+
+              <p
+                id="mr-data-status"
+                class="mr-help"
+              >
+                No system data snapshot has been
+                generated for this report.
+              </p>
+            </div>
+
+            <div class="mr-field">
+              <label for="mr-content">
+                Report content
+              </label>
+
+              <textarea
+                id="mr-content"
+                name="content"
+                rows="18"
+                maxlength="50000"
+                placeholder="Write your report here, or generate a draft from system data."
+              ></textarea>
+
+              <p class="mr-help">
+                You can edit generated content before
+                saving or submitting.
+              </p>
+            </div>
+
+            <div class="mr-attachments">
+              <h3>Attachments</h3>
+
+              <label for="mr-files">
+                Choose supporting files
+              </label>
+
+              <input
+                id="mr-files"
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+                multiple
+                aria-describedby="mr-file-help"
+              >
+
+              <p
+                id="mr-file-help"
+                class="mr-help"
+              >
+                PDF, PNG or JPG.
+                Up to 3 attachments per report,
+                maximum 5 MB each.
+              </p>
+
+              <button
+                id="mr-upload"
+                class="mr-button mr-button-secondary"
+                type="button"
+              >
+                Upload Files
+              </button>
+            </div>
+
+            <div class="mr-form-actions">
+              <button
+                id="mr-save"
+                class="mr-button mr-button-secondary"
+                type="submit"
+              >
+                Save Draft
+              </button>
+
+              <button
+                id="mr-submit"
+                class="mr-button mr-button-primary"
+                type="button"
+              >
+                Submit Report
+              </button>
+            </div>
+          </fieldset>
+        </form>
+
+        <div
+          id="mr-file-list"
+          class="mr-file-list"
+          aria-label="Report attachments"
+          aria-live="polite"
+        ></div>
+      </section>
+
+      <section
+        id="mr-preview-section"
+        class="mr-preview-panel"
+        aria-labelledby="mr-preview-heading"
+      >
+        <div class="mr-preview-heading">
+          <h2 id="mr-preview-heading">
+            Document Preview
+          </h2>
+
+          <span>A4 layout</span>
+        </div>
+
+        <div class="mr-paper-container">
+          <article
+            id="mr-preview"
+            class="mr-paper"
+          >
+            <div class="mr-document-brand">
+              <strong>
+                ShopeeFood Delivery DSS
+              </strong>
+
+              <span>
+                Operations Report
+              </span>
+            </div>
+
+            <h1 id="mr-preview-title">
+              Untitled Report
+            </h1>
+
+            <dl class="mr-document-meta">
+              <dt>Report type</dt>
+              <dd id="mr-preview-type">
+                Delivery Operations
+              </dd>
+
+              <dt>Reporting period</dt>
+              <dd id="mr-preview-period">
+                —
+              </dd>
+
+              <dt>Prepared by</dt>
+              <dd id="mr-preview-author">
+                —
+              </dd>
+
+              <dt>Report date</dt>
+              <dd id="mr-preview-created">
+                —
+              </dd>
+            </dl>
+
+            <div
+              id="mr-preview-content"
+              class="mr-document-content"
+            >
+              Your report content will appear here.
+            </div>
+
+            <p
+              id="mr-preview-source"
+              class="mr-document-source"
+            ></p>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
