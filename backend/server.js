@@ -42,7 +42,7 @@ if (process.env.TRUST_PROXY === "1") {
   app.set("trust proxy", 1);
 }
 
-app.use(express.json({ limit: "256kb" }));
+app.use(express.json({ limit: "2mb" }));
 
 app.get("/api/health", async (req, res) => {
   try {
