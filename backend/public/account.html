@@ -6,8 +6,17 @@
 
   <title>Your Account — ShopeeFood Delivery DSS</title>
 
-  <link rel="stylesheet" href="/app-theme.css?v=4">
-  <script src="/app-shell.js" defer></script>
+<script src="/auth-client.js?v=manager-shell-2"></script>
+
+<link
+  rel="stylesheet"
+  href="/app-theme.css?v=manager-shell-2"
+>
+
+<script
+  src="/app-shell.js?v=manager-shell-2"
+  defer
+></script>
 
   <style>
     body.account-page {
@@ -479,21 +488,9 @@
 
     async function loadAccount() {
       try {
-        const response = await fetch("/api/auth/me", {
-          credentials: "same-origin",
-          cache: "no-store"
-        });
+       const result = await window.sfSessionReady;
 
-        if (response.status === 401) {
-          window.location.replace("/login.html");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Account request failed.");
-        }
-
-        const result = await response.json();
+if (!result) return;
 
         csrfToken = result.csrf_token;
 
