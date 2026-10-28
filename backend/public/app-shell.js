@@ -148,16 +148,13 @@
         ["Drivers", "/drivers.html"],
         ["Vehicles", "/fleet.html"],
         ["Driver Support", "/driver-support.html"]
-      ]],
-      ["Account", [
-        ["Account", "/account.html"]
       ]]
     ];
 
     const logout = document.createElement("button");
     logout.type = "button";
     logout.className = "sf-logout";
-    logout.textContent = "Logout";
+    logout.append(icon("logout"), document.createTextNode("Logout"));
 
     for (const [label, links] of menus) {
       const group = document.createElement("details");
@@ -165,8 +162,7 @@
       const dropdown = document.createElement("div");
 
       summary.textContent = label;
-      summary.prepend(icon({Orders: "orders", Dispatch: "dispatch", "Fleet & Data": "fleet", Account: "account"}[label]));
-      if (label === "Account") group.className = "sf-account-menu";
+      summary.prepend(icon({Orders: "orders", Dispatch: "dispatch", "Fleet & Data": "fleet"}[label]));
       dropdown.className = "sf-dropdown";
 
       let activeFound = false;
@@ -182,8 +178,6 @@
         }
       }
 
-      if (label === "Account") dropdown.appendChild(logout);
-
       group.append(summary, dropdown);
       navigation.appendChild(group);
 
@@ -195,6 +189,107 @@
         });
       });
     }
+
+    const accountActions = document.createElement("div");
+    accountActions.className = "sf-account-actions";
+
+    const accountLink = addLink(accountActions, "Account", "/account.html");
+    accountLink.prepend(icon("account"));
+
+    if (window.location.pathname === "/account.html") {
+      accountLink.setAttribute("aria-current", "page");
+    }
+
+    accountActions.appendChild(logout);
+    navigation.appendChild(accountActions);
+
+    // Keep the existing dashboard reminders available in the shared shell.
+    const notificationButton = document.createElement("button");
+    notificationButton.type = "button";
+    notificationButton.id = "sf-notification-toggle";
+    notificationButton.className = "sf-notification-toggle";
+    notificationButton.title = "Notifications";
+    notificationButton.setAttribute("aria-label", "Open notifications");
+    notificationButton.setAttribute("aria-haspopup", "dialog");
+    notificationButton.setAttribute("aria-controls", "sf-notification-dialog");
+    notificationButton.setAttribute("aria-expanded", "false");
+
+    iconPaths.notifications =
+      "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9 M10 21h4";
+    notificationButton.appendChild(icon("notifications"));
+    top.appendChild(notificationButton);
+
+    const notificationDialog = document.createElement("dialog");
+    notificationDialog.id = "sf-notification-dialog";
+    notificationDialog.className = "sf-notification-dialog";
+    notificationDialog.setAttribute("aria-labelledby", "sf-notification-title");
+
+    const notificationHeading = document.createElement("div");
+    notificationHeading.className = "sf-notification-heading";
+    const notificationTitle = document.createElement("h2");
+    notificationTitle.id = "sf-notification-title";
+    notificationTitle.textContent = "System Notifications";
+
+    const closeNotifications = document.createElement("button");
+    closeNotifications.type = "button";
+    closeNotifications.className = "sf-notification-close";
+    closeNotifications.textContent = "Close";
+    notificationHeading.append(notificationTitle, closeNotifications);
+
+    const notificationList = document.createElement("div");
+    notificationList.className = "sf-notification-list";
+
+    for (const [title, message] of [
+      [
+        "ShopeeFood DSS",
+        "Refresh the report to retrieve the latest recorded delivery metrics and COD records."
+      ],
+      [
+        "Dispatch Reminder",
+        "Check overdue open orders in the metrics summary."
+      ]
+    ]) {
+      const item = document.createElement("article");
+      item.className = "sf-notification-item";
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+      const description = document.createElement("p");
+      description.textContent = message;
+      item.append(heading, description);
+      notificationList.appendChild(item);
+    }
+
+    const reportLink = addLink(
+      notificationList, "Open Dashboard & Reports", "/dashboard.html"
+    );
+    reportLink.className = "sf-notification-report";
+    notificationDialog.append(notificationHeading, notificationList);
+    document.body.appendChild(notificationDialog);
+
+    notificationButton.addEventListener("click", () => {
+      if (notificationDialog.open) return;
+      notificationDialog.showModal();
+      notificationButton.setAttribute("aria-expanded", "true");
+    });
+
+    closeNotifications.addEventListener("click", () => {
+      notificationDialog.close();
+    });
+
+    notificationDialog.addEventListener("close", () => {
+      notificationButton.setAttribute("aria-expanded", "false");
+    });
+
+    notificationDialog.addEventListener("click", event => {
+      if (event.target !== notificationDialog) return;
+      const rect = notificationDialog.getBoundingClientRect();
+      if (
+        event.clientX < rect.left || event.clientX > rect.right ||
+        event.clientY < rect.top || event.clientY > rect.bottom
+      ) {
+        notificationDialog.close();
+      }
+    });
 
     let signingOut = false;
 
@@ -221,7 +316,7 @@
 
         window.location.replace("/login.html");
       } catch (error) {
-        logout.textContent = "Logout";
+        logout.replaceChildren(icon("logout"), document.createTextNode("Logout"));
         window.alert(error.message);
       } finally {
         signingOut = false;
@@ -287,6 +382,7 @@
     setDrawer(false, false);
 
     document.addEventListener("keydown", event => {
+      if (notificationDialog.open) return;
       if (!document.body.classList.contains("sf-sidebar-open")) return;
       if (event.key === "Escape") {
         setDrawer(false);
