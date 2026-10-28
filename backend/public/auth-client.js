@@ -37,6 +37,7 @@
   }
 
   const sessionReady = checkSession();
+  window.sfSessionReady = sessionReady;
 
   window.fetch = async function(input, options = {}) {
     const requestUrl = input instanceof Request
@@ -98,6 +99,51 @@
       window.location.replace("/dashboard.html");
       return;
     }
+    if (session.user.role === "manager") {
+  const shellReady = await window.sfManagerShellReady;
+
+  if (
+    !shellReady ||
+    !document.getElementById("sf-manager-header")
+  ) {
+    const errorPanel = document.createElement("main");
+
+    errorPanel.setAttribute("role", "alert");
+    errorPanel.style.cssText =
+      "max-width:640px;margin:60px auto;" +
+      "padding:24px;font-family:Arial,sans-serif";
+
+    const title = document.createElement("h1");
+    title.textContent = "Unable to load navigation";
+
+    const description = document.createElement("p");
+    description.textContent =
+      "Please reload the page to try again.";
+
+    const retryButton = document.createElement("button");
+    retryButton.textContent = "Reload page";
+
+    retryButton.addEventListener("click", () => {
+      window.location.reload();
+    });
+
+    errorPanel.append(
+      title,
+      description,
+      retryButton
+    );
+
+    document.body.replaceChildren(errorPanel);
+
+    document.body.classList.remove(
+      "sf-manager-layout",
+      "sf-sidebar-open"
+    );
+
+    document.documentElement.style.visibility = "";
+    return;
+  }
+}
 
     document.documentElement.style.visibility = "";
 
