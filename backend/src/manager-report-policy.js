@@ -1,5 +1,10 @@
 "use strict";
 
+const {
+  validateDocument,
+  validatePageSettings
+} = require("./manager-report-document");
+
 const MAX_ID = 18446744073709551615n;
 
 const LIMITS = Object.freeze({
@@ -36,14 +41,20 @@ function parseId(value) {
     typeof value === "number" &&
     !Number.isSafeInteger(value)
   ) {
-    throw httpError(400, "Invalid report ID.");
+    throw httpError(
+      400,
+      "Invalid report ID."
+    );
   }
 
   if (
     typeof value !== "string" &&
     typeof value !== "number"
   ) {
-    throw httpError(400, "Invalid report ID.");
+    throw httpError(
+      400,
+      "Invalid report ID."
+    );
   }
 
   const text = String(value);
@@ -52,7 +63,10 @@ function parseId(value) {
     !/^[1-9][0-9]{0,19}$/.test(text) ||
     BigInt(text) > MAX_ID
   ) {
-    throw httpError(400, "Invalid report ID.");
+    throw httpError(
+      400,
+      "Invalid report ID."
+    );
   }
 
   return text;
@@ -124,6 +138,8 @@ function validateReportInput(
     "period_start",
     "period_end",
     "content",
+    "editor_document",
+    "page_settings",
     "version"
   ]);
 
@@ -159,13 +175,15 @@ function validateReportInput(
     );
   }
 
-  const content = body.content === undefined
-    ? ""
-    : body.content;
+  const suppliedContent =
+    body.content === undefined
+      ? ""
+      : body.content;
 
   if (
-    typeof content !== "string" ||
-    content.length > LIMITS.contentChars
+    typeof suppliedContent !== "string" ||
+    suppliedContent.length >
+      LIMITS.contentChars
   ) {
     throw httpError(
       400,
@@ -195,8 +213,42 @@ function validateReportInput(
     report_type: body.report_type,
     period_start: periodStart,
     period_end: periodEnd,
-    content
+    content: suppliedContent
   };
+
+  if (
+    Object.hasOwn(
+      body,
+      "editor_document"
+    )
+  ) {
+    const rich = validateDocument(
+      body.editor_document
+    );
+
+    result.editor_document =
+      rich.document;
+
+    result.image_attachment_ids =
+      rich.attachment_ids;
+
+    // Keep plain text and formatted content synchronized.
+    if (rich.document !== null) {
+      result.content = rich.text;
+    }
+  }
+
+  if (
+    Object.hasOwn(
+      body,
+      "page_settings"
+    )
+  ) {
+    result.page_settings =
+      validatePageSettings(
+        body.page_settings
+      );
+  }
 
   if (
     requireVersion ||
@@ -229,7 +281,7 @@ function periodBounds(start, end) {
   }
 
   // Report dates use Vietnam time.
-  // SQL queries use an inclusive start and exclusive end in UTC.
+  // Queries use an inclusive start and exclusive end in UTC.
   const startTime = new Date(
     `${periodStart}T00:00:00+07:00`
   );
@@ -237,7 +289,8 @@ function periodBounds(start, end) {
   const endTime = new Date(
     new Date(
       `${periodEnd}T00:00:00+07:00`
-    ).getTime() + 24 * 60 * 60 * 1000
+    ).getTime() +
+      24 * 60 * 60 * 1000
   );
 
   const sqlTime = date =>
@@ -299,20 +352,31 @@ function validateAttachment(
     );
   }
 
-  const type = String(contentType || "")
+  const type = String(
+    contentType || ""
+  )
     .split(";")[0]
     .trim()
     .toLowerCase();
 
-  const name = attachmentName(filename);
+  const name = attachmentName(
+    filename
+  );
 
   const isPdf =
     data.length >= 12 &&
-    data.subarray(0, 5).toString("ascii") ===
-      "%PDF-" &&
     data.subarray(
-      Math.max(0, data.length - 1024)
-    ).includes(Buffer.from("%%EOF"));
+      0,
+      5
+    ).toString("ascii") === "%PDF-" &&
+    data.subarray(
+      Math.max(
+        0,
+        data.length - 1024
+      )
+    ).includes(
+      Buffer.from("%%EOF")
+    );
 
   const isPng =
     data.length >= 33 &&
@@ -328,8 +392,10 @@ function validateAttachment(
         0x0a
       ])
     ) &&
-    data.subarray(-8, -4).toString("ascii") ===
-      "IEND";
+    data.subarray(
+      -8,
+      -4
+    ).toString("ascii") === "IEND";
 
   const isJpeg =
     data.length >= 6 &&
@@ -340,9 +406,18 @@ function validateAttachment(
     data[data.length - 1] === 0xd9;
 
   const supported =
-    (type === "application/pdf" && isPdf) ||
-    (type === "image/png" && isPng) ||
-    (type === "image/jpeg" && isJpeg);
+    (
+      type === "application/pdf" &&
+      isPdf
+    ) ||
+    (
+      type === "image/png" &&
+      isPng
+    ) ||
+    (
+      type === "image/jpeg" &&
+      isJpeg
+    );
 
   if (!supported) {
     throw httpError(
