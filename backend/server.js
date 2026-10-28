@@ -26,6 +26,13 @@ const {
 const {
   createManagerNotificationsRouter,
 } = require("./src/manager-notifications");
+const {
+  createManagerReportsRouter,
+} = require("./src/manager-reports");
+
+const {
+  createManagerReportDraftsRouter,
+} = require("./src/manager-report-drafts");
 
 const app = express();
 
@@ -35,7 +42,7 @@ if (process.env.TRUST_PROXY === "1") {
   app.set("trust proxy", 1);
 }
 
-app.use(express.json({ limit: "32kb" }));
+app.use(express.json({ limit: "256kb" }));
 
 app.get("/api/health", async (req, res) => {
   try {
@@ -141,7 +148,15 @@ app.get(
     next();
   }
 );
-
+// Manager-owned reports and draft generation.
+app.use(
+  "/api/manager-reports",
+  requireLogin,
+  requireManager,
+  protectWrites,
+  createManagerReportDraftsRouter(pool),
+  createManagerReportsRouter(pool)
+);
 app.use(
   express.static(path.join(__dirname, "public"))
 );
