@@ -566,3 +566,480 @@ body.sf-manager-layout .sf-notification-category-system {
   border-color: #d0d5dd;
   color: #344054;
 }
+/* Shared Manager account actions and notification center. */
+
+/* Account and Logout are separate navigation actions. */
+body.sf-manager-layout #sf-manager-header .sf-account-actions {
+  display: grid;
+  flex-shrink: 0;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #ffffff38;
+}
+
+body.sf-manager-layout #sf-manager-header .sf-account-actions > a,
+body.sf-manager-layout #sf-manager-header .sf-account-actions > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  text-decoration: none;
+  box-shadow: none;
+  transform: none;
+  cursor: pointer;
+}
+
+body.sf-manager-layout #sf-manager-header .sf-account-actions > a:hover,
+body.sf-manager-layout #sf-manager-header .sf-account-actions > button:hover:not(:disabled) {
+  background: #ffffff1f;
+  color: #fff;
+  transform: none;
+}
+
+body.sf-manager-layout #sf-manager-header .sf-account-actions > a[aria-current="page"] {
+  background: #fff0e9;
+  color: #b52d14;
+}
+
+body.sf-manager-layout #sf-manager-header .sf-account-actions > button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+/* Keep the notification bell beside the sidebar brand. */
+body.sf-manager-layout #sf-manager-header .sf-header-top {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+body.sf-manager-layout #sf-manager-header .sf-header-top .sf-brand {
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 24px;
+  box-shadow: none;
+}
+
+body.sf-manager-layout #sf-manager-header .sf-notification-toggle,
+body.sf-manager-layout .sf-mobile-bar .sf-notification-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid #ffffff55;
+  border-radius: 9px;
+  background: #ffffff18;
+  color: #fff;
+  box-shadow: none;
+  transform: none;
+  cursor: pointer;
+}
+
+body.sf-manager-layout #sf-manager-header .sf-notification-toggle:hover,
+body.sf-manager-layout .sf-mobile-bar .sf-notification-toggle:hover {
+  background: #ffffff30;
+  color: #fff;
+  transform: none;
+}
+
+body.sf-manager-layout .sf-mobile-bar .sf-notification-toggle {
+  width: 36px;
+  min-height: 36px;
+  margin-left: auto;
+}
+
+body.sf-manager-layout .sf-notification-toggle .sf-menu-icon {
+  width: 19px;
+  height: 19px;
+}
+
+/* The badge displays the unread count, including zero. */
+body.sf-manager-layout .sf-notification-toggle .sf-notification-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 4px;
+  border: 2px solid #ee4d2d;
+  border-radius: 999px;
+  background: #fff;
+  color: #b52d14;
+  font: 700 10px/1 "Segoe UI", Arial, sans-serif;
+}
+
+body.sf-manager-layout .sf-notification-toggle .sf-notification-badge-zero {
+  background: #fff2eb;
+  color: #77594c;
+}
+
+body.sf-manager-layout .sf-notification-toggle.sf-notification-unavailable {
+  outline: 2px dashed #ffe1aa;
+  outline-offset: 2px;
+}
+
+/* Non-modal panel beside the left navigation. */
+body.sf-manager-layout dialog.sf-notification-dialog {
+  position: fixed;
+  inset: 18px auto auto calc(var(--sf-sidebar-width, 256px) + 12px);
+  z-index: 1800;
+  width: min(
+    520px,
+    calc(100vw - var(--sf-sidebar-width, 256px) - 28px)
+  );
+  max-width: calc(100vw - 24px);
+  max-height: min(720px, calc(100dvh - 36px));
+  margin: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  border: 1px solid #f0ded6;
+  border-radius: 14px;
+  background: #fff;
+  color: #29323b;
+  font: 13px/1.5 "Segoe UI", Arial, sans-serif;
+  text-align: left;
+  box-shadow: 0 12px 40px #461e0f33;
+}
+
+body.sf-manager-layout dialog.sf-notification-dialog:not([open]) {
+  display: none;
+}
+
+body.sf-manager-layout .sf-notification-dialog *,
+body.sf-manager-layout .sf-notification-dialog *::before,
+body.sf-manager-layout .sf-notification-dialog *::after {
+  box-sizing: border-box;
+}
+
+body.sf-manager-layout .sf-notification-dialog [hidden],
+body.sf-manager-layout .sf-notification-toggle [hidden] {
+  display: none !important;
+}
+
+/* Title, filters and Close button. */
+body.sf-manager-layout .sf-notification-heading {
+  position: sticky;
+  top: -16px;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0ded6;
+  background: #fff;
+}
+
+body.sf-manager-layout .sf-notification-heading h2 {
+  flex: 1;
+  margin: 0;
+  color: #29323b;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+body.sf-manager-layout .sf-notification-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-left: auto;
+}
+
+body.sf-manager-layout .sf-notification-filters select {
+  display: block;
+  width: auto;
+  max-width: 150px;
+  min-height: 32px;
+  margin: 0;
+  padding: 4px 6px;
+  border: 1px solid #f0ded6;
+  border-radius: 7px;
+  background: #fff;
+  color: #29323b;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Search and read-state controls. */
+body.sf-manager-layout .sf-notification-tools,
+body.sf-manager-layout .sf-notification-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+body.sf-manager-layout .sf-notification-tools input {
+  flex: 1 1 180px;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid #f0ded6;
+  border-radius: 8px;
+  background: #fff;
+  color: #29323b;
+  font: inherit;
+}
+
+body.sf-manager-layout .sf-notification-close,
+body.sf-manager-layout .sf-notification-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: auto;
+  min-height: 32px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #f0ded6;
+  border-radius: 8px;
+  background: #fff;
+  color: #b03b24;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: none;
+  transform: none;
+  cursor: pointer;
+}
+
+body.sf-manager-layout .sf-notification-close:hover:not(:disabled),
+body.sf-manager-layout .sf-notification-action:hover:not(:disabled) {
+  background: #fff0e9;
+  color: #a52f19;
+  box-shadow: none;
+  transform: none;
+}
+
+body.sf-manager-layout .sf-notification-close:disabled,
+body.sf-manager-layout .sf-notification-action:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+body.sf-manager-layout .sf-notification-dialog > .sf-notification-action {
+  margin-top: 14px;
+}
+
+/* Loading and error messages. */
+body.sf-manager-layout .sf-notification-status {
+  margin: 12px 0;
+  color: #737373;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+body.sf-manager-layout .sf-notification-status:empty {
+  display: none;
+}
+
+body.sf-manager-layout .sf-notification-status.sf-notification-error {
+  color: #b42318;
+}
+
+body.sf-manager-layout .sf-notification-empty {
+  margin: 20px 0;
+  color: #737373;
+  text-align: center;
+}
+
+/* Notification cards. */
+body.sf-manager-layout .sf-notification-list {
+  min-width: 0;
+  margin-top: 8px;
+}
+
+body.sf-manager-layout .sf-notification-item {
+  margin: 0 0 8px;
+  padding: 14px 10px;
+  border: 0;
+  border-bottom: 1px solid #f0ded6;
+  border-radius: 8px;
+  background: #fff;
+  color: #29323b;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+body.sf-manager-layout .sf-notification-item.sf-notification-unread {
+  background: #fff2ea;
+  box-shadow: inset 3px 0 #ee4d2d;
+}
+
+body.sf-manager-layout .sf-notification-item-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+body.sf-manager-layout .sf-notification-item-heading strong {
+  display: block;
+  color: #29323b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+body.sf-manager-layout .sf-notification-item p {
+  margin: 6px 0 0;
+  color: #29323b;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+body.sf-manager-layout .sf-notification-item small {
+  display: block;
+  margin-top: 8px;
+  color: #737373;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+body.sf-manager-layout .sf-notification-item-actions a {
+  display: inline-block;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #b03b24;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  box-shadow: none;
+  transform: none;
+}
+
+body.sf-manager-layout .sf-notification-item-actions a:hover {
+  background: transparent;
+  color: #a52f19;
+  transform: none;
+}
+
+/* Category labels. */
+body.sf-manager-layout .sf-notification-category {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+body.sf-manager-layout .sf-notification-category-overdue {
+  border-color: #fecdca;
+  background: #fee4e2;
+  color: #b42318;
+}
+
+body.sf-manager-layout .sf-notification-category-wallet {
+  border-color: #f9dfa0;
+  background: #fff4d6;
+  color: #854a0e;
+}
+
+body.sf-manager-layout .sf-notification-category-message {
+  border-color: #c5daff;
+  background: #e7f0ff;
+  color: #1d4d9b;
+}
+
+body.sf-manager-layout .sf-notification-category-system {
+  border-color: #d0d5dd;
+  background: #f2f4f7;
+  color: #344054;
+}
+
+/* Keyboard focus. */
+body.sf-manager-layout .sf-notification-dialog :is(
+  button,
+  a,
+  input,
+  select
+):focus-visible {
+  outline: 2px solid #b52d14;
+  outline-offset: 3px;
+}
+
+/* Tablet and mobile placement. */
+@media (max-width: 900px) {
+  body.sf-manager-layout dialog.sf-notification-dialog {
+    inset: 68px auto auto 12px;
+    width: min(520px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    max-height: calc(100dvh - 80px);
+  }
+}
+
+@media (max-width: 420px) {
+  body.sf-manager-layout .sf-notification-heading h2 {
+    flex-basis: 100%;
+  }
+
+  body.sf-manager-layout .sf-notification-filters {
+    flex: 1;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+
+  body.sf-manager-layout .sf-notification-filters select {
+    max-width: 130px;
+  }
+
+  body.sf-manager-layout .sf-notification-tools input {
+    flex-basis: 100%;
+  }
+}
+
+@media print {
+  body.sf-manager-layout dialog.sf-notification-dialog {
+    display: none !important;
+  }
+}
