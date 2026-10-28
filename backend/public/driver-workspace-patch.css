@@ -1,0 +1,88 @@
+/* Load AFTER driver-workspace.css (and after driver-workspace.redesign.css if used). */
+body.sf-app{
+  --or:#ee4d2d;--or-d:#d73a1a;--or-l:#fff1ec;--line:#f6c9bb;--mute:#6b6b76;
+  background:radial-gradient(900px 380px at 50% -60px,rgba(238,77,45,.14),transparent 70%) no-repeat,#fff1ec;
+  color:#1f1f23;
+}
+
+/* ---------- Header cam ---------- */
+body.sf-app .top-accent-bar{height:4px;background:#d73a1a}
+body.sf-app header{
+  background:linear-gradient(135deg,#f5603f,#ee4d2d 55%,#d73a1a);
+  border-bottom:0;box-shadow:0 4px 18px rgba(238,77,45,.3);
+}
+body.sf-app header .brand-title,
+body.sf-app header .brand-sub,
+body.sf-app header nav a,
+body.sf-app header nav .nav-link-btn,
+body.sf-app header .nav-profile-text b,
+body.sf-app header .nav-profile-text small,
+body.sf-app header .profile-account-label{color:#fff}
+body.sf-app header .brand-title{letter-spacing:-.2px}
+body.sf-app header .app-logo{background:rgba(255,255,255,.18);box-shadow:none}
+body.sf-app header nav svg,
+body.sf-app header .app-logo svg{stroke:#fff}
+body.sf-app header nav a,
+body.sf-app header nav .nav-link-btn{background:transparent;border-color:transparent}
+body.sf-app header nav a:hover,
+body.sf-app header nav .nav-link-btn:hover:not(:disabled){background:rgba(255,255,255,.18);color:#fff}
+body.sf-app header .nav-link-btn.nav-profile{background:rgba(255,255,255,.14);border-color:transparent}
+body.sf-app header .nav-link-btn.nav-profile:hover:not(:disabled){background:rgba(255,255,255,.24)}
+body.sf-app header .role-chip{background:#fff;color:#ee4d2d}
+body.sf-app header .avatar{background:#fff;color:#ee4d2d}
+
+/* ---------- Cards ---------- */
+body.sf-app .card,
+body.sf-app .metric,
+body.sf-app .toolbar,
+body.sf-app .deliveries>*{
+  background:#fff;border:1px solid #f6c9bb;border-radius:16px;
+  box-shadow:0 1px 2px rgba(120,40,10,.05),0 6px 20px rgba(120,40,10,.06);
+}
+body.sf-app .wallet-card,
+body.sf-app .reward-card{background:#fff;border-left:1px solid #f6c9bb}
+body.sf-app .metric{border-top:3px solid #ee4d2d}
+body.sf-app .points-box strong,
+body.sf-app .metric strong{color:#ee4d2d}
+
+/* ---------- Delivery Location ---------- */
+body.sf-app #share-gps-btn:not(:disabled){
+  background:#ee4d2d;border-color:#ee4d2d;color:#fff;
+  box-shadow:0 4px 12px rgba(238,77,45,.28);
+}
+body.sf-app #share-gps-btn:not(:disabled):hover{background:#d73a1a;border-color:#d73a1a}
+body.sf-app #stop-gps-btn:disabled{background:#faf3f0;color:#9a8f8b;border-color:#f1e4dd}
+body.sf-app #gps-status-text{
+  display:flex;align-items:center;gap:8px;margin-top:14px!important;
+  font-size:13px;color:#6b6b76;
+}
+body.sf-app #gps-status-text::before{
+  content:"";flex:none;width:9px;height:9px;border-radius:50%;background:#b8b2b0;
+}
+
+/* ---------- Suggested Stop Order ---------- */
+body.sf-app #route-panel{display:flex;flex-direction:column}
+body.sf-app #route-panel>.route-note{margin:0 0 12px;font-size:12px;line-height:1.5;color:#6b6b76}
+body.sf-app #route-panel>.route-sum{display:flex;gap:10px;margin:0 0 16px}
+body.sf-app #route-panel>.route-sum[hidden]{display:none}
+body.sf-app #route-panel .route-stat{flex:1;min-width:0;padding:10px 14px;border-radius:12px;background:#fff1ec}
+body.sf-app #route-panel .route-stat b{display:block;font-size:20px;line-height:1.3;color:#ee4d2d}
+body.sf-app #route-panel .route-stat small{display:block;font-size:12px;color:#6b6b76}
+body.sf-app #route-panel>ol{list-style:none;margin:0;padding:0;counter-reset:stop}
+body.sf-app #route-panel>ol>li{
+  counter-increment:stop;position:relative;padding:0 0 16px 38px;min-height:26px;
+}
+body.sf-app #route-panel>ol>li::before{
+  content:counter(stop);position:absolute;left:0;top:0;
+  width:26px;height:26px;border-radius:50%;background:#ee4d2d;color:#fff;
+  font-size:12px;font-weight:700;display:grid;place-items:center;
+}
+body.sf-app #route-panel>ol>li:last-child::before{background:#12a150}
+body.sf-app #route-panel>ol>li:not(:last-child)::after{
+  content:"";position:absolute;left:12px;top:30px;bottom:4px;border-left:2px dashed #f0d5ca;
+}
+body.sf-app #route-panel>ol>li strong{display:block;font-size:13px}
+body.sf-app #route-panel>ol>li p{margin:0;font-size:12px;color:#6b6b76}
+body.sf-app #route-panel>ol>li small{display:block;margin-top:2px;font-size:11px;color:#8a8089}
+body.sf-app #route-panel>.route-message{margin:4px 0 12px;font-size:11px;line-height:1.5;color:#8a8089}
+body.sf-app #route-panel>button{align-self:flex-start;margin-top:auto}
