@@ -26,8 +26,8 @@ if (!window.sfManagerPresentation) {
       "sf-manager-layout"
     );
 
-    // Load the assistant after verifying a Manager session.
-    (async () => {
+    // Initialize the assistant only after session verification.
+    async function initializeManagerAI() {
       if (window.sfManagerAILoading) return;
 
       window.sfManagerAILoading = true;
@@ -45,9 +45,9 @@ if (!window.sfManagerPresentation) {
 
           asset.onload = resolve;
 
-          asset.onerror = () => reject(
-            new Error("Assistant asset failed to load.")
-          );
+          asset.onerror = () => {
+            reject(new Error("Assistant asset failed to load."));
+          };
 
           document.head.appendChild(asset);
         });
@@ -72,9 +72,7 @@ if (!window.sfManagerPresentation) {
           "/manager-ai-chat.js?v=threads-1"
         );
       } catch {
-        document.getElementById(
-          "manager-ai-widget"
-        )?.remove();
+        document.getElementById("manager-ai-widget")?.remove();
 
         window.sfManagerAILoading = false;
 
@@ -82,7 +80,7 @@ if (!window.sfManagerPresentation) {
           "Manager assistant could not load. Refresh to try again."
         );
       }
-    })();
+    }
 
     const header = document.createElement("header");
     header.id = "sf-manager-header";
@@ -116,6 +114,11 @@ avatar.setAttribute("aria-hidden", "true");
 avatar.textContent = "MA";
 
 profile.append(avatar, user);
+    const signedInLabel = user.textContent;
+const signedInAvatar = avatar.textContent;
+
+user.textContent = "Checking session…";
+avatar.textContent = "…";
 
     const navigation = document.createElement("nav");
     navigation.className = "sf-navigation";
@@ -317,6 +320,7 @@ profile.append(avatar, user);
 
     const logout = document.createElement("button");
     logout.type = "button";
+    logout.disabled = true;
     logout.className = "sf-logout";
 
     logout.append(
@@ -404,6 +408,7 @@ profile.append(avatar, user);
       button.type = "button";
       button.id = id;
       button.className = "sf-notification-toggle";
+      button.disabled = true;
       button.title = "Notifications";
 
       button.setAttribute(
@@ -1147,7 +1152,7 @@ profile.append(avatar, user);
     }
 
     function refreshNotifications() {
-      if (document.hidden) return;
+  if (document.hidden || !session) return;
 
       return notificationTask(async () => {
         const generation =
@@ -1636,12 +1641,50 @@ profile.append(avatar, user);
       }
     );
 
-    startNotificationPolling();
+    document.documentElement.classList.add(
+  "sf-manager-mounted"
+);
 
-    const orderView = new URLSearchParams(
-      window.location.search
-    ).get("orders");
+session = await sessionReady;
 
+if (!session || session.user.role !== "manager") {
+  if (!session) {
+    document.documentElement.style.visibility = "hidden";
+  }
+
+  header.remove();
+  mobileBar.remove();
+  backdrop.remove();
+  notificationDialog.remove();
+
+  document.documentElement.classList.remove(
+    "sf-manager-entry",
+    "sf-manager-mounted"
+  );
+
+  document.body.classList.remove(
+    "sf-manager-layout",
+    "sf-sidebar-open"
+  );
+
+  return false;
+}
+
+user.textContent = signedInLabel;
+avatar.textContent = signedInAvatar;
+
+logout.disabled = false;
+
+notificationButtons.forEach(button => {
+  button.disabled = false;
+});
+
+initializeManagerAI();
+startNotificationPolling();
+
+const orderView = new URLSearchParams(
+  window.location.search
+).get("orders");
     if (
       window.location.pathname === "/" &&
       orderView
