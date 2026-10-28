@@ -1,37 +1,80 @@
 (() => {
   "use strict";
 
-  const $ = (id) => document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
   const node = (tag, text) => {
-    const el = document.createElement(tag);
-    el.textContent = text;
-    return el;
+    const element = document.createElement(tag);
+
+    if (text != null) {
+      element.textContent = text;
+    }
+
+    return element;
   };
 
+  const money = value =>
+    `${Number(value || 0).toLocaleString("en-US")} VND`;
+
+  const stamp = value =>
+    value
+      ? new Date(value).toLocaleString()
+      : "—";
+
+  const validId = value =>
+    /^[1-9]\d*$/.test(String(value || "")) &&
+    Number.isSafeInteger(Number(value));
+
+  const initialParams = new URLSearchParams(
+    location.search
+  );
+
+  let preferredOrder = validId(
+    initialParams.get("order")
+  )
+    ? initialParams.get("order")
+    : null;
+
+  let targetMessage = validId(
+    initialParams.get("message")
+  )
+    ? initialParams.get("message")
+    : null;
+
   let selected;
-  let cursor;
+  let cursor = null;
+
   let sending = false;
   let reviewing = false;
+  let loading = false;
+  let refreshing = false;
+
   let messageKey;
   let fingerprint;
+
   let generation = 0;
+  let currentOrder = null;
+  let messageRows = [];
+  let loadedOlder = false;
+  let lastRead = 0;
 
   async function api(path, body) {
     const response = await fetch(
       `/api/driver-support${path}`,
       {
         cache: "no-store",
+        credentials: "same-origin",
         signal: AbortSignal.timeout(15000),
+
         ...(body
           ? {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(body),
-            }
-          : {}),
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+          }
+          : {})
       }
     );
 
@@ -46,68 +89,430 @@
     return result;
   }
 
+  function replyControls() {
+    const closed =
+      !currentOrder ||
+      [
+        "completed",
+        "failed",
+        "cancelled"
+      ].includes(currentOrder.status);
+
+    $("reply").querySelector("button").disabled =
+      closed || sending || loading;
+
+    $("text").disabled =
+      closed || sending;
+
+    $("orders").disabled = sending;
+
+    $("older").hidden = !cursor;
+  }
+
+  function renderDetails(result) {
+    const order = result.data;
+
+    const title = node(
+      "h3",
+      order.order_code
+    );
+
+    const list = node("dl");
+
+    const fields = [
+      ["Status", order.status],
+
+      [
+        "Driver",
+        [
+          order.driver_code,
+          order.driver_name
+        ].filter(Boolean).join(" · ")
+      ],
+
+      ["Restaurant", order.restaurant_name],
+      ["Pickup address", order.pickup_address],
+      ["Customer", order.customer_name],
+      ["Delivery address", order.delivery_address],
+      ["Payment", order.payment_method],
+      ["Order total", money(order.total_amount)],
+      ["COD", money(order.cod_amount)],
+      ["Delivery fee", money(order.delivery_fee)],
+      ["Deadline", stamp(order.due_at)]
+    ];
+
+    for (const [label, value] of fields) {
+      list.append(
+        node("dt", label),
+        node("dd", value || "—")
+      );
+    }
+
+    const items = node("ul");
+
+    for (const item of result.items || []) {
+      items.appendChild(node(
+        "li",
+        `${item.quantity} × ${item.item_name} · ${money(item.unit_price)}`
+      ));
+    }
+
+    $("order-details").replaceChildren(
+      title,
+      list,
+      node("h4", "Order items"),
+      items
+    );
+  }
+
+  function renderMessages() {
+    const container = $("messages");
+
+    const nearBottom =
+      container.scrollHeight -
+      container.scrollTop -
+      container.clientHeight < 70;
+
+    const previousHeight =
+      container.scrollHeight;
+
+    container.replaceChildren();
+
+    for (const message of messageRows) {
+      const row = node("article");
+
+      row.className =
+        `support-message ${
+          message.sender_role === "manager"
+            ? "manager"
+            : "driver"
+        }`;
+
+      row.dataset.messageId =
+        String(message.id);
+
+      row.append(
+        node(
+          "strong",
+          `${message.sender_name} · ${
+            message.sender_role === "manager"
+              ? "Manager"
+              : "Driver"
+          }`
+        ),
+        node("p", message.message_text),
+        node("small", stamp(message.created_at))
+      );
+
+      if (
+        String(message.id) === targetMessage
+      ) {
+        row.classList.add(
+          "support-message-target"
+        );
+      }
+
+      container.appendChild(row);
+    }
+
+    if (!messageRows.length) {
+      container.appendChild(
+        node("p", "No messages yet.")
+      );
+    }
+
+    if (
+      nearBottom ||
+      previousHeight === 0
+    ) {
+      container.scrollTop =
+        container.scrollHeight;
+    }
+  }
+
+  async function load(
+    older = false,
+    force = false
+  ) {
+    const orderId = $("orders").value;
+
+    if (
+      !validId(orderId) ||
+      (loading && !force) ||
+      (sending && !force)
+    ) {
+      return;
+    }
+
+    const token = generation;
+
+    loading = true;
+    replyControls();
+
+    try {
+      const result = await api(
+        `/orders/${orderId}/messages` +
+        (
+          older && cursor
+            ? `?before=${cursor}`
+            : ""
+        )
+      );
+
+      if (
+        token !== generation ||
+        $("orders").value !== orderId
+      ) {
+        return;
+      }
+
+      const merged = new Map(
+        messageRows.map(message => [
+          String(message.id),
+          message
+        ])
+      );
+
+      result.data.forEach(message => {
+        merged.set(
+          String(message.id),
+          message
+        );
+      });
+
+      messageRows = [
+        ...merged.values()
+      ].sort(
+        (a, b) =>
+          Number(a.id) - Number(b.id)
+      );
+
+      if (older || !loadedOlder) {
+        cursor = result.next_cursor;
+      }
+
+      if (older) {
+        loadedOlder = true;
+      }
+
+      if (
+        currentOrder &&
+        result.order_status
+      ) {
+        currentOrder.status =
+          result.order_status;
+      }
+
+      const container = $("messages");
+      const previousHeight =
+        container.scrollHeight;
+
+      renderMessages();
+
+      if (older) {
+        container.scrollTop +=
+          container.scrollHeight -
+          previousHeight;
+      }
+
+      $("status").textContent =
+        [
+          "completed",
+          "failed",
+          "cancelled"
+        ].includes(currentOrder?.status)
+          ? "This delivery is closed. The conversation is read-only."
+          : "Messages update automatically while this page is visible.";
+
+      const newest = Math.max(
+        0,
+        ...result.data.map(
+          message => Number(message.id)
+        )
+      );
+
+      if (
+        !older &&
+        newest > lastRead &&
+        !document.hidden
+      ) {
+        await api(
+          `/orders/${orderId}/messages/read`,
+          {
+            through_id: String(newest)
+          }
+        );
+
+        if (token === generation) {
+          lastRead = newest;
+        }
+      }
+    } catch (error) {
+      if (token === generation) {
+        $("status").textContent =
+          error.message;
+      }
+    } finally {
+      if (token === generation) {
+        loading = false;
+        replyControls();
+      }
+    }
+  }
+
+  async function selectOrder() {
+    const token = ++generation;
+    const orderId = $("orders").value;
+
+    currentOrder = null;
+    messageRows = [];
+    cursor = null;
+    loadedOlder = false;
+    lastRead = 0;
+    loading = true;
+
+    $("messages").replaceChildren();
+
+    replyControls();
+
+    if (!validId(orderId)) {
+      loading = false;
+
+      $("order-details").textContent =
+        "No delivery selected.";
+
+      return;
+    }
+
+    try {
+      const result = await api(
+        `/orders/${orderId}`
+      );
+
+      if (token !== generation) return;
+
+      currentOrder = result.data;
+
+      renderDetails(result);
+
+      const url = new URL(location.href);
+
+      url.searchParams.set(
+        "order",
+        orderId
+      );
+
+      history.replaceState(
+        null,
+        "",
+        url
+      );
+
+      loading = false;
+
+      await load();
+    } catch (error) {
+      if (token === generation) {
+        loading = false;
+
+        $("order-details").textContent =
+          error.message;
+
+        $("status").textContent =
+          error.message;
+
+        replyControls();
+      }
+    }
+  }
+
   async function refresh() {
+    if (refreshing || sending) return;
+
+    refreshing = true;
     $("refresh").disabled = true;
 
     try {
-      const [requests, orders] = await Promise.all([
-        api("/wallet/requests"),
-        api("/orders"),
-      ]);
+      const [requests, orders] =
+        await Promise.all([
+          api("/wallet/requests"),
+          api("/orders")
+        ]);
 
       $("requests").replaceChildren();
 
       for (const request of requests.data) {
-        const row = document.createElement("tr");
+        const row = node("tr");
 
         const values = [
           request.driver_code,
           `${request.request_type} #${request.id}`,
-          `${Number(request.amount).toLocaleString("en-US")} VND`,
-          request.status,
+          money(request.amount),
+          request.status
         ];
 
         for (const value of values) {
-          row.append(node("td", value));
+          row.appendChild(
+            node("td", value)
+          );
         }
 
-        const cell = document.createElement("td");
+        const cell = node("td");
 
         if (request.status === "pending") {
-          const button = node("button", "Review");
+          const button = node(
+            "button",
+            "Review"
+          );
+
           button.type = "button";
 
-          button.addEventListener("click", () => {
-            selected = request;
+          button.addEventListener(
+            "click",
+            () => {
+              selected = request;
 
-            $("review-form").reset();
-            $("review-status").textContent = "";
+              $("review-form").reset();
 
-            $("review-details").textContent =
-              `${request.driver_code} · ` +
-              `${request.request_type} · ` +
-              `${request.amount} VND`;
+              $("review-status").textContent =
+                "";
 
-            $("review").showModal();
-          });
+              $("review-details").textContent =
+                `${request.driver_code} · ` +
+                `${request.request_type} · ` +
+                money(request.amount);
 
-          cell.append(button);
+              $("review").showModal();
+            }
+          );
+
+          cell.appendChild(button);
         } else {
           cell.textContent =
             request.reference || "Reviewed";
         }
 
-        row.append(cell);
-        $("requests").append(row);
+        row.appendChild(cell);
+        $("requests").appendChild(row);
       }
 
       if (!requests.data.length) {
-        const row = node("tr", "");
-        row.append(node("td", "No wallet requests."));
-        $("requests").append(row);
+        const row = node("tr");
+
+        const cell = node(
+          "td",
+          "No wallet requests."
+        );
+
+        cell.colSpan = 5;
+
+        row.appendChild(cell);
+        $("requests").appendChild(row);
       }
 
-      const previous = $("orders").value;
+      const previous =
+        preferredOrder ||
+        $("orders").value;
 
       $("orders").replaceChildren();
 
@@ -118,79 +523,53 @@
         );
 
         option.value = order.id;
-        $("orders").append(option);
+
+        $("orders").appendChild(option);
       }
 
       if (
-        orders.data.some(
-          (order) => String(order.id) === previous
+        previous &&
+        !orders.data.some(
+          order =>
+            String(order.id) === previous
         )
       ) {
+        // Notifications can reference an order outside the latest 200.
+        const result = await api(
+          `/orders/${previous}`
+        );
+
+        const option = node(
+          "option",
+          `${result.data.order_code} · ${
+            result.data.driver_name || "Unassigned"
+          }`
+        );
+
+        option.value = previous;
+
+        $("orders").appendChild(option);
+      }
+
+      if (previous) {
         $("orders").value = previous;
       }
 
-      $("status").textContent = "Updated.";
+      preferredOrder = null;
+
+      await selectOrder();
     } catch (error) {
-      $("status").textContent = error.message;
-    } finally {
-      $("refresh").disabled = false;
-    }
-  }
-
-  async function load(older = false) {
-    const order = $("orders").value;
-
-    if (!order) return;
-
-    const current = ++generation;
-
-    try {
-      const result = await api(
-        `/orders/${order}/messages` +
-          (
-            older && cursor
-              ? `?before=${cursor}`
-              : ""
-          )
-      );
-
-      if (current !== generation) return;
-
-      if (!older) {
-        $("messages").replaceChildren();
-      }
-
-      const rows = result.data.map((message) =>
-        node(
-          "p",
-          `${message.sender_name} ` +
-            `(${message.sender_role}) · ` +
-            `${new Date(message.created_at).toLocaleString()} — ` +
-            message.message_text
-        )
-      );
-
-      if (older) {
-        $("messages").prepend(...rows);
-      } else {
-        $("messages").append(...rows);
-      }
-
-      cursor = result.next_cursor;
-      $("older").hidden = !cursor;
-
       $("status").textContent =
-        result.data.length
-          ? "Messages saved to system."
-          : "No messages yet.";
-    } catch (error) {
-      $("status").textContent = error.message;
+        error.message;
+    } finally {
+      refreshing = false;
+      $("refresh").disabled = false;
     }
   }
 
   $("review-form").addEventListener(
     "submit",
-    async (event) => {
+    async event => {
       event.preventDefault();
 
       if (
@@ -202,10 +581,12 @@
 
       reviewing = true;
 
-      const controls = [...event.target.elements];
+      const controls = [
+        ...event.target.elements
+      ];
 
-      controls.forEach((el) => {
-        el.disabled = true;
+      controls.forEach(element => {
+        element.disabled = true;
       });
 
       try {
@@ -213,11 +594,12 @@
           `/wallet/requests/${selected.id}/review`,
           {
             status: $("decision").value,
-            reference: $("reference").value,
+            reference: $("reference").value
           }
         );
 
         $("review").close();
+
         await refresh();
       } catch (error) {
         $("review-status").textContent =
@@ -225,87 +607,152 @@
       } finally {
         reviewing = false;
 
-        controls.forEach((el) => {
-          el.disabled = false;
+        controls.forEach(element => {
+          element.disabled = false;
         });
       }
     }
   );
 
-  $("cancel").addEventListener("click", () => {
-    if (!reviewing) {
-      $("review").close();
+  $("cancel").addEventListener(
+    "click",
+    () => {
+      if (!reviewing) {
+        $("review").close();
+      }
     }
-  });
+  );
 
-  $("review").addEventListener("cancel", (event) => {
-    if (reviewing) {
-      event.preventDefault();
+  $("review").addEventListener(
+    "cancel",
+    event => {
+      if (reviewing) {
+        event.preventDefault();
+      }
     }
-  });
+  );
 
   $("reply").addEventListener(
     "submit",
-    async (event) => {
+    async event => {
       event.preventDefault();
 
-      if (sending) return;
+      if (
+        sending ||
+        !event.target.reportValidity() ||
+        !currentOrder ||
+        [
+          "completed",
+          "failed",
+          "cancelled"
+        ].includes(currentOrder.status)
+      ) {
+        return;
+      }
 
-      const order = $("orders").value;
-      const message = $("text").value.trim();
+      const orderId = $("orders").value;
+      const text = $("text").value.trim();
 
-      if (!order || !message) return;
+      if (!text) return;
 
-      const current = `${order}:${message}`;
+      const current =
+        `${orderId}:${text}`;
 
-      if (current !== fingerprint) {
+      if (fingerprint !== current) {
         fingerprint = current;
         messageKey = crypto.randomUUID();
       }
 
       sending = true;
-
-      $("reply").querySelector("button").disabled = true;
-      $("orders").disabled = true;
+      replyControls();
 
       try {
         await api(
-          `/orders/${order}/messages`,
+          `/orders/${orderId}/messages`,
           {
-            message_text: message,
-            message_key: messageKey,
+            message_text: text,
+            message_key: messageKey
           }
         );
 
         $("text").value = "";
-        fingerprint = null;
 
-        await load();
-      } catch (error) {
-        $("status").textContent = error.message;
-      } finally {
+        fingerprint = null;
+        messageKey = null;
         sending = false;
 
-        $("reply").querySelector("button").disabled = false;
-        $("orders").disabled = false;
+        await load(false, true);
+      } catch (error) {
+        $("status").textContent =
+          `${error.message} ` +
+          "Retry with the same text if saving was not confirmed.";
+      } finally {
+        sending = false;
+        replyControls();
       }
     }
   );
 
-  $("load").addEventListener("click", () => load());
+  $("load").addEventListener(
+    "click",
+    () => load()
+  );
 
   $("older").addEventListener(
     "click",
     () => load(true)
   );
 
-  $("orders").addEventListener("change", () => {
-    cursor = null;
-    $("messages").replaceChildren();
-    load();
-  });
+  $("orders").addEventListener(
+    "change",
+    () => {
+      targetMessage = null;
+      selectOrder();
+    }
+  );
 
-  $("refresh").addEventListener("click", refresh);
+  $("refresh").addEventListener(
+    "click",
+    refresh
+  );
 
+  let poll;
+
+  function startPolling() {
+    clearInterval(poll);
+
+    poll = setInterval(() => {
+      if (!document.hidden) {
+        load();
+      }
+    }, 5000);
+  }
+
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (!document.hidden) {
+        load();
+      }
+    }
+  );
+
+  window.addEventListener(
+    "pagehide",
+    () => clearInterval(poll)
+  );
+
+  window.addEventListener(
+    "pageshow",
+    event => {
+      if (event.persisted) {
+        startPolling();
+        load();
+      }
+    }
+  );
+
+  replyControls();
   refresh();
+  startPolling();
 })();
