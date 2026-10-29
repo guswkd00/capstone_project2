@@ -162,8 +162,33 @@ async function issueReset(email) {
 router.get("/email-status", (req, res) => {
   res.set("Cache-Control", "no-store");
 
+  let publicUrlValid = false;
+
+  try {
+    const url = new URL(process.env.APP_PUBLIC_URL);
+    const local = ["localhost", "127.0.0.1"].includes(
+      url.hostname
+    );
+
+    publicUrlValid =
+      (url.protocol === "https:" ||
+        (local && url.protocol === "http:")) &&
+      !url.username &&
+      !url.password &&
+      !url.search &&
+      !url.hash &&
+      url.pathname === "/";
+  } catch {}
+
   res.json({
+    diagnosticVersion: "mail-1",
     enabled: emailEnabled(),
+    checks: {
+      hasBrevoKey: Boolean(process.env.BREVO_API_KEY),
+      hasSender: Boolean(process.env.EMAIL_FROM),
+      hasPublicUrl: Boolean(process.env.APP_PUBLIC_URL),
+      publicUrlValid
+    }
   });
 });
 
