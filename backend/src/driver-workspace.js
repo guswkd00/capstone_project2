@@ -1,6 +1,10 @@
 "use strict";
 
 const express = require("express");
+const {
+  emailEnabled,
+  notifyWithdrawal
+} = require("./mail");
 
 const {
   error,
