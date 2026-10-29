@@ -291,6 +291,7 @@ function createWorkspaceRouter(
       "/wallet/requests/:id/review",
       handle(async (req, res) => {
         const requestId = id(req.params.id);
+        let approvedWithdrawal = null;
 
         const data = await transaction(async (db) => {
           const [lookup] = await db.execute(
