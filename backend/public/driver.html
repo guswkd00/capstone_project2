@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ShopeeFood Delivery DSS — Driver App</title>
+
+<script
+  src="/auth-client.js?v=manager-shell-3"
+  data-role="driver"
+></script>
+
+  <script src="/delivery-proof.js" defer></script>
+  <script src="/driver-workspace-deliveries.js?v=1" defer></script>
+  <script src="/driver-workspace-location.js?v=1" defer></script>
+  <script src="/driver-workspace-route.js?v=2" defer></script>
+  <script src="/driver-workspace.js?v=profile-2" defer></script>
+  <script
+  src="/driver-chat-updates.js?v=chat-1"
+  defer
+></script>
+  <script src="/driver-profile-photo.js?v=1" defer></script>
+
+<link rel="stylesheet" href="/driver-workspace.css?v=profile-2">
+<link rel="stylesheet" href="/driver-workspace.redesign.css?v=2">
+<link
+  rel="stylesheet"
+  href="/driver-workspace-patch.css?v=driver-ui-6"
+>
+</head>
+
+<body class="sf-app">
+  <div class="top-accent-bar"></div>
+
+  <header>
+    <div class="header-top">
+      <div class="brand-container">
+        <div class="app-logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <circle cx="8" cy="23" r="3.2"/>
+            <circle cx="25" cy="23" r="3.2"/>
+            <path
+              d="M11.2 23h9.8c1.4 0 2.2-.7 2.4-1.8l.2-2.2H14.5l-3.3 4z"
+              stroke-width="1.8"
+            />
+            <path d="M20.8 9.5l3.2 9.5M18.4 9.5h4.6"/>
+            <rect
+              x="3"
+              y="9"
+              width="10.5"
+              height="7.5"
+              rx="1.6"
+              fill="currentColor"
+              stroke="none"
+            />
+            <path d="M13.5 16.5V19h1"/>
+          </svg>
+        </div>
+
+        <div class="brand-text">
+          <strong class="brand-title">
+            ShopeeFood Delivery DSS
+          </strong>
+
+          <small class="brand-sub">
+            Academic Prototype
+            <span class="role-chip">Driver App</span>
+          </small>
+        </div>
+      </div>
+
+      <nav aria-label="Main navigation">
+        <a href="#df-deliveries">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h10"/>
+          </svg>
+          Deliveries
+        </a>
+
+        <button
+          type="button"
+          class="nav-link-btn"
+          id="open-wallet-btn"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect
+              x="3"
+              y="6"
+              width="18"
+              height="13"
+              rx="2.5"
+            />
+            <path d="M3 10h18M16 14.5h2"/>
+          </svg>
+          Wallet
+        </button>
+
+        <button
+          type="button"
+          class="nav-link-btn"
+          id="open-chat-btn"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4.5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"
+            />
+          </svg>
+          Chat
+        </button>
+
+        <button
+          type="button"
+          class="nav-link-btn nav-profile"
+          id="open-profile-btn"
+          data-account-menu
+          aria-label="Open Driver Profile and Account"
+        >
+          <span class="avatar">D</span>
+
+          <span class="nav-profile-text">
+            <b id="nav-driver-name">Driver</b>
+            <small id="nav-driver-zone">Loading...</small>
+          </span>
+
+          <span class="profile-account-label">
+            Account
+          </span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="df-driver-main">
+    <h1 id="df-greeting">My Deliveries</h1>
+    <p id="df-profile" class="muted">
+      Loading your profile...
+    </p>
+
+    <section class="top-grid">
+      <div class="card">
+        <h2>Delivery Location</h2>
+
+        <p class="muted">
+          Share GPS while delivering.
+        </p>
+
+        <div class="btn-row">
+          <button type="button" id="share-gps-btn">
+            Share GPS
+          </button>
+
+          <button type="button" id="stop-gps-btn" disabled>
+            Stop Sharing
+          </button>
+        </div>
+
+        <p
+          id="gps-status-text"
+          class="muted"
+          role="status"
+          style="margin-top:8px"
+        >
+          Location sharing is off.
+        </p>
+      </div>
+
+      <div class="card" id="route-panel"></div>
+    </section>
+
+    <section
+      class="card wallet-card"
+      aria-label="Driver Wallet"
+    >
+      <div>
+        <h2>Driver Wallet</h2>
+
+        <p class="muted">
+          Internal earnings ledger.
+          Transfers require Manager review.
+        </p>
+      </div>
+
+      <div class="wallet-balances">
+        <div class="wallet-item">
+          <small>Cash Balance</small>
+          <strong id="wallet-cash">—</strong>
+        </div>
+
+        <div class="wallet-item">
+          <small>COD Deposit</small>
+          <strong id="wallet-deposit">—</strong>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin:0">
+        <button
+          type="button"
+          class="active"
+          id="inline-withdraw-btn"
+        >
+          Withdraw
+        </button>
+
+        <button type="button" id="inline-topup-btn">
+          Top-up
+        </button>
+
+        <button type="button" id="wallet-detail-btn">
+          History
+        </button>
+      </div>
+    </section>
+
+    <section
+      class="card reward-card"
+      aria-label="Driver Reward Points"
+    >
+      <div class="reward-summary">
+        <div class="points-box">
+          <strong id="driver-points">—</strong>
+          <small>POINTS</small>
+        </div>
+
+        <div>
+          <h2>Driver Reward Points</h2>
+
+          <p id="reward-status" class="muted">
+            Loading reward policy...
+          </p>
+        </div>
+      </div>
+
+      <div class="milestones" id="reward-tiers"></div>
+    </section>
+
+    <section
+      class="metrics df-metrics"
+      aria-label="Delivery summary"
+    >
+      <div class="metric">
+        <small>Active Deliveries</small>
+        <strong id="df-active-count">—</strong>
+      </div>
+
+      <div class="metric">
+        <small>Completed</small>
+        <strong id="df-completed-count">—</strong>
+      </div>
+
+      <div class="metric">
+        <small>COD to Collect</small>
+        <strong id="df-cod-total">—</strong>
+      </div>
+
+      <div class="metric">
+        <small>Daily Bonus</small>
+        <strong id="daily-bonus">—</strong>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="toolbar-buttons">
+        <button
+          id="df-active-tab"
+          class="active"
+          type="button"
+        >
+          Active Deliveries
+        </button>
+
+        <button id="df-history-tab" type="button">
+          Delivery History
+        </button>
+
+        <button id="df-refresh" type="button">
+          Refresh
+        </button>
+      </div>
+
+      <div class="toolbar-filters">
+        <div
+          class="pay-filter"
+          role="group"
+          aria-label="Payment flow"
+        >
+          <button type="button" class="on" data-pay="all">
+            All payments
+          </button>
+
+          <button type="button" data-pay="prepaid">
+            Prepaid
+          </button>
+
+          <button type="button" data-pay="cod">
+            Pay on delivery
+          </button>
+        </div>
+
+        <form id="distance-form">
+          <label for="max-distance">
+            Maximum delivery distance (km)
+          </label>
+
+          <input
+            id="max-distance"
+            type="number"
+            min="1"
+            step="0.1"
+            required
+            style="width:80px"
+          >
+
+          <button type="submit">Save limit</button>
+        </form>
+      </div>
+    </div>
+
+    <p
+      id="df-message"
+      class="muted"
+      role="status"
+      style="margin-bottom:12px;font-weight:500"
+    ></p>
+
+    <p id="df-count" class="muted"></p>
+
+    <section
+      id="df-deliveries"
+      class="deliveries df-cards"
+      aria-label="Deliveries"
+    ></section>
+  </main>
+
+  <dialog
+    id="df-details-dialog"
+    aria-labelledby="df-details-title"
+  >
+    <div class="dialog-header">
+      <h2 id="df-details-title">Delivery Details</h2>
+
+      <button id="df-close-details" type="button">
+        Close
+      </button>
+    </div>
+
+    <div id="df-details-content"></div>
+  </dialog>
+
+  <dialog
+    id="wallet-dialog"
+    aria-labelledby="wallet-dialog-title"
+  >
+    <div class="dialog-header">
+      <h2 id="wallet-dialog-title">Driver Wallet</h2>
+
+      <button id="close-wallet" type="button">
+        Close
+      </button>
+    </div>
+
+    <div class="qr-wrap" style="text-align:left">
+      <small class="muted">Available Cash Balance</small>
+
+      <strong
+        id="modal-wallet-cash"
+        style="display:block;font-size:22px;margin:4px 0 10px"
+      >
+        —
+      </strong>
+
+      <div class="btn-row" style="margin:0">
+        <button
+          type="button"
+          class="active"
+          id="btn-withdraw"
+        >
+          Withdraw
+        </button>
+
+        <button type="button" id="btn-topup">
+          Top Up Deposit
+        </button>
+      </div>
+
+      <p
+        id="wallet-action-msg"
+        class="muted"
+        role="status"
+        style="margin-top:8px"
+      ></p>
+    </div>
+
+    <form id="wallet-request-form" hidden>
+      <label for="wallet-amount">
+        Amount (VND, 10,000–10,000,000)
+      </label>
+
+      <input
+        id="wallet-amount"
+        type="number"
+        min="10000"
+        max="10000000"
+        step="1"
+        required
+      >
+
+      <p id="wallet-request-description"></p>
+
+      <label>
+        <input
+          id="wallet-confirm"
+          type="checkbox"
+          required
+        >
+        I confirm this request requires Manager review.
+      </label>
+
+      <button type="submit" class="active">
+        Submit request
+      </button>
+    </form>
+
+    <h2 style="font-size:14px">
+      Latest 50 transactions and requests
+    </h2>
+
+    <table class="profile-table">
+      <tbody id="wallet-tx-list">
+        <tr>
+          <td>Loading transactions...</td>
+        </tr>
+      </tbody>
+    </table>
+  </dialog>
+
+  <dialog
+    id="chat-dialog"
+    aria-labelledby="chat-dialog-title"
+  >
+    <div class="dialog-header">
+      <h2 id="chat-dialog-title">Order Messages</h2>
+
+      <button id="close-chat" type="button">
+        Close
+      </button>
+    </div>
+
+    <p>
+      Manager support channel.
+      External customer messaging is not connected.
+    </p>
+
+    <p id="chat-status" role="status"></p>
+
+    <button type="button" id="chat-older" hidden>
+      Load older messages
+    </button>
+
+    <select
+      id="chat-order-selector"
+      class="chat-order-select"
+      aria-label="Select delivery"
+    ></select>
+
+    <div
+      id="chat-messages"
+      class="chat-messages"
+      role="log"
+      aria-label="Order messages"
+    ></div>
+
+    <div class="quick-replies">
+      <button
+        type="button"
+        class="quick-chip"
+        data-msg="Arrived at pickup."
+      >
+        Arrived at pickup
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip"
+        data-msg="On the way to your address."
+      >
+        On the way
+      </button>
+
+      <button
+        type="button"
+        class="quick-chip"
+        data-msg="Arrived at dropoff."
+      >
+        Arrived at dropoff
+      </button>
+    </div>
+
+    <form id="chat-form" class="chat-input-row">
+      <input
+        type="text"
+        id="chat-input"
+        aria-label="Message"
+        maxlength="1000"
+        placeholder="Message Manager support..."
+        required
+      >
+
+      <button type="submit" class="active">
+        Send
+      </button>
+    </form>
+  </dialog>
+
+  <dialog
+    id="profile-dialog"
+    aria-labelledby="profile-dialog-title"
+  >
+    <div class="dialog-header">
+      <h2 id="profile-dialog-title">
+        Driver Profile &amp; Account
+      </h2>
+
+      <button id="close-profile" type="button">
+        Close
+      </button>
+    </div>
+
+    <form id="driver-photo-form">
+      <div
+        class="driver-photo-preview"
+        id="driver-photo-preview"
+        aria-label="Current profile photo"
+      >
+        D
+      </div>
+
+      <label for="driver-photo-file">
+        Driver photo
+      </label>
+
+      <input
+        id="driver-photo-file"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        required
+      >
+
+      <p class="muted">
+        Choose a photo up to 10 MB.
+        It will be cropped to a square and saved
+        as a profile image.
+      </p>
+
+      <div class="btn-row">
+        <button type="submit" class="active">
+          Save photo
+        </button>
+
+        <button
+          id="driver-photo-remove"
+          type="button"
+          disabled
+        >
+          Remove photo
+        </button>
+      </div>
+
+      <p id="driver-photo-status" role="status"></p>
+    </form>
+
+    <div id="profile-content">
+      Loading profile...
+    </div>
+
+    <p>
+      For delivery or payment issues, contact your
+      assigned hub Manager through Order Messages.
+    </p>
+
+    <div class="btn-row">
+      <a href="/account.html">Account settings</a>
+
+      <button id="driver-logout" type="button">
+        Sign out
+      </button>
+    </div>
+
+    <p id="profile-status" role="status"></p>
+  </dialog>
+</body>
+</html>

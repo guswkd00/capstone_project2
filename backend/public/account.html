@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Your Account — ShopeeFood Delivery DSS</title>
+
+<script src="/auth-client.js?v=manager-shell-3"></script>
+  <script
+  src="/app-shell.js?v=manager-shell-3"
+  defer
+></script>
+
+<link
+  rel="stylesheet"
+  href="/app-theme.css?v=manager-shell-3"
+>
+
+  <style>
+    body.account-page {
+      margin: 0;
+      background: #fff8f5;
+      color: #263344;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .account-page > header {
+      display: none;
+    }
+
+    .account-page main {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Orange banner */
+    .account-hero {
+      min-height: 210px;
+      padding: 46px 48px 38px;
+      color: #ffffff;
+      background: linear-gradient(
+        110deg,
+        #ee4d2d,
+        #df3c1e
+      );
+      border: 0;
+      border-radius: 0;
+    }
+
+    .account-eyebrow {
+      margin: 0 0 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .account-hero h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 4vw, 42px);
+      letter-spacing: -1px;
+    }
+
+    .account-hero .account-status {
+      margin: 0;
+      color: #fff1e9;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .account-hero .account-status.error {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Account panel */
+    .account-content {
+      max-width: 1500px;
+      margin: auto;
+      padding: 34px 44px 50px;
+    }
+
+    .account-page .account-card {
+      display: grid;
+      grid-template-columns:
+        minmax(220px, 0.85fr)
+        minmax(0, 2fr);
+      min-height: 460px;
+      overflow: hidden;
+      padding: 0;
+      background: #ffffff;
+      border: 1px solid #efdfd7;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px #8b3c1c08;
+    }
+
+    /* Profile */
+    .account-profile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 28px;
+      text-align: center;
+      background: #fffaf7;
+      border-right: 1px solid #f0e2dc;
+    }
+
+    .account-avatar {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      margin-bottom: 24px;
+      background: #ffebe1;
+      color: #c84223;
+      border: 6px solid #ffffff;
+      outline: 1px solid #f1dacd;
+      border-radius: 50%;
+      font-size: 45px;
+      font-weight: 700;
+    }
+
+    .account-avatar img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .account-profile h2 {
+      margin: 0 0 12px;
+      font-size: 23px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .account-role-badge {
+      padding: 6px 15px;
+      border: 1px solid #f5c9b6;
+      border-radius: 30px;
+      color: #b43b21;
+      background: #fff0e9;
+      text-transform: capitalize;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .account-profile p {
+      margin: 24px 0 0;
+      max-width: 210px;
+      color: #7e716b;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    /* Account information */
+    .account-details {
+      min-width: 0;
+      padding: 40px;
+    }
+
+    .account-details h2 {
+      margin: 0 0 8px;
+      font-size: 23px;
+      letter-spacing: -0.4px;
+    }
+
+    .account-page .muted {
+      color: #7b838c;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .account-details > p {
+      margin: 0 0 30px;
+    }
+
+    .account-details dl {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      margin: 0;
+    }
+
+    .account-details dt,
+    .account-details dd {
+      margin: 0;
+      padding: 18px 0;
+      border-bottom: 1px solid #f0e9e5;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .account-details dt {
+      color: #7b838c;
+    }
+
+    .account-details dd {
+      color: #263344;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    #account-role {
+      text-transform: capitalize;
+    }
+
+    /* Action buttons */
+    .account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .account-page .account-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      background: #ee4d2d;
+      color: #ffffff;
+      border-radius: 9px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .account-page .account-actions a:hover {
+      background: #d93818;
+    }
+
+    .account-page .account-actions button {
+      padding: 12px 20px;
+      font-size: 13px;
+    }
+
+    /* Quick access */
+    .account-workspace {
+      margin-top: 30px;
+    }
+
+    .account-workspace h2 {
+      margin: 0 0 5px;
+      font-size: 18px;
+    }
+
+    .account-page .account-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .account-page .account-links a {
+      padding: 10px 14px;
+      color: #a8422c;
+      border: 1px solid #efd9ce;
+      border-radius: 8px;
+      background: #ffffff;
+      text-decoration: none;
+      font-size: 12px;
+    }
+
+    .account-page .account-links a:hover {
+      background: #fff0e9;
+    }
+
+    .account-page [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 1100px) {
+      .account-hero {
+        padding: 36px 30px;
+      }
+
+      .account-content {
+        padding: 28px;
+      }
+
+      .account-details {
+        padding: 30px;
+      }
+
+      .account-page .account-card {
+        grid-template-columns:
+          minmax(190px, 0.8fr)
+          minmax(0, 1.5fr);
+      }
+    }
+
+    @media (max-width: 650px) {
+      .account-hero {
+        min-height: 180px;
+        padding: 28px 22px;
+      }
+
+      .account-content {
+        padding: 20px 14px 36px;
+      }
+
+      .account-page .account-card {
+        grid-template-columns: 1fr;
+      }
+
+      .account-profile {
+        padding: 30px 22px;
+        border-right: 0;
+        border-bottom: 1px solid #f0e2dc;
+      }
+
+      .account-avatar {
+        width: 130px;
+        height: 130px;
+        margin-bottom: 16px;
+      }
+
+      .account-profile p {
+        margin-top: 16px;
+        max-width: none;
+      }
+
+      .account-details {
+        padding: 26px 22px;
+      }
+
+      .account-details dl {
+        grid-template-columns: 95px minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body class="sf-app account-page">
+  <main>
+    <section
+      class="account-hero"
+      aria-labelledby="account-title"
+    >
+      <p class="account-eyebrow">PERSONAL WORKSPACE</p>
+
+      <h1 id="account-title">Your Account</h1>
+
+      <p
+        id="account-message"
+        class="account-status"
+        role="status"
+        aria-live="polite"
+      >
+        Checking your session...
+      </p>
+    </section>
+
+    <div class="account-content">
+      <section
+        id="account-card"
+        class="card account-card"
+        aria-label="Account profile"
+        hidden
+      >
+        <div class="account-profile">
+          <div class="account-avatar">
+            <span
+              id="profile-initials"
+              aria-hidden="true"
+            ></span>
+
+            <img
+              id="profile-photo"
+              alt="Profile picture"
+              hidden
+            >
+          </div>
+
+          <h2 id="profile-name"></h2>
+
+          <span
+            id="profile-role"
+            class="account-role-badge"
+          ></span>
+
+          <p>
+            Your profile and access details for
+            ShopeeFood Delivery DSS.
+          </p>
+        </div>
+
+        <div class="account-details">
+          <h2>Account Information</h2>
+
+          <p class="muted">
+            Review the details associated with
+            your signed-in account.
+          </p>
+
+          <dl>
+            <dt>Full Name</dt>
+            <dd id="account-name"></dd>
+
+            <dt>Email Address</dt>
+            <dd id="account-email"></dd>
+
+            <dt>Account Role</dt>
+            <dd id="account-role"></dd>
+          </dl>
+
+          <div class="account-actions">
+            <a
+              id="workspace-link"
+              href="/dashboard.html"
+            >
+              Open Workspace →
+            </a>
+
+            <button
+              id="sign-out-button"
+              type="button"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="manager-links"
+        class="account-workspace"
+        aria-labelledby="workspace-title"
+        hidden
+      >
+        <h2 id="workspace-title">Quick Access</h2>
+
+        <p class="muted">
+          Continue managing your delivery operations.
+        </p>
+
+        <nav
+          class="account-links"
+          aria-label="Manager workspace shortcuts"
+        >
+          <a href="/dashboard.html">
+            Dashboard &amp; Reports
+          </a>
+
+          <a href="/?orders=all">Orders</a>
+
+          <a href="/fleet.html">Fleet Management</a>
+
+          <a href="/drivers.html">Manage Drivers</a>
+
+          <a href="/dispatch.html">Dispatch</a>
+
+          <a href="/dispatch-history.html">
+            Dispatch History
+          </a>
+        </nav>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const accountMessage =
+      document.getElementById("account-message");
+
+    const accountCard =
+      document.getElementById("account-card");
+
+    const signOutButton =
+      document.getElementById("sign-out-button");
+
+    let csrfToken = "";
+
+    function showAccountError(error, fallbackMessage) {
+      accountMessage.className = "account-status error";
+
+      accountMessage.textContent =
+        error instanceof TypeError
+          ? "Unable to connect. Please check your connection and try again."
+          : fallbackMessage;
+    }
+
+    async function loadAccount() {
+      try {
+       const result = await window.sfSessionReady;
+
+if (!result) return;
+
+        csrfToken = result.csrf_token;
+
+        const displayName =
+          result.user.role === "manager" &&
+          /^demo manager$/i.test(
+            (result.user.full_name || "").trim()
+          )
+            ? "Mai Anh & Hồng Anh lalala"
+            : result.user.full_name;
+
+        document.getElementById("account-name")
+          .textContent = displayName;
+
+        document.getElementById("profile-name")
+          .textContent = displayName;
+
+        const initials =
+          document.getElementById("profile-initials");
+
+        initials.textContent = (displayName || "U")
+          .trim()
+          .slice(0, 1)
+          .toUpperCase();
+
+        const photo =
+          document.getElementById("profile-photo");
+
+        photo.addEventListener(
+          "load",
+          () => {
+            photo.hidden = false;
+            initials.hidden = true;
+          },
+          { once: true }
+        );
+
+        photo.addEventListener(
+          "error",
+          () => {
+            photo.hidden = true;
+            initials.hidden = false;
+          },
+          { once: true }
+        );
+
+        if (result.user.role === "manager") {
+          photo.src = "/images/account-avatar.jpg";
+        }
+
+        document.getElementById("profile-role")
+          .textContent = result.user.role;
+
+        document.getElementById("workspace-link")
+          .href = result.user.role === "manager"
+            ? "/dashboard.html"
+            : "/driver.html";
+
+        document.getElementById("account-email")
+          .textContent = result.user.email;
+
+        document.getElementById("account-role")
+          .textContent = result.user.role;
+
+        document.getElementById("manager-links")
+          .hidden = result.user.role !== "manager";
+
+        accountCard.hidden = false;
+
+        accountMessage.className = "account-status";
+        accountMessage.textContent = "You are signed in.";
+      } catch (error) {
+        showAccountError(
+          error,
+          "Unable to load your account. Please refresh and try again."
+        );
+      }
+    }
+
+    signOutButton.addEventListener(
+      "click",
+      async () => {
+        if (signOutButton.disabled) return;
+
+        signOutButton.disabled = true;
+        signOutButton.textContent = "Signing out...";
+
+        try {
+          const response = await fetch(
+            "/api/auth/logout",
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "X-CSRF-Token": csrfToken
+              }
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Sign-out request failed.");
+          }
+
+          window.location.replace("/login.html");
+        } catch (error) {
+          showAccountError(
+            error,
+            "Unable to sign out. Please try again."
+          );
+        } finally {
+          signOutButton.disabled = false;
+          signOutButton.textContent = "Sign Out";
+        }
+      }
+    );
+
+    loadAccount();
+  </script>
+</body>
+</html>

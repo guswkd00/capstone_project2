@@ -1,0 +1,184 @@
+name: ShopeeFood CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: JavaScript and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check JavaScript and inline HTML scripts
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const vm = require('node:vm');
+          const { spawnSync } = require('node:child_process');
+
+          let checked = 0;
+          let failed = false;
+
+          function walk(directory) {
+            for (const entry of fs.readdirSync(directory, {
+              withFileTypes: true
+            })) {
+              if (['node_modules', '.git'].includes(entry.name)) {
+                continue;
+              }
+
+              const filename = path.join(directory, entry.name);
+
+              if (entry.isDirectory()) {
+                walk(filename);
+              } else if (/\.(?:js|cjs|mjs)$/.test(filename)) {
+                const result = spawnSync(
+                  process.execPath,
+                  ['--check', filename],
+                  { encoding: 'utf8' }
+                );
+
+                checked++;
+
+                if (result.status !== 0) {
+                  failed = true;
+                  console.error(
+                    result.stderr ||
+                    result.error ||
+                    `Unable to check ${filename}`
+                  );
+                }
+              } else if (filename.endsWith('.html')) {
+                const html = fs.readFileSync(filename, 'utf8');
+                let index = 0;
+
+                for (const match of html.matchAll(
+                  /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi
+                )) {
+                  index++;
+
+                  const attributes = match[1];
+
+                  const type = attributes.match(
+                    /\btype\s*=\s*["']([^"']+)["']/i
+                  )?.[1].toLowerCase();
+
+                  if (/\bsrc\s*=/i.test(attributes)) {
+                    continue;
+                  }
+
+                  if (
+                    type &&
+                    ![
+                      'text/javascript',
+                      'application/javascript'
+                    ].includes(type)
+                  ) {
+                    continue;
+                  }
+
+                  try {
+                    new vm.Script(match[2], {
+                      filename: `${filename}:inline-script-${index}`
+                    });
+
+                    checked++;
+                  } catch (error) {
+                    failed = true;
+                    console.error(error.stack);
+                  }
+                }
+              }
+            }
+          }
+
+          walk('.');
+
+          console.log(
+            `Checked ${checked} JavaScript files and inline scripts.`
+          );
+
+          if (failed) {
+            process.exit(1);
+          }
+          NODE
+
+      - name: Test DSS, Manager AI and Driver policy
+        run: |
+          node --test \
+            src/dss.test.js \
+            src/manager-ai.test.js \
+            src/driver-workspace.test.js
+
+  driver-database:
+    name: Driver MySQL integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: isolated-ci-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pisolated-ci-only --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test Driver APIs and MySQL transactions
+        run: node --test src/driver-workspace.integration.cjs
+        env:
+          DRIVER_TEST_DB: ci_driver_test
+          DRIVER_TEST_HOST: 127.0.0.1
+          DRIVER_TEST_PORT: '3306'
+          DRIVER_TEST_USER: root
+          DRIVER_TEST_PASSWORD: isolated-ci-only

@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>Create Report · ShopeeFood</title>
+
+  <script
+    src="/auth-client.js?v=manager-shell-3"
+    data-role="manager"
+  ></script>
+
+  <script
+    src="/app-shell.js?v=manager-shell-3"
+    defer
+  ></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/app-theme.css?v=manager-shell-3"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/manager-reports.css?v=1"
+  >
+
+  <style>
+    /* Theme */
+    body.sf-app {
+      --lx-bg: #f5f1ea;
+      --lx-surface: #ffffff;
+      --lx-surface-2: #faf7f1;
+      --lx-ink: #1d1b18;
+      --lx-ink-2: #57524a;
+      --lx-muted: #8a8478;
+      --lx-line: #e6dfd2;
+      --lx-line-strong: #d3caba;
+      --lx-accent: #c2451e;
+      --lx-accent-dark: #9f3414;
+      --lx-gold: #b4935a;
+      --lx-gold-soft: #f1e8d5;
+      --lx-ok: #2f6b4f;
+      --lx-ok-bg: #e7f1ea;
+      --lx-warn: #8f6210;
+      --lx-warn-bg: #f8eed6;
+      --lx-danger: #a32d2d;
+      --lx-danger-bg: #f8e4e1;
+
+      --lx-serif:
+        "Cormorant Garamond",
+        "Playfair Display",
+        Georgia,
+        "Times New Roman",
+        serif;
+
+      --lx-sans:
+        "Inter",
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        Roboto,
+        Arial,
+        sans-serif;
+
+      font-family: var(--lx-sans);
+      color: var(--lx-ink);
+
+      background:
+        radial-gradient(
+          1100px 520px at 12% -8%,
+          rgba(180, 147, 90, 0.13),
+          transparent 60%
+        ),
+        radial-gradient(
+          900px 480px at 100% 0%,
+          rgba(194, 69, 30, 0.07),
+          transparent 60%
+        ),
+        var(--lx-bg);
+
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Fallback navigation */
+    body.sf-app > header:not([class]) {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: saturate(1.4) blur(14px);
+      -webkit-backdrop-filter: saturate(1.4) blur(14px);
+      border-bottom: 1px solid var(--lx-line);
+    }
+
+    body.sf-app > header:not([class]) nav {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 14px 40px;
+      display: flex;
+      gap: 28px;
+    }
+
+    body.sf-app > header:not([class]) nav a {
+      color: var(--lx-ink-2);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    body.sf-app > header:not([class]) nav a:hover {
+      color: var(--lx-accent);
+    }
+
+    /* Main */
+    body.sf-app .manager-report-main {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 40px 40px 80px;
+      box-sizing: border-box;
+    }
+
+    .manager-report-main [hidden] {
+      display: none !important;
+    }
+
+    /* Page heading */
+    .manager-report-main .mr-page-heading {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 0 0 28px;
+      margin: 0 0 24px;
+      border-bottom: 1px solid var(--lx-line);
+    }
+
+    .manager-report-main .mr-page-heading::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 110px;
+      height: 2px;
+      background: linear-gradient(
+        90deg,
+        var(--lx-gold),
+        rgba(180, 147, 90, 0)
+      );
+    }
+
+    .manager-report-main #mr-page-title {
+      margin: 0;
+      font-family: var(--lx-serif);
+      font-size: 46px;
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      color: var(--lx-ink);
+    }
+
+    .manager-report-main #mr-page-description {
+      margin: 10px 0 0;
+      color: var(--lx-ink-2);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .manager-report-main #mr-page-description:empty {
+      display: none;
+    }
+
+    .manager-report-main .mr-page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .manager-report-main .mr-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 22px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-family: var(--lx-sans);
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      line-height: 1;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease;
+    }
+
+    .manager-report-main .mr-button:focus-visible {
+      outline: 2px solid var(--lx-gold);
+      outline-offset: 2px;
+    }
+
+    .manager-report-main .mr-button-primary {
+      color: #ffffff;
+      background: linear-gradient(
+        135deg,
+        #d4502a 0%,
+        #b53a16 100%
+      );
+      box-shadow:
+        0 10px 22px -10px rgba(181, 58, 22, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    }
+
+    .manager-report-main .mr-button-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow:
+        0 14px 26px -10px rgba(181, 58, 22, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .manager-report-main .mr-button-secondary {
+      color: var(--lx-ink);
+      background: var(--lx-surface);
+      border-color: var(--lx-line-strong);
+      box-shadow: 0 1px 2px rgba(29, 27, 24, 0.05);
+    }
+
+    .manager-report-main .mr-button-secondary:hover:not(:disabled) {
+      border-color: var(--lx-gold);
+      color: var(--lx-accent-dark);
+      background: var(--lx-surface-2);
+      transform: translateY(-1px);
+    }
+
+    .manager-report-main .mr-button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .manager-report-main .mr-button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* State and status */
+    .manager-report-main .mr-state-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 0 0 14px;
+    }
+
+    .manager-report-main .mr-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--lx-ink-2);
+      background: var(--lx-surface);
+      border: 1px solid var(--lx-line-strong);
+    }
+
+    .manager-report-main .mr-state::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .manager-report-main .mr-state-draft {
+      color: var(--lx-warn);
+      background: var(--lx-warn-bg);
+      border-color: #ead9ae;
+    }
+
+    .manager-report-main .mr-state[class*="submitted"],
+    .manager-report-main .mr-state[class*="approved"] {
+      color: var(--lx-ok);
+      background: var(--lx-ok-bg);
+      border-color: #c5dccd;
+    }
+
+    .manager-report-main .mr-state[class*="reject"],
+    .manager-report-main .mr-state[class*="error"] {
+      color: var(--lx-danger);
+      background: var(--lx-danger-bg);
+      border-color: #ecc5c0;
+    }
+
+    .manager-report-main #mr-dirty {
+      font-size: 13px;
+      color: var(--lx-muted);
+    }
+
+    .manager-report-main .mr-status {
+      margin: 0 0 20px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--lx-line);
+      border-left: 3px solid var(--lx-gold);
+      background: var(--lx-surface);
+      color: var(--lx-ink-2);
+      font-size: 13.5px;
+      line-height: 1.5;
+      box-shadow: 0 1px 2px rgba(29, 27, 24, 0.04);
+    }
+
+    .manager-report-main .mr-status:empty {
+      display: none;
+    }
+
+    .manager-report-main .mr-status[class*="error"],
+    .manager-report-main .mr-status[class*="danger"] {
+      color: var(--lx-danger);
+      background: var(--lx-danger-bg);
+      border-color: #ecc5c0;
+      border-left-color: var(--lx-danger);
+    }
+
+    .manager-report-main .mr-status[class*="success"],
+    .manager-report-main .mr-status[class*="saved"] {
+      color: var(--lx-ok);
+      background: var(--lx-ok-bg);
+      border-color: #c5dccd;
+      border-left-color: var(--lx-ok);
+    }
+
+    .manager-report-main .mr-readonly {
+      margin: 0 0 20px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid #ead9ae;
+      border-left: 3px solid var(--lx-gold);
+      background: var(--lx-gold-soft);
+      color: #5d4a22;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    /* Workspace */
+    .manager-report-main .mr-workspace {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1.05fr)
+        minmax(0, 0.95fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .manager-report-main .mr-workspace[data-preview-hidden="true"] {
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 940px;
+    }
+
+    .manager-report-main
+    .mr-workspace[data-preview-hidden="true"]
+    .mr-preview-panel {
+      display: none;
+    }
+
+    /* Editor panel */
+    .manager-report-main .mr-editor-panel {
+      position: relative;
+      padding: 34px 34px 30px;
+      background: var(--lx-surface);
+      border: 1px solid var(--lx-line);
+      border-radius: 22px;
+      box-shadow:
+        0 1px 2px rgba(29, 27, 24, 0.04),
+        0 24px 48px -28px rgba(29, 27, 24, 0.22);
+    }
+
+    .manager-report-main .mr-editor-panel::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 34px;
+      right: 34px;
+      height: 2px;
+      background: linear-gradient(
+        90deg,
+        var(--lx-gold),
+        rgba(180, 147, 90, 0.15)
+      );
+    }
+
+    .manager-report-main .mr-panel-heading {
+      margin: 0 0 26px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--lx-line);
+    }
+
+    .manager-report-main .mr-panel-heading h2,
+    .manager-report-main .mr-preview-heading h2 {
+      margin: 0;
+      font-family: var(--lx-serif);
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      color: var(--lx-ink);
+    }
+
+    .manager-report-main .mr-panel-heading p {
+      margin: 6px 0 0;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--lx-muted);
+    }
+
+    .manager-report-main .mr-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      min-width: 0;
+    }
+
+    .manager-report-main .mr-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .manager-report-main .mr-field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .manager-report-main .mr-field > label,
+    .manager-report-main .mr-attachments > label {
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--lx-ink-2);
+    }
+
+    .manager-report-main .mr-field > label span {
+      color: var(--lx-accent);
+      margin-left: 2px;
+    }
+
+    .manager-report-main .mr-field input[type="text"],
+    .manager-report-main .mr-field input[type="date"],
+    .manager-report-main .mr-field select,
+    .manager-report-main .mr-field textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-family: var(--lx-sans);
+      font-size: 15px;
+      color: var(--lx-ink);
+      background: #fffdfa;
+      border: 1px solid var(--lx-line-strong);
+      border-radius: 12px;
+      transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+    }
+
+    .manager-report-main .mr-field select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 42px;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238a8478' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+    }
+
+    .manager-report-main .mr-field textarea {
+      min-height: 280px;
+      line-height: 1.7;
+      resize: vertical;
+    }
+
+    .manager-report-main .mr-field input::placeholder,
+    .manager-report-main .mr-field textarea::placeholder {
+      color: #aaa393;
+    }
+
+    .manager-report-main .mr-field input:hover:not(:disabled),
+    .manager-report-main .mr-field select:hover:not(:disabled),
+    .manager-report-main .mr-field textarea:hover:not(:disabled) {
+      border-color: var(--lx-gold);
+    }
+
+    .manager-report-main .mr-field input:focus,
+    .manager-report-main .mr-field select:focus,
+    .manager-report-main .mr-field textarea:focus {
+      outline: none;
+      background: #ffffff;
+      border-color: var(--lx-accent);
+      box-shadow: 0 0 0 4px rgba(194, 69, 30, 0.12);
+    }
+
+    .manager-report-main .mr-field input:disabled,
+    .manager-report-main .mr-field select:disabled,
+    .manager-report-main .mr-field textarea:disabled {
+      background: var(--lx-surface-2);
+      color: var(--lx-muted);
+      cursor: not-allowed;
+    }
+
+    .manager-report-main .mr-help {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: var(--lx-muted);
+    }
+
+    .manager-report-main .mr-help:empty {
+      display: none;
+    }
+
+    /* AI generation */
+    .manager-report-main .mr-generation-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 22px 22px 22px 26px;
+      background: linear-gradient(
+        135deg,
+        var(--lx-surface-2),
+        #ffffff
+      );
+      border: 1px solid var(--lx-line);
+      border-radius: 16px;
+    }
+
+    .manager-report-main .mr-generation-panel::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 18px;
+      bottom: 18px;
+      width: 3px;
+      border-radius: 3px;
+      background: linear-gradient(
+        180deg,
+        var(--lx-gold),
+        var(--lx-accent)
+      );
+    }
+
+    .manager-report-main .mr-generation-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* Rich text editor */
+    body.sf-app
+    .manager-report-main
+    .jodit-container:not(.jodit_inline) {
+      border: 1px solid var(--lx-line-strong);
+      border-radius: 14px;
+      background: #ffffff;
+      overflow: hidden;
+      font-family: var(--lx-sans);
+      transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    body.sf-app
+    .manager-report-main
+    .jodit-container.jodit_focused,
+    body.sf-app
+    .manager-report-main
+    .jodit-container:focus-within {
+      border-color: var(--lx-accent);
+      box-shadow: 0 0 0 4px rgba(194, 69, 30, 0.1);
+    }
+
+    body.sf-app
+    .manager-report-main
+    .jodit-container
+    .jodit-toolbar__box:not(:empty) {
+      background: var(--lx-surface-2);
+      border-bottom: 1px solid var(--lx-line);
+      padding: 4px 6px;
+    }
+
+    body.sf-app
+    .manager-report-main
+    .jodit-container
+    .jodit-toolbar-button__button:hover,
+    body.sf-app
+    .manager-report-main
+    .jodit-container
+    .jodit-toolbar-button:hover
+    .jodit-toolbar-button__button {
+      background: var(--lx-gold-soft);
+      border-radius: 8px;
+    }
+
+    body.sf-app
+    .manager-report-main
+    .jodit-container
+    .jodit-wysiwyg {
+      padding: 22px 26px;
+      font-family: var(--lx-sans);
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--lx-ink);
+    }
+
+    body.sf-app
+    .manager-report-main
+    .jodit-container
+    .jodit-wysiwyg table {
+      border-collapse: collapse;
+    }
+
+    body.sf-app
+    .manager-report-main
+    .jodit-container
+    .jodit-status-bar {
+      background: var(--lx-surface-2);
+      border-top: 1px solid var(--lx-line);
+      color: var(--lx-muted);
+    }
+
+    .manager-report-main .jodit-status-bar-link,
+    .manager-report-main .jodit-status-bar a[href*="xdsoft"],
+    .manager-report-main .jodit-status-bar a[href*="jodit"] {
+      display: none !important;
+    }
+
+    /* Attachments and dropzone */
+    .manager-report-main .mr-attachments {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+      padding: 0;
+      background: none;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .manager-report-main .mr-attachments h3 {
+      margin: 0;
+      font-family: var(--lx-serif);
+      font-size: 23px;
+      font-weight: 600;
+      color: var(--lx-ink);
+    }
+
+    .manager-report-main .mr-attachments #mr-upload {
+      align-self: flex-end;
+    }
+
+    .manager-report-main .mr-dropzone {
+      --dz-border: #d9c9a3;
+      --dz-bg: #fcf8ef;
+      --dz-bg-active: #ffffff;
+      --dz-icon-bg: #f1e8d5;
+      --dz-icon: #9a7a3c;
+
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 190px;
+      padding: 32px 24px;
+      text-align: center;
+      background: var(--dz-bg);
+      border: 2px dashed var(--dz-border);
+      border-radius: 18px;
+      transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .manager-report-main .mr-dropzone:hover,
+    .manager-report-main .mr-dropzone.is-dragover,
+    .manager-report-main .mr-dropzone:focus-within {
+      --dz-border: var(--lx-accent);
+      background: var(--dz-bg-active);
+      box-shadow: 0 0 0 4px rgba(194, 69, 30, 0.08);
+    }
+
+    .manager-report-main .mr-dropzone.is-dragover {
+      --dz-icon-bg: #f8e1d8;
+      --dz-icon: var(--lx-accent);
+    }
+
+    .manager-report-main .mr-dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .manager-report-main .mr-dropzone input[type="file"]:disabled {
+      cursor: not-allowed;
+    }
+
+    .manager-report-main .mr-dropzone:has(input:disabled) {
+      opacity: 0.55;
+    }
+
+    .manager-report-main .mr-dropzone-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      margin-bottom: 8px;
+      border-radius: 50%;
+      color: var(--dz-icon);
+      background: var(--dz-icon-bg);
+      transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .manager-report-main .mr-dropzone:hover .mr-dropzone-icon {
+      transform: translateY(-2px);
+    }
+
+    .manager-report-main .mr-dropzone-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--lx-ink);
+    }
+
+    .manager-report-main .mr-dropzone .mr-help {
+      text-align: center;
+    }
+
+    .manager-report-main .mr-dropzone-selected {
+      max-width: 100%;
+      margin: 8px 0 0;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--lx-ok);
+      background: var(--lx-ok-bg);
+      border-radius: 999px;
+      overflow-wrap: anywhere;
+    }
+
+    /* Form actions */
+    .manager-report-main .mr-form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 1px solid var(--lx-line);
+    }
+
+    .manager-report-main .mr-form-actions .mr-button {
+      min-width: 150px;
+    }
+
+    /* Uploaded files */
+    .manager-report-main .mr-file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .manager-report-main .mr-file-list:empty {
+      display: none;
+    }
+
+    .manager-report-main .mr-file-list > * {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      color: var(--lx-ink);
+      background: #ffffff;
+      border: 1px solid var(--lx-line);
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(29, 27, 24, 0.04);
+    }
+
+    .manager-report-main .mr-file-list a {
+      color: var(--lx-accent-dark);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .manager-report-main .mr-file-list a:hover {
+      text-decoration: underline;
+    }
+
+    .manager-report-main .mr-file-list button {
+      padding: 7px 14px;
+      font-family: var(--lx-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--lx-ink-2);
+      background: var(--lx-surface-2);
+      border: 1px solid var(--lx-line-strong);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .manager-report-main .mr-file-list button:hover {
+      color: var(--lx-danger);
+      border-color: var(--lx-danger);
+      background: var(--lx-danger-bg);
+    }
+
+    /* Preview */
+    .manager-report-main .mr-preview-panel {
+      position: sticky;
+      top: 84px;
+      min-width: 0;
+    }
+
+    .manager-report-main .mr-preview-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 16px;
+      padding: 0 4px;
+    }
+
+    .manager-report-main .mr-preview-heading > span {
+      display: none;
+    }
+
+    .manager-report-main .mr-paper-container {
+      max-height: calc(100vh - 170px);
+      overflow: auto;
+      padding: 32px;
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.35),
+          rgba(255, 255, 255, 0)
+        ),
+        #e9e2d4;
+      border: 1px solid var(--lx-line-strong);
+      border-radius: 22px;
+      box-shadow: inset 0 2px 14px rgba(29, 27, 24, 0.08);
+    }
+
+    .manager-report-main .mr-paper {
+      position: relative;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 794px;
+      margin: 0 auto;
+      aspect-ratio: 210 / 297;
+      padding: 56px 56px 60px;
+      background: #fffffe;
+      color: #25221e;
+      border-radius: 3px;
+      box-shadow:
+        0 1px 1px rgba(29, 27, 24, 0.06),
+        0 6px 12px rgba(29, 27, 24, 0.08),
+        0 28px 50px -12px rgba(29, 27, 24, 0.28);
+      font-family: var(--lx-sans);
+      overflow-wrap: anywhere;
+    }
+
+    .manager-report-main .mr-paper::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(
+        90deg,
+        var(--lx-accent),
+        var(--lx-gold)
+      );
+    }
+
+    .manager-report-main .mr-document-brand {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 14px;
+      margin-bottom: 30px;
+      border-bottom: 1px solid var(--lx-line-strong);
+    }
+
+    .manager-report-main .mr-document-brand strong {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--lx-accent-dark);
+    }
+
+    .manager-report-main .mr-document-brand span {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--lx-muted);
+    }
+
+    .manager-report-main .mr-paper h1 {
+      margin: 0 0 24px;
+      font-family: var(--lx-serif);
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 1.12;
+      letter-spacing: -0.01em;
+      color: #181613;
+    }
+
+    .manager-report-main .mr-document-meta {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 24px;
+      row-gap: 0;
+      margin: 0 0 28px;
+      padding: 0;
+      border-top: 1px solid var(--lx-line);
+      font-size: 12.5px;
+    }
+
+    .manager-report-main .mr-document-meta dt,
+    .manager-report-main .mr-document-meta dd {
+      margin: 0;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--lx-line);
+    }
+
+    .manager-report-main .mr-document-meta dt {
+      padding-top: 11px;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lx-muted);
+    }
+
+    .manager-report-main .mr-document-meta dd {
+      color: var(--lx-ink);
+      font-weight: 500;
+    }
+
+    .manager-report-main .mr-document-content {
+      font-size: 13.5px;
+      line-height: 1.8;
+      color: #2c2924;
+    }
+
+    .manager-report-main .mr-document-content h1,
+    .manager-report-main .mr-document-content h2,
+    .manager-report-main .mr-document-content h3,
+    .manager-report-main .mr-document-content h4 {
+      font-family: var(--lx-serif);
+      color: #181613;
+      line-height: 1.2;
+      margin: 1.5em 0 0.5em;
+    }
+
+    .manager-report-main .mr-document-content h1 {
+      font-size: 26px;
+    }
+
+    .manager-report-main .mr-document-content h2 {
+      font-size: 22px;
+    }
+
+    .manager-report-main .mr-document-content h3 {
+      font-size: 18px;
+    }
+
+    .manager-report-main .mr-document-content h4 {
+      font-size: 15px;
+    }
+
+    .manager-report-main .mr-document-content p {
+      margin: 0 0 0.9em;
+    }
+
+    .manager-report-main .mr-document-content ul,
+    .manager-report-main .mr-document-content ol {
+      margin: 0 0 1em;
+      padding-left: 1.4em;
+    }
+
+    .manager-report-main .mr-document-content table {
+      width: 100%;
+      margin: 1em 0;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    .manager-report-main .mr-document-content th,
+    .manager-report-main .mr-document-content td {
+      padding: 8px 10px;
+      border: 1px solid var(--lx-line-strong);
+      text-align: left;
+    }
+
+    .manager-report-main .mr-document-content th {
+      background: var(--lx-surface-2);
+      font-weight: 600;
+      color: #181613;
+    }
+
+    .manager-report-main .mr-document-content blockquote {
+      margin: 1em 0;
+      padding: 4px 0 4px 16px;
+      border-left: 3px solid var(--lx-gold);
+      color: var(--lx-ink-2);
+      font-style: italic;
+    }
+
+    .manager-report-main .mr-document-content a {
+      color: var(--lx-accent-dark);
+    }
+
+    .manager-report-main .mr-document-source {
+      margin: 32px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid var(--lx-line);
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--lx-muted);
+      font-style: italic;
+    }
+
+    .manager-report-main .mr-document-source:empty {
+      display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 1180px) {
+      .manager-report-main .mr-workspace {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .manager-report-main .mr-preview-panel {
+        position: static;
+      }
+
+      .manager-report-main .mr-paper-container {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body.sf-app .manager-report-main {
+        padding: 24px 16px 56px;
+      }
+
+      body.sf-app > header:not([class]) nav {
+        padding: 12px 16px;
+      }
+
+      .manager-report-main #mr-page-title {
+        font-size: 36px;
+      }
+
+      .manager-report-main .mr-editor-panel {
+        padding: 24px 18px;
+        border-radius: 18px;
+      }
+
+      .manager-report-main .mr-editor-panel::before {
+        left: 18px;
+        right: 18px;
+      }
+
+      .manager-report-main .mr-field-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .manager-report-main .mr-form-actions .mr-button,
+      .manager-report-main .mr-generation-actions .mr-button {
+        flex: 1 1 100%;
+      }
+
+      .manager-report-main .mr-dropzone {
+        min-height: 160px;
+        padding: 24px 16px;
+      }
+
+      .manager-report-main .mr-attachments #mr-upload {
+        align-self: stretch;
+      }
+
+      .manager-report-main .mr-paper-container {
+        padding: 14px;
+      }
+
+      .manager-report-main .mr-paper {
+        padding: 32px 24px 36px;
+      }
+
+      .manager-report-main .mr-paper h1 {
+        font-size: 28px;
+      }
+    }
+
+    @media print {
+      .manager-report-main .mr-paper {
+        box-shadow: none;
+        aspect-ratio: auto;
+      }
+
+      .manager-report-main .mr-paper-container {
+        padding: 0;
+        background: none;
+        border: 0;
+        box-shadow: none;
+        max-height: none;
+        overflow: visible;
+      }
+    }
+  </style>
+
+  <script
+    src="/report-richtext.js?v=1"
+    defer
+  ></script>
+
+  <script
+    src="/report-editor.js?v=2"
+    defer
+  ></script>
+</head>
+
+<body class="sf-app">
+  <header>
+    <nav aria-label="Main navigation">
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/my-reports.html">My Reports</a>
+    </nav>
+  </header>
+
+  <main class="manager-report-main">
+    <div class="mr-page-heading">
+      <div>
+        <h1 id="mr-page-title">Create Report</h1>
+        <p id="mr-page-description"></p>
+      </div>
+
+      <div class="mr-page-actions">
+        <a
+          class="mr-button mr-button-secondary"
+          href="/my-reports.html"
+        >
+          My Reports
+        </a>
+
+        <button
+          id="mr-toggle-preview"
+          class="mr-button mr-button-secondary"
+          type="button"
+          aria-controls="mr-preview-section"
+          aria-expanded="true"
+          disabled
+        >
+          Hide Preview
+        </button>
+
+        <button
+          id="mr-export"
+          class="mr-button mr-button-secondary"
+          type="button"
+          disabled
+        >
+          Export PDF
+        </button>
+      </div>
+    </div>
+
+    <div class="mr-state-row">
+      <span
+        id="mr-state"
+        class="mr-state mr-state-draft"
+      >
+        Draft
+      </span>
+
+      <span id="mr-dirty">New report</span>
+    </div>
+
+    <p
+      id="mr-status"
+      class="mr-status"
+      role="status"
+      aria-live="polite"
+    >
+      Preparing report editor...
+    </p>
+
+    <p
+      id="mr-readonly"
+      class="mr-readonly"
+      hidden
+    >
+      This report has been submitted.
+      You can view the report and export a PDF.
+    </p>
+
+    <div
+      id="mr-workspace"
+      class="mr-workspace"
+      data-preview-hidden="false"
+    >
+      <section
+        class="mr-editor-panel"
+        aria-labelledby="mr-editor-heading"
+      >
+        <div class="mr-panel-heading">
+          <h2 id="mr-editor-heading">Report Editor</h2>
+
+          <p>
+            Add verified information and review the
+            content before submitting.
+          </p>
+        </div>
+
+        <form id="mr-form">
+          <fieldset
+            id="mr-fields"
+            class="mr-fields"
+            disabled
+          >
+            <div class="mr-field">
+              <label for="mr-title">
+                Report title
+                <span aria-hidden="true">*</span>
+              </label>
+
+              <input
+                id="mr-title"
+                name="title"
+                type="text"
+                maxlength="160"
+                placeholder="Enter a report title"
+                required
+              >
+            </div>
+
+            <div class="mr-field">
+              <label for="mr-type">Report type</label>
+
+              <select
+                id="mr-type"
+                name="report_type"
+                required
+              >
+                <option value="delivery">
+                  Delivery Operations
+                </option>
+
+                <option value="cod">COD</option>
+
+                <option value="maintenance">
+                  Vehicle Maintenance
+                </option>
+
+                <option value="expense">Expenses</option>
+
+                <option value="incident">Incidents</option>
+
+                <option value="general">
+                  General Operations
+                </option>
+              </select>
+            </div>
+
+            <div class="mr-field-grid">
+              <div class="mr-field">
+                <label for="mr-start">
+                  Start date
+                  <span aria-hidden="true">*</span>
+                </label>
+
+                <input
+                  id="mr-start"
+                  name="period_start"
+                  type="date"
+                  required
+                >
+              </div>
+
+              <div class="mr-field">
+                <label for="mr-end">
+                  End date
+                  <span aria-hidden="true">*</span>
+                </label>
+
+                <input
+                  id="mr-end"
+                  name="period_end"
+                  type="date"
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="mr-generation-panel">
+              <div class="mr-field">
+                <label for="mr-language">
+                  AI draft language
+                </label>
+
+                <select id="mr-language">
+                  <option value="en">English</option>
+                  <option value="vi">Vietnamese</option>
+                </select>
+              </div>
+
+              <div class="mr-generation-actions">
+                <button
+                  id="mr-generate"
+                  class="mr-button mr-button-secondary"
+                  type="button"
+                >
+                  Generate from Data
+                </button>
+
+                <button
+                  id="mr-ai"
+                  class="mr-button mr-button-primary"
+                  type="button"
+                >
+                  AI Draft
+                </button>
+              </div>
+
+              <p
+                id="mr-data-status"
+                class="mr-help"
+              ></p>
+            </div>
+
+            <div class="mr-field">
+              <label for="mr-content">
+                Report content
+              </label>
+
+              <textarea
+                id="mr-content"
+                name="content"
+                rows="18"
+                maxlength="50000"
+                placeholder="Write your report here, or generate a draft from system data."
+              ></textarea>
+            </div>
+
+            <!-- Attachment dropzone -->
+            <div class="mr-attachments">
+              <h3>Attachments</h3>
+
+              <div
+                class="mr-dropzone"
+                id="mr-dropzone"
+              >
+                <input
+                  id="mr-files"
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+                  multiple
+                  aria-describedby="mr-file-help"
+                >
+
+                <span
+                  class="mr-dropzone-icon"
+                  aria-hidden="true"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                    <path d="M12 12v9"></path>
+                    <path d="m16 16-4-4-4 4"></path>
+                  </svg>
+                </span>
+
+                <label
+                  for="mr-files"
+                  class="mr-dropzone-title"
+                >
+                  Click to upload or drag and drop
+                </label>
+
+                <p
+                  id="mr-file-help"
+                  class="mr-help"
+                >
+                  PNG, JPG or PDF
+                  (max. 5 MB each, up to 3 files)
+                </p>
+
+                <p
+                  id="mr-dropzone-selected"
+                  class="mr-dropzone-selected"
+                  aria-live="polite"
+                  hidden
+                ></p>
+              </div>
+
+              <button
+                id="mr-upload"
+                class="mr-button mr-button-secondary"
+                type="button"
+              >
+                Upload Files
+              </button>
+            </div>
+
+            <div class="mr-form-actions">
+              <button
+                id="mr-save"
+                class="mr-button mr-button-secondary"
+                type="submit"
+              >
+                Save Draft
+              </button>
+
+              <button
+                id="mr-submit"
+                class="mr-button mr-button-primary"
+                type="button"
+              >
+                Submit Report
+              </button>
+            </div>
+          </fieldset>
+        </form>
+
+        <div
+          id="mr-file-list"
+          class="mr-file-list"
+          aria-label="Report attachments"
+          aria-live="polite"
+        ></div>
+      </section>
+
+      <!-- Document preview -->
+      <section
+        id="mr-preview-section"
+        class="mr-preview-panel"
+        aria-labelledby="mr-preview-heading"
+      >
+        <div class="mr-preview-heading">
+          <h2 id="mr-preview-heading">
+            Document Preview
+          </h2>
+        </div>
+
+        <div class="mr-paper-container">
+          <article
+            id="mr-preview"
+            class="mr-paper"
+          >
+            <div class="mr-document-brand">
+              <strong>ShopeeFood Delivery DSS</strong>
+              <span>Operations Report</span>
+            </div>
+
+            <h1 id="mr-preview-title">
+              Untitled Report
+            </h1>
+
+            <dl class="mr-document-meta">
+              <dt>Report type</dt>
+              <dd id="mr-preview-type">
+                Delivery Operations
+              </dd>
+
+              <dt>Reporting period</dt>
+              <dd id="mr-preview-period">—</dd>
+
+              <dt>Prepared by</dt>
+              <dd id="mr-preview-author">—</dd>
+
+              <dt>Report date</dt>
+              <dd id="mr-preview-created">—</dd>
+            </dl>
+
+            <div
+              id="mr-preview-content"
+              class="mr-document-content"
+            >
+              Your report content will appear here.
+            </div>
+
+            <p
+              id="mr-preview-source"
+              class="mr-document-source"
+            ></p>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var zone = document.getElementById("mr-dropzone");
+      var input = document.getElementById("mr-files");
+
+      var note = document.getElementById(
+        "mr-dropzone-selected"
+      );
+
+      var list = document.getElementById("mr-file-list");
+
+      if (!zone || !input || !note) return;
+
+      ["dragenter", "dragover"].forEach(function (name) {
+        input.addEventListener(name, function () {
+          zone.classList.add("is-dragover");
+        });
+      });
+
+      ["dragleave", "drop", "mouseout"].forEach(function (name) {
+        input.addEventListener(name, function () {
+          zone.classList.remove("is-dragover");
+        });
+      });
+
+      function syncSelected() {
+        var files = input.files
+          ? Array.prototype.slice.call(input.files)
+          : [];
+
+        if (!files.length) {
+          note.hidden = true;
+          note.textContent = "";
+          return;
+        }
+
+        note.textContent =
+          files.length +
+          (files.length === 1
+            ? " file selected: "
+            : " files selected: ") +
+          files.map(function (file) {
+            return file.name;
+          }).join(", ");
+
+        note.hidden = false;
+      }
+
+      input.addEventListener("change", syncSelected);
+
+      if (list && window.MutationObserver) {
+        new MutationObserver(syncSelected).observe(list, {
+          childList: true
+        });
+      }
+
+      syncSelected();
+    })();
+  </script>
+</body>
+</html>

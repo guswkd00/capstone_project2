@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ee4d2d">
+
+  <title>Log In — ShopeeFood Delivery DSS</title>
+
+  <style>
+    :root {
+      --orange: #ee4d2d;
+      --orange-light: #fff5f1;
+      --ink: #222;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--ink);
+      background: #f5f5f5;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover,
+    .text-button:hover {
+      text-decoration: underline;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 3px solid #1759b8;
+      outline-offset: 3px;
+    }
+
+    .topbar {
+      background: white;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .topbar-inner {
+      max-width: 1130px;
+      min-height: 84px;
+      margin: auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--orange);
+      font-size: 27px;
+      font-weight: 700;
+      letter-spacing: -.8px;
+    }
+
+    .bag {
+      width: 38px;
+      height: 45px;
+      --bag-letter: white;
+    }
+
+    .page-label {
+      font-size: 22px;
+      font-weight: 500;
+      padding-left: 14px;
+      border-left: 1px solid #e0e0e0;
+      color: #333;
+    }
+
+    .text-button {
+      border: 0;
+      padding: 0;
+      background: none;
+      color: var(--orange);
+      font-size: 13px;
+    }
+
+    .top-help {
+      margin-left: auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ee4d2d 0%, #ff6633 100%);
+    }
+
+    .hero-inner {
+      max-width: 1100px;
+      min-height: 620px;
+      padding: 36px 24px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      align-items: center;
+      gap: 64px;
+    }
+
+    .hero-brand {
+      color: white;
+      text-align: center;
+    }
+
+    .hero-bag {
+      width: 190px;
+      height: 220px;
+      --bag-letter: #ee4d2d;
+    }
+
+    .hero-brand h1 {
+      margin: 2px 0 0;
+      font-weight: 700;
+      font-size: 60px;
+      letter-spacing: -1.5px;
+    }
+
+    .hero-brand p {
+      margin: 32px auto 0;
+      max-width: 450px;
+      font-size: 22px;
+      line-height: 1.55;
+    }
+
+    .hero-brand small {
+      display: inline-block;
+      margin-top: 18px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 6px 14px;
+      border-radius: 99px;
+    }
+
+    .login-card {
+      width: 100%;
+      padding: 28px 30px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-heading h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      color: #222;
+    }
+
+    .access-note {
+      padding: 6px 10px;
+      border: 1px solid #ffbf00;
+      background: #fffbed;
+      color: #986c00;
+      font-size: 11px;
+      border-radius: 4px;
+      line-height: 1.35;
+      font-weight: 600;
+    }
+
+    /* ==================== SELECT ROLE: MANAGER OR DRIVER ==================== */
+    .role-prompt {
+      font-size: 13px;
+      color: #555;
+      margin: 0 0 10px 0;
+      font-weight: 500;
+    }
+
+    .role-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .role-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 12px 10px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 6px;
+      background: #fafafa;
+      color: #555;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .role-tab svg {
+      width: 22px;
+      height: 22px;
+      color: #888;
+      transition: color 0.2s ease;
+    }
+
+    .role-tab strong {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .role-tab span {
+      font-size: 11px;
+      color: #888;
+    }
+
+    .role-tab:hover {
+      border-color: #ffb399;
+      background: #fffcfb;
+    }
+
+    .role-tab.active {
+      border-color: var(--orange);
+      background: var(--orange-light);
+      color: var(--orange);
+      box-shadow: 0 2px 8px rgba(238, 77, 45, 0.12);
+    }
+
+    .role-tab.active svg {
+      color: var(--orange);
+    }
+
+    .role-tab.active span {
+      color: #d73211;
+    }
+
+    .role-welcome {
+      font-size: 12.5px;
+      color: #444;
+      background: #f8f9fa;
+      border-left: 3px solid var(--orange);
+      padding: 9px 12px;
+      margin-bottom: 18px;
+      border-radius: 0 4px 4px 0;
+      line-height: 1.45;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid #d8d8d8;
+      border-radius: 4px;
+      padding: 0 12px;
+      outline: none;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 2px rgba(238, 77, 45, 0.15);
+    }
+
+    .password-field {
+      position: relative;
+    }
+
+    .password-field input {
+      padding-right: 48px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 2px;
+      top: 2px;
+      height: 40px;
+      width: 42px;
+      border: 0;
+      background: white;
+      color: #777;
+      display: grid;
+      place-items: center;
+      border-radius: 3px;
+    }
+
+    .password-toggle svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .forgot-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: -6px;
+      margin-bottom: 18px;
+    }
+
+    .forgot-row button {
+      color: #1769aa;
+      font-size: 12px;
+    }
+
+    .email-alert-badge {
+      font-size: 11px;
+      color: #087f5b;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .login-button {
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--orange);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      box-shadow: 0 3px 8px rgba(238, 77, 45, 0.3);
+      transition: background 0.2s;
+    }
+
+    .login-button:hover {
+      background: #db4325;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: .65;
+    }
+
+    .message {
+      min-height: 18px;
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #b42318;
+      font-weight: 500;
+    }
+
+    .session-note {
+      margin: 10px 0 18px;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #b7b7b7;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 16px 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      background: #eee;
+      flex: 1;
+    }
+
+    .roles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .role {
+      border: 1px solid #e6e6e6;
+      border-radius: 4px;
+      padding: 9px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      background: #fcfcfc;
+    }
+
+    .role span {
+      display: block;
+      color: #777;
+      font-weight: 400;
+      margin-top: 4px;
+      font-size: 11px;
+    }
+
+    .terms {
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.6;
+      margin: 20px 0 14px;
+    }
+
+    .terms button {
+      font-size: inherit;
+    }
+
+    .request-access {
+      text-align: center;
+      color: #999;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    footer {
+      background: #f5f5f5;
+    }
+
+    .footer-inner {
+      max-width: 1240px;
+      margin: auto;
+      padding: 45px 24px 30px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 30px;
+    }
+
+    .footer-column h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      margin: 0 0 22px;
+    }
+
+    .footer-column a,
+    .footer-column button,
+    .footer-column p {
+      display: block;
+      margin: 0 0 13px;
+      color: #666;
+      font-size: 12px;
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    .footer-column button {
+      border: 0;
+      padding: 0;
+      background: none;
+    }
+
+    .payment-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .payment-tags span {
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      background: white;
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .footer-divider {
+      border: 0;
+      border-top: 1px solid #ddd;
+      margin: 30px 0;
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: #777;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .legal {
+      text-align: center;
+      margin-top: 55px;
+      color: #777;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .legal-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 25px;
+    }
+
+    .legal-links button {
+      color: #777;
+      font-size: 12px;
+    }
+
+    .prototype-label {
+      display: inline-block;
+      border: 1px solid #e8b7ac;
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: var(--orange);
+      margin-bottom: 14px;
+    }
+
+    .info-dialog {
+      width: min(500px, calc(100vw - 36px));
+      max-height: 80vh;
+      overflow: auto;
+      border: 0;
+      border-radius: 6px;
+      padding: 28px;
+      box-shadow: 0 8px 30px #0003;
+    }
+
+    .info-dialog::backdrop {
+      background: #0006;
+    }
+
+    .info-dialog h2 {
+      margin-top: 0;
+      font-size: 21px;
+    }
+
+    .info-dialog p {
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-line;
+      color: #555;
+    }
+
+    .info-dialog button {
+      border: 0;
+      background: var(--orange);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 900px) {
+      .hero-inner {
+        gap: 30px;
+        grid-template-columns: 1fr 390px;
+      }
+
+      .hero-brand h1 {
+        font-size: 44px;
+      }
+
+      .hero-brand p {
+        font-size: 19px;
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .topbar-inner {
+        padding: 14px 18px;
+        gap: 12px;
+        min-height: 72px;
+      }
+
+      .brand {
+        font-size: 22px;
+      }
+
+      .page-label {
+        font-size: 19px;
+      }
+
+      .bag {
+        width: 30px;
+        height: 36px;
+      }
+
+      .hero-inner {
+        display: block;
+        min-height: 0;
+        padding: 30px 18px;
+      }
+
+      .hero-brand {
+        display: none;
+      }
+
+      .login-card {
+        max-width: 420px;
+        margin: auto;
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .top-help {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .top-help {
+        display: none;
+      }
+
+      .login-card {
+        padding: 24px 20px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/app-theme.css?v=3">
+
+<style>
+  body.sf-login {
+    --orange: var(--brand);
+    --orange-light: #fff0e9;
+    background: #fff8f5;
+    color: var(--ink);
+    font-family: "Segoe UI", Arial, sans-serif;
+  }
+
+  body.sf-login .topbar {
+    border-top: 4px solid var(--brand);
+    border-bottom: 1px solid var(--border);
+  }
+
+  body.sf-login .hero {
+    background: linear-gradient(135deg, #ee4d2d, #ff6633);
+  }
+
+  body.sf-login .login-card {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 16px 48px rgba(100, 40, 20, 0.14);
+  }
+
+  body.sf-login :is(button, a, input):focus-visible {
+    outline: 3px solid var(--brand);
+    outline-offset: 3px;
+  }
+</style>
+</head>
+
+<body class="sf-login">
+  <svg
+    width="0"
+    height="0"
+    aria-hidden="true"
+    style="position:absolute"
+  >
+    <defs>
+      <symbol id="shopping-bag" viewBox="0 0 100 120">
+        <path
+          d="M28 31C28 0 72 0 72 31"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="6"
+        />
+
+        <path
+          d="M5 30H95L91 104Q90 113 80 113H20Q10 113 9 104Z"
+          fill="currentColor"
+        />
+
+        <text
+          x="50"
+          y="97"
+          text-anchor="middle"
+          font-family="Arial, sans-serif"
+          font-size="76"
+          fill="var(--bag-letter)"
+        >S</text>
+      </symbol>
+    </defs>
+  </svg>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a
+        class="brand"
+        href="/login.html"
+        aria-label="ShopeeFood login"
+      >
+        <svg class="bag" aria-hidden="true">
+          <use href="#shopping-bag"></use>
+        </svg>
+
+        <span>ShopeeFood</span>
+      </a>
+
+      <span class="page-label">Log In</span>
+
+      <button
+        class="text-button top-help"
+        type="button"
+        data-info="help"
+      >
+        Need help?
+      </button>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="hero-inner">
+      <section
+        class="hero-brand"
+        aria-label="Project introduction"
+      >
+        <svg class="hero-bag" aria-hidden="true">
+          <use href="#shopping-bag"></use>
+        </svg>
+
+        <h1>ShopeeFood</h1>
+
+        <p>
+          Food delivery management<br>
+          and dispatch decision support
+        </p>
+
+        <small>
+          Academic Prototype · Manager &amp; Driver Portal
+        </small>
+      </section>
+
+      <section
+        class="login-card"
+        aria-labelledby="login-title"
+      >
+        <div class="card-heading">
+          <h2 id="login-title">Manager Log In</h2>
+
+          <div class="access-note">
+            Authorized Portal<br>
+            Email Alert Enabled
+          </div>
+        </div>
+
+        <p class="role-prompt">Are you a Manager or a Driver? Please select your role:</p>
+
+        <!-- 2 Login portal options: Manager or Driver -->
+        <div class="role-tabs" role="tablist" aria-label="Select login role">
+          <button
+            type="button"
+            class="role-tab active"
+            data-role-select="manager"
+            role="tab"
+            aria-selected="true"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+            <strong>Manager</strong>
+            <span>Management &amp; Dispatch</span>
+          </button>
+
+          <button
+            type="button"
+            class="role-tab"
+            data-role-select="driver"
+            role="tab"
+            aria-selected="false"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="5.5" cy="17.5" r="3.5"></circle>
+              <circle cx="18.5" cy="17.5" r="3.5"></circle>
+              <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"></path>
+            </svg>
+            <strong>Driver</strong>
+            <span>Receive &amp; Deliver Orders</span>
+          </button>
+        </div>
+
+        <div id="role-welcome" class="role-welcome">
+          Welcome, <strong>Manager</strong>! Please log in with your administrator email to access the dispatch system.
+        </div>
+
+        <form id="login-form">
+          <div class="field">
+            <label class="sr-only" for="email">
+              Account email
+            </label>
+
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Enter your Manager email"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              maxlength="150"
+              required
+            >
+          </div>
+
+          <div class="field password-field">
+            <label class="sr-only" for="password">
+              Password
+            </label>
+
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Password"
+              autocomplete="current-password"
+              maxlength="200"
+              required
+            >
+
+            <button
+              id="toggle-password"
+              class="password-toggle"
+              type="button"
+              aria-label="Show password"
+              aria-pressed="false"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                aria-hidden="true"
+              >
+                <path
+                  d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"
+                ></path>
+
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+
+          <div class="forgot-row">
+            <span class="email-alert-badge">
+            </span>
+
+            <button
+              class="text-button"
+              type="button"
+              data-info="forgot"
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          <button
+            id="login-button"
+            class="login-button"
+            type="submit"
+          >
+            LOG IN AS MANAGER
+          </button>
+
+          <p
+            id="login-message"
+            class="message"
+            role="alert"
+            aria-live="polite"
+          ></p>
+        </form>
+
+        <p class="session-note">
+          Security notices are sent to your registered email when email delivery is enabled.
+        </p>
+
+        <div class="divider">ACCOUNT ACCESS</div>
+
+        <div class="roles">
+          <div class="role">
+            Manager
+            <span>Orders, fleet and dispatch</span>
+          </div>
+
+          <div class="role">
+            Driver
+            <span>Your assigned deliveries</span>
+          </div>
+        </div>
+
+        <p class="terms">
+          By logging in, you agree to this prototype's<br>
+
+          <button
+            class="text-button"
+            type="button"
+            data-info="terms"
+          >
+            Terms of Use
+          </button>
+
+          &amp;
+
+          <button
+            class="text-button"
+            type="button"
+            data-info="privacy"
+          >
+            Privacy Information
+          </button>.
+        </p>
+
+        <p class="request-access">
+          Need an account?
+
+          <button
+            class="text-button"
+            type="button"
+            data-info="access"
+          >
+            Contact administrator
+          </button>
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <section class="footer-column">
+          <h3>Customer Service</h3>
+
+          <button type="button" data-info="help">
+            Help Centre
+          </button>
+
+          <button type="button" data-info="forgot">
+            Account Assistance
+          </button>
+
+          <button type="button" data-info="access">
+            Request Access
+          </button>
+        </section>
+
+        <section class="footer-column">
+          <h3>About ShopeeFood DSS</h3>
+
+          <button type="button" data-info="about">
+            About the Project
+          </button>
+
+          <button type="button" data-info="terms">
+            Terms of Use
+          </button>
+
+          <button type="button" data-info="privacy">
+            Privacy Information
+          </button>
+        </section>
+
+        <section class="footer-column">
+          <h3>Order Payment Methods</h3>
+
+          <div class="payment-tags">
+            <span>PREPAID</span>
+            <span>COD</span>
+          </div>
+
+          <p style="margin-top:14px">
+            Payment status and cash collection records.
+          </p>
+        </section>
+
+        <section class="footer-column">
+          <h3>Account Roles</h3>
+
+          <p>Manager: delivery operations and reports.</p>
+
+          <p>Driver: assigned deliveries and progress.</p>
+        </section>
+
+        <section class="footer-column">
+          <h3>Quick Access</h3>
+
+          <a href="/dashboard.html">Manager Dashboard</a>
+          <a href="/driver.html">Driver Deliveries</a>
+          <a href="/account.html">Your Account</a>
+        </section>
+      </div>
+
+      <hr class="footer-divider">
+
+      <div class="footer-bottom">
+        <span>ShopeeFood Delivery DSS · Academic Prototype</span>
+        <span>Region: Vietnam · Language: English</span>
+      </div>
+
+      <div class="legal">
+        <div class="legal-links">
+          <button
+            class="text-button"
+            type="button"
+            data-info="privacy"
+          >
+            PRIVACY INFORMATION
+          </button>
+
+          <button
+            class="text-button"
+            type="button"
+            data-info="terms"
+          >
+            TERMS OF USE
+          </button>
+
+          <button
+            class="text-button"
+            type="button"
+            data-info="about"
+          >
+            ABOUT THE PROJECT
+          </button>
+        </div>
+
+        <div class="prototype-label">
+          ACADEMIC PROTOTYPE
+        </div>
+
+        <div>
+          A student project inspired by ShopeeFood delivery operations.
+        </div>
+
+        <div>
+          This prototype is not an official Shopee or ShopeeFood service.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <dialog
+    id="info-dialog"
+    class="info-dialog"
+    aria-labelledby="info-title"
+  >
+    <h2 id="info-title"></h2>
+    <p id="info-text"></p>
+
+    <button id="close-info" type="button">
+      Close
+    </button>
+  </dialog>
+
+  <script>
+    const form = document.getElementById("login-form");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginButton = document.getElementById("login-button");
+    const toggleButton = document.getElementById("toggle-password");
+    const message = document.getElementById("login-message");
+    const loginTitle = document.getElementById("login-title");
+    const roleWelcome = document.getElementById("role-welcome");
+    const roleTabs = document.querySelectorAll("[data-role-select]");
+
+    let submitting = false;
+    let selectedRole = "manager";
+
+    // Switch between Manager and Driver login portals
+    roleTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        selectedRole = tab.dataset.roleSelect;
+
+        roleTabs.forEach((t) => {
+          const isActive = t === tab;
+          t.classList.toggle("active", isActive);
+          t.setAttribute("aria-selected", String(isActive));
+        });
+
+        message.textContent = "";
+
+        if (selectedRole === "manager") {
+          loginTitle.textContent = "Manager Log In";
+          roleWelcome.innerHTML =
+            "Welcome, <strong>Manager</strong>! Please log in with your administrator email to access the dispatch system.";
+          emailInput.placeholder = "Enter your Manager email";
+          loginButton.textContent = "LOG IN AS MANAGER";
+        } else {
+          loginTitle.textContent = "Driver Log In";
+          roleWelcome.innerHTML =
+            "Welcome, <strong>Driver</strong>! Please log in to your account to view and update assigned deliveries.";
+          emailInput.placeholder = "Enter your Driver email";
+          loginButton.textContent = "LOG IN AS DRIVER";
+        }
+      });
+    });
+
+    toggleButton.addEventListener("click", () => {
+      const showing = passwordInput.type === "password";
+
+      passwordInput.type = showing ? "text" : "password";
+
+      toggleButton.setAttribute(
+        "aria-label",
+        showing ? "Hide password" : "Show password"
+      );
+
+      toggleButton.setAttribute(
+        "aria-pressed",
+        String(showing)
+      );
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (submitting || !form.reportValidity()) return;
+
+      submitting = true;
+      message.textContent = "";
+
+      const body = {
+        email: emailInput.value.trim(),
+        password: passwordInput.value,
+        expectedRole: selectedRole,
+      };
+
+      const controls = [
+        emailInput,
+        passwordInput,
+        loginButton,
+        toggleButton,
+        ...roleTabs,
+      ];
+
+      controls.forEach((item) => {
+        item.disabled = true;
+      });
+
+      loginButton.textContent = "LOGGING IN...";
+
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
+
+        const result = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(
+            result?.message ||
+            "Unable to log in. Please try again."
+          );
+        }
+
+        const role = result?.user?.role;
+
+        if (role !== "manager" && role !== "driver") {
+          throw new Error(
+            "This account does not have access to this portal."
+          );
+        }
+
+        // Check if the logged-in account matches the selected tab (Manager / Driver)
+        if (role !== selectedRole) {
+          throw new Error(
+            selectedRole === "manager"
+              ? "This is a Driver account. Please switch to the 'Driver' tab to log in."
+              : "This is a Manager account. Please switch to the 'Manager' tab to log in."
+          );
+        }
+
+        passwordInput.value = "";
+
+        window.location.replace(
+          role === "manager"
+            ? "/dashboard.html"
+            : "/driver.html"
+        );
+      } catch (error) {
+        message.textContent =
+          error instanceof TypeError
+            ? "Unable to connect. Please try again."
+            : error.message;
+
+        passwordInput.value = "";
+      } finally {
+        submitting = false;
+
+        controls.forEach((item) => {
+          item.disabled = false;
+        });
+
+        loginButton.textContent =
+          selectedRole === "manager"
+            ? "LOG IN AS MANAGER"
+            : "LOG IN AS DRIVER";
+      }
+    });
+
+    const information = {
+      help: [
+        "Help Centre",
+        "Log in with the email and password issued for this project.\n\n" +
+        "Manager accounts open the operations dashboard. " +
+        "Driver accounts open their assigned deliveries.\n\n" +
+        "If your account is unavailable, contact the project administrator.",
+      ],
+
+      forgot: [
+        "Password Assistance",
+        "Contact the project administrator to request a password reset. " +
+        "Automated email password recovery is not available in this prototype.\n\n" +
+        "Never send your existing password through chat or email.",
+      ],
+
+      access: [
+        "Request Account Access",
+        "Accounts are issued by the project administrator. " +
+        "Public self-registration is not available.\n\n" +
+        "Management access requires an active Manager account. " +
+        "Driver accounts can access only their own deliveries.",
+      ],
+
+      about: [
+        "About the Project",
+        "ShopeeFood Delivery DSS is an academic prototype for food order management, " +
+        "driver and vehicle management, dispatch recommendations and delivery reporting.\n\n" +
+        "It is not affiliated with Shopee or ShopeeFood. " +
+        "Dispatch distances and travel times are modeled estimates.",
+      ],
+
+      terms: [
+        "Terms of Use",
+        "Use this prototype only for the authorized academic demonstration. " +
+        "Record delivery updates accurately and use demonstration data.\n\n" +
+        "Do not share account passwords. " +
+        "Access is limited by the role assigned to your account.",
+      ],
+
+      privacy: [
+        "Privacy Information",
+        "The application stores account profiles, orders, driver details " +
+        "and delivery event records. Passwords are stored as salted hashes.\n\n" +
+        "An HttpOnly session cookie is used for authentication. " +
+        "Sign out when using a shared device.\n\n" +
+        "Use demonstration customer data and avoid entering sensitive personal information.",
+      ],
+    };
+
+    const infoDialog = document.getElementById("info-dialog");
+
+    document.querySelectorAll("[data-info]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.dataset.info === "forgot") {
+          window.location.assign("/forgot-password.html");
+          return;
+        }
+        const [title, text] = information[button.dataset.info];
+
+        document.getElementById("info-title").textContent = title;
+        document.getElementById("info-text").textContent = text;
+
+        if (!infoDialog.open) {
+          infoDialog.showModal();
+        }
+      });
+    });
+
+    document.getElementById("close-info").addEventListener(
+      "click",
+      () => infoDialog.close()
+    );
+  </script>
+</body>
+</html>

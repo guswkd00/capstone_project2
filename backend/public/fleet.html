@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <script
+  src="/auth-client.js?v=manager-shell-3"
+  data-role="manager"
+></script>
+
+<script
+  src="/app-shell.js?v=manager-shell-3"
+  defer
+></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DispatchFlow — Fleet Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --sf-primary: #ee4d2d;
+      --sf-primary-hover: #d73818;
+      --sf-primary-soft: #fff5f2;
+      --sf-dark: #0f172a;
+      --sf-dark-surface: #1e293b;
+      --sf-bg: #f1f5f9;
+      --sf-surface: #ffffff;
+      /* Hệ thống đường viền sắc nét, độ tương phản cao */
+      --sf-border-strong: #94a3b8;
+      --sf-border: #cbd5e1;
+      --sf-border-subtle: #cbd5e1;
+      --sf-text: #0f172a;
+      --sf-text-secondary: #334155;
+      --sf-text-muted: #64748b;
+      --sf-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+      --sf-shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+      --sf-shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+      --sf-radius-sm: 8px;
+      --sf-radius-md: 12px;
+      --sf-radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--sf-bg);
+      color: var(--sf-text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    /* ==================== HEADER & NAVIGATION ==================== */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      padding: 20px 36px;
+      border-bottom: 3px solid var(--sf-primary);
+      box-shadow: var(--sf-shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    header strong {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header strong::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background: var(--sf-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.25);
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    nav a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--sf-radius-sm);
+      border: 1px solid transparent;
+      transition: all 0.18s ease;
+    }
+
+    nav a:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    nav a.active {
+      color: white;
+      background: rgba(238, 77, 45, 0.22);
+      border: 1.5px solid #ee4d2d;
+      font-weight: 600;
+    }
+
+    /* ==================== MAIN CONTAINER ==================== */
+    main {
+      max-width: 1260px;
+      margin: 32px auto 60px;
+      padding: 0 24px;
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--sf-text);
+    }
+
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--sf-text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--sf-text);
+      margin: 32px 0 6px 0;
+      padding-top: 22px;
+      border-top: 2px dashed var(--sf-border-strong);
+    }
+
+    .subtitle, .muted {
+      color: var(--sf-text-muted);
+      line-height: 1.6;
+      font-size: 14px;
+      margin-top: 0;
+    }
+
+    /* ==================== TOOLBAR & TABS ==================== */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 24px 0;
+      background: var(--sf-surface);
+      padding: 12px 16px;
+      border-radius: var(--sf-radius-md);
+      border: 1.5px solid var(--sf-border-strong);
+      box-shadow: var(--sf-shadow-sm);
+    }
+
+    .toolbar button[data-tab] {
+      border: 1.5px solid var(--sf-border);
+      background: #f8fafc;
+      color: var(--sf-text-secondary);
+      font-weight: 600;
+      padding: 10px 18px;
+    }
+
+    .toolbar button[data-tab]:hover:not(:disabled):not(.active) {
+      background: #e2e8f0;
+      border-color: var(--sf-border-strong);
+      color: var(--sf-text);
+    }
+
+    #refresh-fleet {
+      margin-left: auto;
+      background: var(--sf-surface);
+      color: var(--sf-text-secondary);
+      border: 1.5px solid var(--sf-border-strong);
+    }
+
+    button {
+      padding: 10px 16px;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      background: var(--sf-surface);
+      color: var(--sf-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: #475569;
+      background: #f8fafc;
+    }
+
+    button.active,
+    button.primary {
+      background: var(--sf-primary) !important;
+      border-color: #c23315 !important;
+      color: white !important;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(238, 77, 45, 0.3);
+    }
+
+    button.active:hover:not(:disabled),
+    button.primary:hover:not(:disabled) {
+      background: var(--sf-primary-hover) !important;
+      border-color: #9a250d !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(238, 77, 45, 0.38);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    [hidden] { display: none !important; }
+
+    /* ==================== CARDS & SECTIONS ==================== */
+    .card {
+      background: var(--sf-surface);
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-lg);
+      padding: 24px;
+      box-shadow: var(--sf-shadow-md);
+    }
+
+    /* Maintenance Alert Special Card Accent */
+    section[aria-labelledby="maintenance-alerts-title"] {
+      border-top: 4px solid #f59e0b;
+      background: linear-gradient(180deg, #fffdf9 0%, #ffffff 100px);
+    }
+
+    #maintenance-alerts-title::before {
+      content: "⚠";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: #fef3c7;
+      border: 1.5px solid #f59e0b;
+      color: #b45309;
+      font-size: 14px;
+    }
+
+    #refresh-maintenance {
+      margin: 4px 0 14px 0;
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+
+    #refresh-maintenance:hover:not(:disabled) {
+      background: #fef3c7;
+      border-color: #d97706;
+    }
+
+    /* Status messages */
+    #message, #maintenance-message, #expense-message {
+      margin: 12px 0 16px 0;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border: 1px solid var(--sf-border-strong);
+      border-left: 4px solid var(--sf-primary);
+      border-radius: var(--sf-radius-sm);
+      display: inline-block;
+      color: var(--sf-text);
+    }
+
+    #message:empty, #maintenance-message:empty, #expense-message:empty {
+      display: none;
+    }
+
+    .error {
+      background: #fef2f2 !important;
+      border-color: #f87171 !important;
+      border-left-color: #dc2626 !important;
+      color: #b91c1c !important;
+      font-weight: 600;
+    }
+
+    .note {
+      margin: 18px 0 24px 0;
+      padding: 12px 16px;
+      background: #eff6ff;
+      border: 1.5px solid #60a5fa;
+      border-left: 5px solid #2563eb;
+      border-radius: var(--sf-radius-sm);
+      color: #1e3a8a;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    /* ==================== KPI METRIC CARDS ==================== */
+    .sf-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 16px 0 20px 0;
+    }
+
+    .sf-kpi-card {
+      background: var(--sf-surface);
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      padding: 15px 18px;
+      box-shadow: var(--sf-shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sf-kpi-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--sf-border-strong);
+    }
+
+    .sf-kpi-card.kpi-1::after { background: var(--sf-primary); }
+    .sf-kpi-card.kpi-2::after { background: #059669; }
+    .sf-kpi-card.kpi-3::after { background: #f59e0b; }
+    .sf-kpi-card.kpi-4::after { background: #2563eb; }
+
+    .sf-kpi-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--sf-text-secondary);
+    }
+
+    .sf-kpi-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--sf-text);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .sf-kpi-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--sf-text-muted);
+    }
+
+    /* ==================== CONTROL PANEL (SEARCH, SORT, CHIPS) ==================== */
+    .sf-control-panel {
+      background: #f8fafc;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      padding: 16px;
+      margin-bottom: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .sf-search-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sf-search-input-wrap {
+      position: relative;
+      flex: 1 1 280px;
+      display: flex;
+      align-items: center;
+    }
+
+    .sf-search-icon {
+      position: absolute;
+      left: 13px;
+      color: #475569;
+      pointer-events: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    .sf-search-input {
+      padding-left: 38px !important;
+      height: 42px;
+      border-radius: var(--sf-radius-sm);
+      border: 1.5px solid var(--sf-border-strong);
+      background: white;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .sf-Filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sf-filter-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--sf-text-secondary);
+      white-space: nowrap;
+    }
+
+    .sf-filter-select {
+      width: auto !important;
+      min-width: 185px;
+      height: 42px;
+      padding: 0 28px 0 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--sf-text);
+      background-color: white;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      cursor: pointer;
+    }
+
+    .sf-category-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1.5px dashed var(--sf-border-strong);
+    }
+
+    .sf-chip {
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: white;
+      color: var(--sf-text-secondary);
+      border: 1.5px solid var(--sf-border-strong);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .sf-chip:hover:not(:disabled) {
+      border-color: var(--sf-dark);
+      color: var(--sf-dark);
+      background: #f1f5f9;
+    }
+
+    .sf-chip.active {
+      background: var(--sf-dark) !important;
+      border-color: var(--sf-dark) !important;
+      color: white !important;
+      box-shadow: var(--sf-shadow-sm);
+    }
+
+    .sf-chip-badge {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+    }
+
+    .sf-chip.active .sf-chip-badge {
+      background: rgba(255, 255, 255, 0.22);
+      color: white;
+      border-color: transparent;
+    }
+
+    /* ==================== DATA TABLES ==================== */
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      background: white;
+      box-shadow: var(--sf-shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--sf-border);
+      border-right: 1px solid #e2e8f0;
+      font-size: 13.5px;
+    }
+
+    th:last-child, td:last-child {
+      border-right: none;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--sf-text-secondary);
+      border-bottom: 2px solid var(--sf-border-strong);
+      user-select: none;
+    }
+
+    tbody tr {
+      transition: background-color 0.14s ease;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: #fff3ed;
+    }
+
+    /* Monospace & Action Styling */
+    #fleet-body td:first-child,
+    #maintenance-alerts-body td:first-child,
+    #expense-history td:first-child {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--sf-dark);
+    }
+
+    #expense-history td:nth-child(3) {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    #fleet-body td button {
+      padding: 6px 13px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #c23315;
+      background: var(--sf-primary-soft);
+      border: 1.5px solid #f97316;
+      border-radius: 6px;
+    }
+
+    #fleet-body td button:hover:not(:disabled) {
+      background: var(--sf-primary);
+      color: white;
+      border-color: #c23315;
+    }
+
+    /* ==================== BADGES ==================== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #334155;
+      text-transform: capitalize;
+      letter-spacing: 0.01em;
+      border: 1.5px solid #94a3b8;
+    }
+
+    .badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge.available {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #34d399;
+    }
+
+    .badge.maintenance {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #f59e0b;
+    }
+
+    .badge.offline,
+    .badge.inactive {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #f87171;
+    }
+
+    /* ==================== FORMS & INPUTS ==================== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    #expense-form {
+      background: #f8fafc;
+      padding: 20px;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      margin-top: 16px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sf-text-secondary);
+    }
+
+    label[for="expense-vehicle"] {
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-weight: 700;
+      color: var(--sf-text);
+    }
+
+    #expense-vehicle {
+      max-width: 420px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      background: white;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--sf-text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    textarea {
+      min-height: 44px;
+      resize: vertical;
+    }
+
+    input:hover, select:hover, textarea:hover {
+      border-color: #475569;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--sf-primary);
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.18);
+    }
+
+    .full-width { grid-column: 1 / -1; }
+
+    /* ==================== DIALOG / MODAL ==================== */
+    dialog {
+      width: min(650px, 94vw);
+      max-height: 88vh;
+      overflow-y: auto;
+      border: 2px solid var(--sf-dark);
+      border-radius: var(--sf-radius-lg);
+      padding: 28px;
+      background: var(--sf-surface);
+      box-shadow: var(--sf-shadow-lg);
+      color: var(--sf-text);
+    }
+
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--sf-border-strong);
+      margin-bottom: 16px;
+    }
+
+    .dialog-header h2 { margin: 0; }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 16px;
+      margin-top: 6px;
+      border-top: 2px solid var(--sf-border-strong);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 900px) {
+      .sf-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 18px 20px; }
+      main { padding: 0 14px; margin: 20px auto; }
+      .sf-kpi-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
+      #refresh-fleet { margin-left: 0; }
+    }
+    </style>
+
+  <link
+    rel="stylesheet"
+    href="/app-theme.css?v=manager-shell-3"
+  >
+
+  <script
+    src="/vehicle-expenses.js?v=1"
+    defer
+  ></script>
+
+  <script
+    src="/maintenance-alerts.js?v=1"
+    defer
+  ></script>
+</head>
+<body class="sf-app">
+  <header>
+    <strong>DispatchFlow</strong>
+
+    <nav aria-label="Main navigation">
+      <a href="/">Orders</a>
+      <a href="/fleet.html" class="active">Fleet Management</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Fleet Management</h1>
+    <p class="subtitle">
+      Manage your drivers, vehicles and delivery service zones.
+    </p>
+
+    <div class="toolbar">
+      <button data-tab="drivers" class="active">Drivers</button>
+      <button data-tab="vehicles">Vehicles</button>
+      <button data-tab="zones">Hubs / Zones</button>
+      <button id="refresh-fleet">↻ Refresh</button>
+      <button id="add-vehicle" class="primary" hidden>+ Add Vehicle</button>
+    </div>
+
+    <section
+      class="card"
+      aria-labelledby="maintenance-alerts-title"
+      style="margin-bottom:24px"
+    >
+      <h2 id="maintenance-alerts-title">Maintenance Alerts</h2>
+
+      <p class="muted">
+        Vehicles in maintenance, overdue, or due within the next 7 days.
+      </p>
+
+      <button id="refresh-maintenance" type="button" disabled>
+        ↻ Refresh Alerts
+      </button>
+
+      <p
+        id="maintenance-message"
+        role="status"
+        aria-live="polite"
+      >
+        Maintenance alerts are loading...
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Alert</th>
+              <th>Maintenance Due</th>
+              <th>Vehicle Status</th>
+            </tr>
+          </thead>
+          <tbody id="maintenance-alerts-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 id="section-title">Drivers</h2>
+      <p id="message" role="status"></p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead id="fleet-head"></thead>
+          <tbody id="fleet-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="note">
+      Driver availability and vehicle status are checked separately.
+      A driver with a maintenance vehicle should not receive a new assignment.
+    </p>
+
+    <section class="card" style="margin-top:24px">
+      <h2>Vehicle Expenses</h2>
+      <p class="muted">Record actual fuel, maintenance and other vehicle expenses.</p>
+
+      <label for="expense-vehicle">Select Vehicle</label>
+      <select id="expense-vehicle" disabled>
+        <option value="">Loading vehicles...</option>
+      </select>
+
+      <p id="expense-message" role="status" aria-live="polite"></p>
+
+      <form id="expense-form" class="form-grid">
+        <label>
+          Expense Type
+          <select name="expense_type" required>
+            <option value="fuel">Fuel</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+
+        <label>
+          Amount (VND)
+          <input
+            name="amount"
+            type="number"
+            min="1"
+            max="9999999999"
+            step="1"
+            required
+          >
+        </label>
+
+        <label>
+          Expense Date
+          <input name="expense_date" type="date" required>
+        </label>
+
+        <label>
+          Description
+          <textarea name="description" maxlength="500" required></textarea>
+        </label>
+
+        <button id="save-expense" class="primary" type="submit" disabled>
+          Save Expense
+        </button>
+      </form>
+
+      <h3>Expense History</h3>
+      <p class="muted">Shows up to 200 recent records for the selected vehicle.</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Recorded By</th>
+            </tr>
+          </thead>
+          <tbody id="expense-history"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="vehicle-dialog" aria-labelledby="vehicle-title">
+    <div class="dialog-header">
+      <h2 id="vehicle-title">Add Vehicle</h2>
+      <button id="close-vehicle" type="button">Close</button>
+    </div>
+
+    <form id="vehicle-form" class="form-grid">
+      <label>
+        License Plate
+        <input name="plate_number" maxlength="30" required>
+      </label>
+
+      <label>
+        Vehicle Type
+        <select name="vehicle_type">
+          <option value="motorbike">Motorbike</option>
+          <option value="van">Van</option>
+        </select>
+      </label>
+
+      <label>
+        Capacity (kg)
+        <input
+          name="capacity_kg"
+          type="number"
+          min="0.01"
+          max="100000"
+          step="0.01"
+          required
+        >
+      </label>
+
+      <label>
+        Cost per km (VND)
+        <input
+          name="cost_per_km"
+          type="number"
+          min="0"
+          max="1000000"
+          step="1"
+          required
+        >
+      </label>
+
+      <label>
+        Status
+        <select name="status">
+          <option value="available">Available</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </label>
+
+      <label>
+        Maintenance Due
+        <input name="maintenance_due" type="date" required>
+      </label>
+
+      <p id="vehicle-error" class="error full-width" role="alert"></p>
+
+      <div class="form-actions full-width">
+        <button id="cancel-vehicle" type="button">Cancel</button>
+        <button id="save-vehicle" class="primary" type="submit">
+          Save Vehicle
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const fleetHead = document.getElementById("fleet-head");
+    const fleetBody = document.getElementById("fleet-body");
+    const fleetMessage = document.getElementById("message");
+    const sectionTitle = document.getElementById("section-title");
+    const refreshFleet = document.getElementById("refresh-fleet");
+    const addVehicle = document.getElementById("add-vehicle");
+
+    const vehicleDialog = document.getElementById("vehicle-dialog");
+    const vehicleForm = document.getElementById("vehicle-form");
+    const vehicleError = document.getElementById("vehicle-error");
+    const saveVehicle = document.getElementById("save-vehicle");
+
+    const vnd = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "VND",
+      maximumFractionDigits: 0
+    });
+
+    const resources = {
+      drivers: {
+        title: "Drivers",
+        columns: [
+          ["driver_code", "Driver Code"],
+          ["full_name", "Full Name"],
+          ["phone", "Phone"],
+          ["service_zone", "Service Zone"],
+          ["plate_number", "Vehicle"],
+          ["status", "Driver Status", "status"],
+          ["vehicle_status", "Vehicle Status", "status"]
+        ]
+      },
+      vehicles: {
+        title: "Vehicles",
+        columns: [
+          ["plate_number", "License Plate"],
+          ["vehicle_type", "Type"],
+          ["capacity_kg", "Capacity (kg)"],
+          ["cost_per_km", "Cost / km", "money"],
+          ["status", "Status", "status"],
+          ["maintenance_due", "Maintenance Due", "date"]
+        ]
+      },
+      zones: {
+        title: "Hubs / Zones",
+        columns: [
+          ["name", "Hub / Zone"],
+          ["latitude", "Latitude"],
+          ["longitude", "Longitude"],
+          ["active", "Active", "boolean"]
+        ]
+      }
+    };
+
+    let activeTab = "drivers";
+    let requestNumber = 0;
+    let editingVehicleId = null;
+    let savingVehicle = false;
+
+    function calendarDate(value) {
+      if (!value) return "";
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return value;
+      }
+
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) return "";
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    }
+
+    function createCell(value, format) {
+      const cell = document.createElement("td");
+
+      if (format === "status") {
+        const badge = document.createElement("span");
+        badge.className = "badge";
+
+        if (
+          ["available", "maintenance", "offline", "inactive"]
+            .includes(value)
+        ) {
+          badge.classList.add(value);
+        }
+
+        badge.textContent = value;
+        cell.appendChild(badge);
+      } else if (format === "money") {
+        cell.textContent = vnd.format(Number(value));
+      } else if (format === "date") {
+        const date = calendarDate(value);
+        cell.textContent = date
+          ? date.split("-").reverse().join("/")
+          : "—";
+      } else if (format === "boolean") {
+        cell.textContent = Number(value) === 1 ? "Yes" : "No";
+      } else {
+        cell.textContent = value ?? "—";
+      }
+
+      return cell;
+    }
+
+    async function loadFleet() {
+      const thisRequest = ++requestNumber;
+      const selectedTab = activeTab;
+      const resource = resources[selectedTab];
+
+      refreshFleet.disabled = true;
+      addVehicle.hidden = selectedTab !== "vehicles";
+      sectionTitle.textContent = resource.title;
+      fleetMessage.className = "";
+      fleetMessage.textContent = "Loading fleet data...";
+      fleetHead.replaceChildren();
+      fleetBody.replaceChildren();
+
+      const headerRow = document.createElement("tr");
+
+      for (const [, label] of resource.columns) {
+        const heading = document.createElement("th");
+        heading.textContent = label;
+        headerRow.appendChild(heading);
+      }
+
+      if (selectedTab === "vehicles") {
+        const heading = document.createElement("th");
+        heading.textContent = "Action";
+        headerRow.appendChild(heading);
+      }
+
+      fleetHead.appendChild(headerRow);
+
+      try {
+        const response = await fetch(`/api/fleet/${selectedTab}`);
+
+        if (!response.ok) {
+          throw new Error("Unable to load fleet data. Please try again.");
+        }
+
+        const result = await response.json();
+
+        if (thisRequest !== requestNumber) return;
+
+        for (const record of result.data) {
+          const row = document.createElement("tr");
+
+          for (const [key, , format] of resource.columns) {
+            row.appendChild(createCell(record[key], format));
+          }
+
+          if (selectedTab === "vehicles") {
+            const actionCell = document.createElement("td");
+            const editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.addEventListener("click", () => {
+              openVehicleForm(record);
+            });
+
+            actionCell.appendChild(editButton);
+            row.appendChild(actionCell);
+          }
+
+          fleetBody.appendChild(row);
+        }
+
+        fleetMessage.textContent = result.data.length
+          ? `${result.data.length} records found.`
+          : "No records found.";
+      } catch (error) {
+        if (thisRequest !== requestNumber) return;
+
+        fleetMessage.className = "error";
+        fleetMessage.textContent = error.message;
+      } finally {
+        if (thisRequest === requestNumber) {
+          refreshFleet.disabled = false;
+        }
+      }
+    }
+
+    function openVehicleForm(vehicle = null) {
+      editingVehicleId = vehicle ? vehicle.id : null;
+      vehicleForm.reset();
+      vehicleError.textContent = "";
+
+      document.getElementById("vehicle-title").textContent =
+        vehicle ? "Edit Vehicle" : "Add Vehicle";
+
+      if (vehicle) {
+        for (const field of [
+          "plate_number",
+          "vehicle_type",
+          "capacity_kg",
+          "cost_per_km",
+          "status"
+        ]) {
+          vehicleForm.elements.namedItem(field).value = vehicle[field];
+        }
+
+        vehicleForm.elements.namedItem("maintenance_due").value =
+          calendarDate(vehicle.maintenance_due);
+      } else {
+        vehicleForm.elements.namedItem("capacity_kg").value = 20;
+        vehicleForm.elements.namedItem("cost_per_km").value = 1500;
+
+        const due = new Date();
+        due.setDate(due.getDate() + 60);
+
+        vehicleForm.elements.namedItem("maintenance_due").value =
+          calendarDate(due);
+      }
+
+      vehicleDialog.showModal();
+    }
+
+    function closeVehicleForm() {
+      if (!savingVehicle) vehicleDialog.close();
+    }
+
+    vehicleForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (savingVehicle) return;
+
+      savingVehicle = true;
+      saveVehicle.disabled = true;
+      saveVehicle.textContent = "Saving...";
+      vehicleError.textContent = "";
+
+      const body = Object.fromEntries(new FormData(vehicleForm));
+
+      body.capacity_kg = Number(body.capacity_kg);
+      body.cost_per_km = Number(body.cost_per_km);
+
+      const isEditing = editingVehicleId !== null;
+      const url = isEditing
+        ? `/api/fleet/vehicles/${editingVehicleId}`
+        : "/api/fleet/vehicles";
+
+      try {
+        const response = await fetch(url, {
+          method: isEditing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Unable to save the vehicle.");
+        }
+
+        vehicleDialog.close();
+        await loadFleet();
+      } catch (error) {
+        vehicleError.textContent = error.message;
+      } finally {
+        savingVehicle = false;
+        saveVehicle.disabled = false;
+        saveVehicle.textContent = "Save Vehicle";
+      }
+    });
+
+    document.querySelectorAll("[data-tab]").forEach(button => {
+      button.addEventListener("click", () => {
+        activeTab = button.dataset.tab;
+
+        document.querySelectorAll("[data-tab]").forEach(tab => {
+          tab.classList.toggle("active", tab.dataset.tab === activeTab);
+        });
+
+        loadFleet();
+      });
+    });
+
+    addVehicle.addEventListener("click", () => openVehicleForm());
+
+    document.getElementById("close-vehicle")
+      .addEventListener("click", closeVehicleForm);
+
+    document.getElementById("cancel-vehicle")
+      .addEventListener("click", closeVehicleForm);
+
+    vehicleDialog.addEventListener("cancel", event => {
+      if (savingVehicle) event.preventDefault();
+    });
+
+    refreshFleet.addEventListener("click", loadFleet);
+    loadFleet();
+  </script>
+
+  <script>
+    (() => {
+      function normalise(value) {
+        return String(value || "").normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[đĐ]/g, "d")
+          .toLowerCase().trim();
+      }
+
+      function parseNumber(text) {
+        const cleaned = String(text || "").replace(/[^0-9.-]+/g, "");
+        return Number(cleaned) || 0;
+      }
+
+      function initialiseFleetEnhancements() {
+        const fleetBody = document.getElementById("fleet-body");
+        const fleetTableWrap = fleetBody?.closest(".table-wrapper");
+        if (!fleetTableWrap || document.getElementById("fleet-search")) return;
+
+        // 1. Dynamic KPI Strip for Fleet Section
+        const kpiGrid = document.createElement("div");
+        kpiGrid.className = "sf-kpi-grid";
+        kpiGrid.innerHTML = `
+          <div class="sf-kpi-card kpi-1">
+            <span class="sf-kpi-label" id="fkpi-1-label">Total Records</span>
+            <strong class="sf-kpi-value" id="fkpi-1-val">0</strong>
+            <span class="sf-kpi-sub" id="fkpi-1-sub">In selected tab</span>
+          </div>
+          <div class="sf-kpi-card kpi-2">
+            <span class="sf-kpi-label" id="fkpi-2-label">Available / Active</span>
+            <strong class="sf-kpi-value" id="fkpi-2-val">0</strong>
+            <span class="sf-kpi-sub" id="fkpi-2-sub">Ready for operation</span>
+          </div>
+          <div class="sf-kpi-card kpi-3">
+            <span class="sf-kpi-label" id="fkpi-3-label">Attention Needed</span>
+            <strong class="sf-kpi-value" id="fkpi-3-val">0</strong>
+            <span class="sf-kpi-sub" id="fkpi-3-sub">Offline or Maintenance</span>
+          </div>
+          <div class="sf-kpi-card kpi-4">
+            <span class="sf-kpi-label" id="fkpi-4-label">Coverage / Metric</span>
+            <strong class="sf-kpi-value" id="fkpi-4-val">0</strong>
+            <span class="sf-kpi-sub" id="fkpi-4-sub">Summary indicator</span>
+          </div>
+        `;
+        fleetTableWrap.before(kpiGrid);
+
+        // 2. Search, Sort & Category Panel for Fleet Table
+        const panel = document.createElement("div");
+        panel.className = "sf-control-panel";
+
+        const topRow = document.createElement("div");
+        topRow.className = "sf-search-top";
+
+        const searchWrap = document.createElement("div");
+        searchWrap.className = "sf-search-input-wrap";
+        searchWrap.innerHTML = `
+          <svg class="sf-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        `;
+
+        const searchInput = document.createElement("input");
+        searchInput.id = "fleet-search";
+        searchInput.className = "sf-search-input";
+        searchInput.type = "search";
+        searchInput.placeholder = "Search current tab records...";
+        searchInput.maxLength = 150;
+        searchWrap.appendChild(searchInput);
+
+        const filterGroup = document.createElement("div");
+        filterGroup.className = "sf-Filter-group";
+
+        const sortLabel = document.createElement("label");
+        sortLabel.htmlFor = "fleet-sort";
+        sortLabel.className = "sf-filter-label";
+        sortLabel.textContent = "Sort by:";
+
+        const sortSelect = document.createElement("select");
+        sortSelect.id = "fleet-sort";
+        sortSelect.className = "sf-filter-select";
+
+        const resetBtn = document.createElement("button");
+        resetBtn.type = "button";
+        resetBtn.textContent = "Reset Filters";
+        resetBtn.disabled = true;
+
+        filterGroup.append(sortLabel, sortSelect, resetBtn);
+        topRow.append(searchWrap, filterGroup);
+
+        const categoryBar = document.createElement("div");
+        categoryBar.className = "sf-category-bar";
+
+        const statusLine = document.createElement("p");
+        statusLine.className = "muted";
+        statusLine.style.margin = "0";
+        statusLine.style.fontSize = "12.5px";
+
+        panel.append(topRow, categoryBar, statusLine);
+        fleetTableWrap.before(panel);
+
+        let currentChip = "all";
+        let lastTab = "";
+        let isSorting = false;
+
+        const tabConfig = {
+          drivers: {
+            placeholder: "Search by driver code, full name, phone, zone or vehicle...",
+            sorts: [
+              ["default", "Default Order"],
+              ["col0-asc", "Driver Code: A → Z"],
+              ["col1-asc", "Full Name: A → Z"],
+              ["col3-asc", "Service Zone: A → Z"]
+            ],
+            chips: [
+              ["all", "All Drivers"],
+              ["available", "Driver Available"],
+              ["offline", "Driver Offline"],
+              ["veh-ready", "Vehicle Available"],
+              ["veh-maint", "Vehicle Maintenance"]
+            ]
+          },
+          vehicles: {
+            placeholder: "Search by license plate, vehicle type or status...",
+            sorts: [
+              ["default", "Default Order"],
+              ["col0-asc", "License Plate: A → Z"],
+              ["num2-desc", "Capacity (kg): High → Low"],
+              ["num3-asc", "Cost / km: Low → High"],
+              ["num3-desc", "Cost / km: High → Low"]
+            ],
+            chips: [
+              ["all", "All Vehicles"],
+              ["available", "Available"],
+              ["maintenance", "In Maintenance"],
+              ["inactive", "Inactive"],
+              ["motorbike", "Motorbikes"],
+              ["van", "Vans"]
+            ]
+          },
+          zones: {
+            placeholder: "Search by hub or service zone name...",
+            sorts: [
+              ["default", "Default Order"],
+              ["col0-asc", "Zone Name: A → Z"],
+              ["col0-desc", "Zone Name: Z → A"]
+            ],
+            chips: [
+              ["all", "All Zones"],
+              ["yes", "Active (Yes)"],
+              ["no", "Inactive (No)"]
+            ]
+          }
+        };
+
+        function rebuildTabControls(tab) {
+          const cfg = tabConfig[tab] || tabConfig.drivers;
+          searchInput.placeholder = cfg.placeholder;
+          searchInput.value = "";
+          currentChip = "all";
+
+          sortSelect.replaceChildren();
+          for (const [val, text] of cfg.sorts) {
+            const opt = document.createElement("option");
+            opt.value = val;
+            opt.textContent = text;
+            sortSelect.appendChild(opt);
+          }
+
+          categoryBar.replaceChildren();
+          for (const [key, label] of cfg.chips) {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "sf-chip" + (key === "all" ? " active" : "");
+            chip.dataset.key = key;
+
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = label;
+
+            const badge = document.createElement("span");
+            badge.className = "sf-chip-badge";
+            badge.textContent = "0";
+
+            chip.append(nameSpan, badge);
+            chip.addEventListener("click", () => {
+              currentChip = key;
+              categoryBar.querySelectorAll(".sf-chip").forEach(btn => {
+                btn.classList.toggle("active", btn.dataset.key === currentChip);
+              });
+              applyFleetFilterAndSort();
+            });
+            categoryBar.appendChild(chip);
+          }
+        }
+
+        function rowMatchesChip(row, tab, key) {
+          if (key === "all") return true;
+          if (tab === "drivers") {
+            const dSt = normalise(row.cells[5]?.textContent);
+            const vSt = normalise(row.cells[6]?.textContent);
+            if (key === "available") return dSt === "available";
+            if (key === "offline") return dSt !== "available";
+            if (key === "veh-ready") return vSt === "available";
+            if (key === "veh-maint") return vSt === "maintenance";
+          } else if (tab === "vehicles") {
+            const vType = normalise(row.cells[1]?.textContent);
+            const st = normalise(row.cells[4]?.textContent);
+            if (["available", "maintenance", "inactive"].includes(key)) return st === key;
+            if (["motorbike", "van"].includes(key)) return vType === key;
+          } else if (tab === "zones") {
+            const act = normalise(row.cells[3]?.textContent);
+            return act === key;
+          }
+          return true;
+        }
+
+        function updateKPIs(rows, tab) {
+          const l1 = document.getElementById("fkpi-1-label");
+          const v1 = document.getElementById("fkpi-1-val");
+          const s1 = document.getElementById("fkpi-1-sub");
+          const l2 = document.getElementById("fkpi-2-label");
+          const v2 = document.getElementById("fkpi-2-val");
+          const s2 = document.getElementById("fkpi-2-sub");
+          const l3 = document.getElementById("fkpi-3-label");
+          const v3 = document.getElementById("fkpi-3-val");
+          const s3 = document.getElementById("fkpi-3-sub");
+          const l4 = document.getElementById("fkpi-4-label");
+          const v4 = document.getElementById("fkpi-4-val");
+          const s4 = document.getElementById("fkpi-4-sub");
+
+          if (tab === "drivers") {
+            let avail = 0;
+            let off = 0;
+            const zones = new Set();
+            for (const r of rows) {
+              const st = normalise(r.cells[5]?.textContent);
+              if (st === "available") avail++;
+              else off++;
+              const z = (r.cells[3]?.textContent || "").trim();
+              if (z && z !== "—") zones.add(z);
+            }
+            l1.textContent = "Total Drivers";
+            v1.textContent = String(rows.length);
+            s1.textContent = "Registered personnel";
+
+            l2.textContent = "Available Drivers";
+            v2.textContent = String(avail);
+            s2.textContent = "Ready for dispatch";
+
+            l3.textContent = "Offline Drivers";
+            v3.textContent = String(off);
+            s3.textContent = "Currently unavailable";
+
+            l4.textContent = "Covered Zones";
+            v4.textContent = String(zones.size);
+            s4.textContent = "Active driver zones";
+          } else if (tab === "vehicles") {
+            let avail = 0;
+            let maint = 0;
+            let totalCap = 0;
+            for (const r of rows) {
+              const st = normalise(r.cells[4]?.textContent);
+              if (st === "available") avail++;
+              if (st === "maintenance" || st === "inactive") maint++;
+              totalCap += parseNumber(r.cells[2]?.textContent);
+            }
+            l1.textContent = "Total Fleet";
+            v1.textContent = String(rows.length);
+            s1.textContent = "Motorbikes & Vans";
+
+            l2.textContent = "Available Vehicles";
+            v2.textContent = String(avail);
+            s2.textContent = "Ready for allocation";
+
+            l3.textContent = "Maint. / Inactive";
+            v3.textContent = String(maint);
+            s3.textContent = "Under service or paused";
+
+            l4.textContent = "Total Capacity";
+            v4.textContent = `${totalCap.toLocaleString("en-US")} kg`;
+            s4.textContent = "Combined payload";
+          } else {
+            let active = 0;
+            let inactive = 0;
+            for (const r of rows) {
+              if (normalise(r.cells[3]?.textContent) === "yes") active++;
+              else inactive++;
+            }
+            l1.textContent = "Total Hubs / Zones";
+            v1.textContent = String(rows.length);
+            s1.textContent = "Configured territories";
+
+            l2.textContent = "Active Zones";
+            v2.textContent = String(active);
+            s2.textContent = "Accepting orders";
+
+            l3.textContent = "Inactive Zones";
+            v3.textContent = String(inactive);
+            s3.textContent = "Temporarily closed";
+
+            l4.textContent = "Active Ratio";
+            v4.textContent = rows.length ? `${Math.round((active / rows.length) * 100)}%` : "0%";
+            s4.textContent = "Operational coverage";
+          }
+        }
+
+        function applyFleetFilterAndSort() {
+          if (isSorting) return;
+
+          const tab = typeof activeTab === "string" ? activeTab : "drivers";
+          if (tab !== lastTab) {
+            lastTab = tab;
+            rebuildTabControls(tab);
+          }
+
+          const rows = Array.from(fleetBody.rows);
+          rows.forEach((r, idx) => {
+            if (r.dataset.origIdx === undefined) {
+              r.dataset.origIdx = String(idx);
+            }
+          });
+
+          // Update chip counts
+          categoryBar.querySelectorAll(".sf-chip").forEach(chip => {
+            const key = chip.dataset.key;
+            const count = rows.filter(r => rowMatchesChip(r, tab, key)).length;
+            const badge = chip.querySelector(".sf-chip-badge");
+            if (badge) badge.textContent = String(count);
+          });
+
+          // Sort rows
+          const sortMode = sortSelect.value;
+          const sorted = [...rows].sort((a, b) => {
+            if (sortMode === "col0-asc") {
+              return (a.cells[0]?.textContent || "").localeCompare(b.cells[0]?.textContent || "");
+            }
+            if (sortMode === "col0-desc") {
+              return (b.cells[0]?.textContent || "").localeCompare(a.cells[0]?.textContent || "");
+            }
+            if (sortMode === "col1-asc") {
+              return (a.cells[1]?.textContent || "").localeCompare(b.cells[1]?.textContent || "");
+            }
+            if (sortMode === "col3-asc") {
+              return (a.cells[3]?.textContent || "").localeCompare(b.cells[3]?.textContent || "");
+            }
+            if (sortMode === "num2-desc") {
+              return parseNumber(b.cells[2]?.textContent) - parseNumber(a.cells[2]?.textContent);
+            }
+            if (sortMode === "num3-asc") {
+              return parseNumber(a.cells[3]?.textContent) - parseNumber(b.cells[3]?.textContent);
+            }
+            if (sortMode === "num3-desc") {
+              return parseNumber(b.cells[3]?.textContent) - parseNumber(a.cells[3]?.textContent);
+            }
+            return Number(a.dataset.origIdx) - Number(b.dataset.origIdx);
+          });
+
+          if (sorted.some((r, i) => r !== rows[i])) {
+            isSorting = true;
+            fleetBody.append(...sorted);
+            isSorting = false;
+          }
+
+          // Filter rows
+          const terms = normalise(searchInput.value).split(/\s+/).filter(Boolean);
+          let visibleCount = 0;
+
+          for (const row of sorted) {
+            const text = normalise(Array.from(row.cells).map(c => c.textContent).join(" "));
+            const termMatch = terms.every(t => text.includes(t));
+            const chipMatch = rowMatchesChip(row, tab, currentChip);
+            const visible = termMatch && chipMatch;
+            row.hidden = !visible;
+            if (visible) visibleCount++;
+          }
+
+          updateKPIs(rows, tab);
+
+          const hasFilter =
+            searchInput.value.length > 0 ||
+            currentChip !== "all" ||
+            sortSelect.value !== "default";
+
+          resetBtn.disabled = !hasFilter;
+          statusLine.textContent = hasFilter
+            ? `Showing ${visibleCount} of ${rows.length} records in ${resources[tab]?.title || tab}.`
+            : `Showing all ${rows.length} loaded records in ${resources[tab]?.title || tab}.`;
+        }
+
+        searchInput.addEventListener("input", applyFleetFilterAndSort);
+        sortSelect.addEventListener("change", applyFleetFilterAndSort);
+        resetBtn.addEventListener("click", () => {
+          searchInput.value = "";
+          sortSelect.value = "default";
+          currentChip = "all";
+          categoryBar.querySelectorAll(".sf-chip").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.key === "all");
+          });
+          applyFleetFilterAndSort();
+          searchInput.focus();
+        });
+
+        new MutationObserver(() => {
+          if (!isSorting) applyFleetFilterAndSort();
+        }).observe(fleetBody, { childList: true });
+
+        rebuildTabControls(activeTab);
+        applyFleetFilterAndSort();
+
+        // 3. Expense History Search & Category Filter
+        const expenseBody = document.getElementById("expense-history");
+        const expenseTableWrap = expenseBody?.closest(".table-wrapper");
+        if (expenseTableWrap && !document.getElementById("expense-search")) {
+          const expPanel = document.createElement("div");
+          expPanel.className = "sf-control-panel";
+          expPanel.style.marginTop = "12px";
+
+          expPanel.innerHTML = `
+            <div class="sf-search-top">
+              <div class="sf-search-input-wrap">
+                <svg class="sf-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input id="expense-search" class="sf-search-input" type="search" placeholder="Search expense description, date, type or user...">
+              </div>
+              <div class="sf-Filter-group">
+                <span class="sf-filter-label">Type:</span>
+                <select id="expense-type-filter" class="sf-filter-select">
+                  <option value="all">All Expense Types</option>
+                  <option value="fuel">Fuel</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          `;
+          expenseTableWrap.before(expPanel);
+
+          const expSearch = document.getElementById("expense-search");
+          const expType = document.getElementById("expense-type-filter");
+
+          function filterExpenses() {
+            const terms = normalise(expSearch.value).split(/\s+/).filter(Boolean);
+            const selectedType = expType.value;
+            for (const row of Array.from(expenseBody.rows)) {
+              const text = normalise(row.textContent);
+              const rType = normalise(row.cells[1]?.textContent);
+              const matchTerms = terms.every(t => text.includes(t));
+              const matchType = selectedType === "all" || rType === selectedType;
+              row.hidden = !(matchTerms && matchType);
+            }
+          }
+
+          expSearch.addEventListener("input", filterExpenses);
+          expType.addEventListener("change", filterExpenses);
+          new MutationObserver(filterExpenses).observe(expenseBody, { childList: true });
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initialiseFleetEnhancements, { once: true });
+      } else {
+        initialiseFleetEnhancements();
+      }
+    })();
+  </script>
+</body>
+</html>
