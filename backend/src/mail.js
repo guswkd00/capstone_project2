@@ -135,9 +135,53 @@ function notify(user, kind, ip) {
   });
 }
 
+async function notifyWithdrawal(user, withdrawal) {
+  if (!emailEnabled()) return false;
+
+  const amount = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0
+  }).format(Number(withdrawal.amount));
+
+  const time = new Date().toLocaleString("en-GB", {
+    timeZone: "Asia/Ho_Chi_Minh"
+  });
+
+  try {
+    await sendEmail(
+      user.email,
+      user.full_name,
+      "Withdrawal approved — ShopeeFood Delivery DSS",
+      `Hello ${user.full_name},\n\n` +
+      "A Manager has approved your withdrawal request.\n" +
+      `Request ID: ${withdrawal.id}\n` +
+      `Amount: ${amount}\n` +
+      `Reference: ${withdrawal.reference}\n` +
+      `Notification time: ${time} (Vietnam time)\n\n` +
+      "The approved withdrawal has been recorded in your application wallet.\n" +
+      "This application does not initiate bank transfers or independently verify receipt in your bank account.\n" +
+      "If the funds have not arrived, contact your Manager with the request ID and reference.\n\n" +
+      "View your wallet:\n" +
+      applicationUrl("/driver.html") +
+      "\n\nAcademic prototype — not an official ShopeeFood service."
+    );
+
+    return true;
+  } catch (error) {
+    console.error(
+      "Withdrawal email failed:",
+      error.code || error.name
+    );
+
+    return false;
+  }
+}
+
 module.exports = {
   emailEnabled,
   applicationUrl,
   sendEmail,
   notify,
+  notifyWithdrawal
 };
