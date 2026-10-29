@@ -344,9 +344,36 @@ if (
 }
 
 return reviewed;
-        });
+});
 
-        res.json({
+// Send email only after the transaction commits.
+if (approvedWithdrawal && emailEnabled()) {
+  Promise.resolve().then(async () => {
+    const [[recipient]] = await pool.execute(
+      `SELECT u.email, u.full_name
+       FROM drivers d
+       JOIN users u ON u.id = d.user_id
+       WHERE d.id = ?
+         AND u.active = 1
+         AND u.role = 'driver'`,
+      [approvedWithdrawal.driver_id]
+    );
+
+    if (recipient) {
+      await notifyWithdrawal(
+        recipient,
+        approvedWithdrawal
+      );
+    }
+  }).catch(error => {
+    console.error(
+      "Withdrawal notification failed:",
+      error.code || error.name
+    );
+  });
+}
+
+res.json({
           data,
           message:
             "Review recorded. This system does not initiate a bank transfer.",
