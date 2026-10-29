@@ -323,12 +323,27 @@ function createWorkspaceRouter(
             [requestId]
           );
 
-          return reviewRequest(
-            db,
-            request,
-            req.user.id,
-            req.body
-          );
+const reviewed = await reviewRequest(
+  db,
+  request,
+  req.user.id,
+  req.body
+);
+
+if (
+  request.status === "pending" &&
+  request.request_type === "withdrawal" &&
+  reviewed.status === "approved"
+) {
+  approvedWithdrawal = {
+    id: request.id,
+    driver_id: request.driver_id,
+    amount: request.amount,
+    reference: req.body.reference.trim()
+  };
+}
+
+return reviewed;
         });
 
         res.json({
