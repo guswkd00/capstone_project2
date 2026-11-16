@@ -99,6 +99,11 @@
         }
 
         const plan = result.data;
+        document.dispatchEvent(
+  new CustomEvent("driver:route", {
+    detail: plan,
+  })
+);
 
         if (!plan.stops.length) {
           message.textContent =

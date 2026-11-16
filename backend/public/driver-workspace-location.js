@@ -136,9 +136,16 @@
               `±${Math.round(position.coords.accuracy)} m · ` +
               new Date(data.updated_at).toLocaleTimeString();
 
-            document.dispatchEvent(
-              new Event("driver:location-updated")
-            );
+document.dispatchEvent(
+  new CustomEvent("driver:location-updated", {
+    detail: {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy_m: position.coords.accuracy,
+      captured_at: position.timestamp,
+    },
+  })
+);
           } catch (e) {
             if (session === generation) {
               status.textContent =

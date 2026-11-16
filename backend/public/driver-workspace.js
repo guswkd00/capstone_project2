@@ -166,6 +166,11 @@
       try {
         const data = await api("/api/driver/wallet");
         const wallet = data.data;
+        document.dispatchEvent(
+  new CustomEvent("driver:wallet", {
+    detail: data,
+  })
+);
 
         $("wallet-cash").textContent =
           money(wallet.available_cash);
