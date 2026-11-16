@@ -265,6 +265,7 @@
 
       for (const order of visible) {
         const card = element("article", null, "df-card");
+        card.dataset.orderId = order.id;
         const heading = element(
           "div",
           null,
