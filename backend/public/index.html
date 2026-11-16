@@ -1,117 +1,2094 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ShopeeFood — Đơn hàng đang chờ</title>
+  <script
+  src="/auth-client.js?v=manager-shell-3"
+  data-role="manager"
+></script>
+
+<script
+  src="/app-shell.js?v=manager-shell-3"
+  defer
+></script>
+  data-role="manager"
+></script>
+  <title>ShopeeFood Delivery DSS — Orders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --sf-primary: #ee4d2d;
+      --sf-primary-hover: #d73818;
+      --sf-primary-soft: #fff5f2;
+      --sf-dark: #0f172a;
+      --sf-dark-surface: #1e293b;
+      --sf-bg: #f1f5f9;
+      --sf-surface: #ffffff;
+      /* Hệ thống đường viền sắc nét, độ tương phản cao */
+      --sf-border-strong: #94a3b8;
+      --sf-border: #cbd5e1;
+      --sf-border-subtle: #cbd5e1;
+      --sf-text: #0f172a;
+      --sf-text-secondary: #334155;
+      --sf-text-muted: #64748b;
+      --sf-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+      --sf-shadow-md: 0 4px 8px -2px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+      --sf-shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+      --sf-radius-sm: 8px;
+      --sf-radius-md: 12px;
+      --sf-radius-lg: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
       margin: 0;
-      padding: 30px;
+      background: var(--sf-bg);
+      color: var(--sf-text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
     }
-    main {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      overflow-x: auto;
-    }
-    h1 { color: #ee4d2d; }
-    button {
-      background: #ee4d2d;
+
+    /* ==================== HEADER & NAVIGATION ==================== */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: white;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 6px;
+      padding: 20px 36px;
+      border-bottom: 3px solid var(--sf-primary);
+      box-shadow: var(--sf-shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    header strong {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header strong::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background: var(--sf-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.25);
+    }
+
+    header small {
+      display: block;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-size: 12.5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    nav a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: var(--sf-radius-sm);
+      border: 1px solid transparent;
+      transition: all 0.18s ease;
+    }
+
+    nav a:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    nav a[href="/"] {
+      color: white;
+      background: rgba(238, 77, 45, 0.22);
+      border: 1.5px solid #ee4d2d;
+      font-weight: 600;
+    }
+
+    /* ==================== MAIN CONTAINER ==================== */
+    main {
+      max-width: 1260px;
+      margin: 32px auto 60px;
+      padding: 0 24px;
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--sf-text);
+    }
+
+    .muted {
+      color: var(--sf-text-muted);
+      line-height: 1.6;
+      font-size: 14px;
+      margin-top: 0;
+    }
+
+    /* ==================== TOOLBAR & SEGMENTED TABS ==================== */
+    .toolbar, .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 24px 0;
+    }
+
+    .toolbar {
+      background: var(--sf-surface);
+      padding: 12px 16px;
+      border-radius: var(--sf-radius-md);
+      border: 1.5px solid var(--sf-border-strong);
+      box-shadow: var(--sf-shadow-sm);
+    }
+
+    #pending-button, #all-button {
+      position: relative;
+      border: 1.5px solid var(--sf-border);
+      background: #f8fafc;
+      color: var(--sf-text-secondary);
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--sf-radius-sm);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #pending-button:hover:not(:disabled):not(.active),
+    #all-button:hover:not(:disabled):not(.active) {
+      background: #e2e8f0;
+      border-color: var(--sf-border-strong);
+      color: var(--sf-text);
+    }
+
+    #refresh-button {
+      margin-left: auto;
+      background: var(--sf-surface);
+      color: var(--sf-text-secondary);
+      border: 1.5px solid var(--sf-border-strong);
+      font-weight: 600;
+    }
+
+    #refresh-button:hover:not(:disabled) {
+      background: #f1f5f9;
+      border-color: #64748b;
+      color: var(--sf-text);
+    }
+
+    button {
+      padding: 10px 16px;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      background: var(--sf-surface);
+      color: var(--sf-text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: #475569;
+      background: #f8fafc;
+    }
+
+    button.active, button.primary {
+      background: var(--sf-primary) !important;
+      border-color: #c23315 !important;
+      color: white !important;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(238, 77, 45, 0.3);
+    }
+
+    button.active:hover:not(:disabled), button.primary:hover:not(:disabled) {
+      background: var(--sf-primary-hover) !important;
+      border-color: #9a250d !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(238, 77, 45, 0.38);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* ==================== KPI METRIC CARDS ==================== */
+    .sf-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .sf-kpi-card {
+      background: var(--sf-surface);
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      padding: 16px 20px;
+      box-shadow: var(--sf-shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sf-kpi-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--sf-border-strong);
+    }
+
+    .sf-kpi-card.kpi-total::after { background: var(--sf-primary); }
+    .sf-kpi-card.kpi-pending::after { background: #f59e0b; }
+    .sf-kpi-card.kpi-active::after { background: #2563eb; }
+    .sf-kpi-card.kpi-value::after { background: #059669; }
+
+    .sf-kpi-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--sf-text-secondary);
+    }
+
+    .sf-kpi-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--sf-text);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .sf-kpi-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--sf-text-muted);
+    }
+
+    /* ==================== CARD & FILTER BAR ==================== */
+    .card {
+      background: var(--sf-surface);
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-lg);
+      padding: 24px;
+      box-shadow: var(--sf-shadow-md);
+    }
+
+    #message {
+      margin: 0 0 16px 0;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border: 1px solid var(--sf-border-strong);
+      border-left: 4px solid var(--sf-primary);
+      border-radius: var(--sf-radius-sm);
+      display: inline-block;
+      color: var(--sf-text);
+    }
+
+    #message.error {
+      background: #fef2f2;
+      border-color: #f87171;
+      border-left-color: #dc2626;
+      color: #b91c1c;
+    }
+
+    /* Search, Category Chips & Sort Bar */
+    .sf-control-panel {
+      background: #f8fafc;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      padding: 16px;
+      margin-bottom: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .sf-search-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sf-search-input-wrap {
+      position: relative;
+      flex: 1 1 300px;
+      display: flex;
+      align-items: center;
+    }
+
+    .sf-search-icon {
+      position: absolute;
+      left: 13px;
+      color: #475569;
+      pointer-events: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    #order-search {
+      padding-left: 38px !important;
+      height: 42px;
+      border-radius: var(--sf-radius-sm);
+      border: 1.5px solid var(--sf-border-strong);
+      background: white;
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+
+    #order-search:hover {
+      border-color: #475569;
+    }
+
+    #order-search:focus {
+      outline: none;
+      border-color: var(--sf-primary);
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.18);
+    }
+
+    .sf-sort-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sf-sort-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--sf-text-secondary);
+      white-space: nowrap;
+    }
+
+    .sf-sort-select {
+      width: auto !important;
+      min-width: 195px;
+      height: 42px;
+      padding: 0 32px 0 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--sf-text);
+      background-color: white;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
       cursor: pointer;
     }
+
+    .sf-sort-select:hover {
+      border-color: #475569;
+    }
+
+    .sf-category-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1.5px dashed var(--sf-border-strong);
+    }
+
+    .sf-chip {
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      background: white;
+      color: var(--sf-text-secondary);
+      border: 1.5px solid var(--sf-border-strong);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .sf-chip:hover:not(:disabled) {
+      border-color: var(--sf-dark);
+      color: var(--sf-dark);
+      background: #f1f5f9;
+    }
+
+    .sf-chip.active {
+      background: var(--sf-dark) !important;
+      border-color: var(--sf-dark) !important;
+      color: white !important;
+      box-shadow: var(--sf-shadow-sm);
+    }
+
+    .sf-chip-badge {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+    }
+
+    .sf-chip.active .sf-chip-badge {
+      background: rgba(255, 255, 255, 0.22);
+      color: white;
+      border-color: transparent;
+    }
+
+    /* ==================== DATA TABLE ==================== */
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-md);
+      background: white;
+      box-shadow: var(--sf-shadow-sm);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--sf-border);
+      border-right: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+
+    th:last-child, td:last-child {
+      border-right: none;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--sf-text-secondary);
+      border-bottom: 2px solid var(--sf-border-strong);
+      user-select: none;
+    }
+
+    tbody tr {
+      transition: background-color 0.14s ease;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: #fff3ed;
+    }
+
+    /* Column Specific Styling */
+    #orders td:nth-child(1) {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--sf-dark);
+    }
+
+    #orders td:nth-child(2) {
+      font-weight: 600;
+      color: var(--sf-text);
+    }
+
+    #orders td:nth-child(3) {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #0f172a;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #orders td:nth-child(5) button {
+      padding: 7px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #c23315;
+      background: var(--sf-primary-soft);
+      border: 1.5px solid #f97316;
+      border-radius: 6px;
+    }
+
+    #orders td:nth-child(5) button:hover:not(:disabled) {
+      background: var(--sf-primary);
+      color: white;
+      border-color: #c23315;
+    }
+
+    /* ==================== STATUS PILLS ==================== */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #334155;
+      text-transform: capitalize;
+      letter-spacing: 0.01em;
+      border: 1.5px solid #94a3b8;
+    }
+
+    .status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status.pending {
+      background: #fffbeb;
+      color: #92400e;
+      border-color: #f59e0b;
+    }
+
+    .status.confirmed {
+      background: #fff7ed;
+      color: #9a3412;
+      border-color: #f97316;
+    }
+
+    .status.assigned {
+      background: #eff6ff;
+      color: #1e40af;
+      border-color: #60a5fa;
+    }
+
+    .status.delivering {
+      background: #f5f3ff;
+      color: #5b21b6;
+      border-color: #a78bfa;
+    }
+
+    .status.completed {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #34d399;
+    }
+
+    .status.failed, .status.cancelled {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #f87171;
+    }
+
+    .error {
+      color: #dc2626;
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+
+    /* ==================== DIALOGS / MODALS ==================== */
+    dialog {
+      width: min(720px, 94vw);
+      max-height: 88vh;
+      overflow-y: auto;
+      border: 2px solid var(--sf-dark);
+      border-radius: var(--sf-radius-lg);
+      padding: 28px;
+      background: var(--sf-surface);
+      box-shadow: var(--sf-shadow-lg);
+      color: var(--sf-text);
+    }
+
+    #new-order-dialog { width: min(920px, 94vw); }
+
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid var(--sf-border-strong);
+      margin-bottom: 20px;
+    }
+
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+    }
+
+    #details-content h3,
+    #new-order-form h3 {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--sf-text);
+      margin: 28px 0 12px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--sf-border-strong);
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 12px 18px;
+      margin: 18px 0;
+      background: #f8fafc;
+      padding: 18px 20px;
+      border-radius: var(--sf-radius-md);
+      border: 1.5px solid var(--sf-border-strong);
+    }
+
+    dt {
+      color: var(--sf-text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--sf-text);
+    }
+
+    /* ==================== FORMS ==================== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
       margin-top: 20px;
     }
-    th, td {
-      padding: 14px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    th { background: #fff3ee; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Đơn hàng đang chờ</h1>
-    <button id="reload">Tải lại danh sách</button>
-    <p id="message" role="status"></p>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Mã đơn</th>
-          <th>Khách hàng</th>
-          <th>Tổng tiền</th>
-          <th>Trạng thái</th>
-        </tr>
-      </thead>
-      <tbody id="orders"></tbody>
-    </table>
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sf-text-secondary);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+      background: white;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--sf-text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:hover, select:hover, textarea:hover {
+      border-color: #475569;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--sf-primary);
+      box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.18);
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--sf-primary);
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+    .wide { grid-column: 1 / -1; }
+
+    #restaurant-info {
+      background: #fff7ed;
+      border: 1.5px solid #fb923c;
+      color: #9a3412;
+      padding: 10px 14px;
+      border-radius: var(--sf-radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .food-row {
+      display: grid;
+      grid-template-columns: 2fr 0.7fr 1fr 1fr auto;
+      align-items: end;
+      gap: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: #f8fafc;
+      border: 1.5px solid var(--sf-border-strong);
+      border-radius: var(--sf-radius-sm);
+    }
+
+    .food-row output {
+      display: block;
+      padding: 10px 0;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--sf-text);
+    }
+
+    .summary {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      border: 2px solid #334155;
+      border-radius: var(--sf-radius-md);
+      padding: 20px 24px;
+      box-shadow: var(--sf-shadow-md);
+    }
+
+    .summary p {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin: 10px 0;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    .summary p strong {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      color: white;
+    }
+
+    .summary p:nth-child(3) {
+      padding-top: 10px;
+      border-top: 1.5px solid rgba(255, 255, 255, 0.25);
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .summary p:nth-child(3) strong {
+      font-size: 18px;
+      color: #fb923c;
+    }
+
+    .form-actions {
+      justify-content: flex-end;
+      margin: 8px 0 0 0;
+      padding-top: 16px;
+      border-top: 2px solid var(--sf-border-strong);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 900px) {
+      .sf-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 650px) {
+      header { padding: 18px 20px; }
+      main { padding: 0 14px; margin: 20px auto; }
+      .sf-kpi-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .food-row { grid-template-columns: 1fr 1fr; }
+      .food-row label:first-child { grid-column: 1 / -1; }
+      dl { grid-template-columns: 1fr; gap: 6px; padding: 14px; }
+      dd { margin-bottom: 10px; }
+      .card { padding: 16px; }
+      #refresh-button { margin-left: 0; }
+    }
+   </style>
+
+  <link
+    rel="stylesheet"
+    href="/app-theme.css?v=manager-shell-3"
+  >
+
+</head>
+
+<body class="sf-app">
+  <header>
+    <strong>ShopeeFood Delivery DSS</strong>
+    <small>Academic Prototype · Manager Portal</small>
+
+    <nav aria-label="Main navigation">
+      <a href="/">Orders</a>
+      <a href="/fleet.html">Fleet Management</a>
+      <a href="/drivers.html">Manage Drivers</a>
+      <a href="/dispatch.html">Dispatch</a>
+      <a href="/dispatch-history.html">Dispatch History</a>
+      <a href="/account.html">Account</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Food Orders</h1>
+    <p class="muted">
+      Review restaurant pickups, customer deliveries and payment details.
+    </p>
+
+    <div class="toolbar">
+      <button id="pending-button" class="active">Pending Orders</button>
+      <button id="all-button">All Orders</button>
+      <button id="refresh-button">↻ Refresh</button>
+      <button id="new-order-button" class="primary">+ New Order</button>
+    </div>
+
+    <section class="card">
+      <p id="message" class="muted" role="status"></p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Order Code</th>
+              <th>Customer</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="orders"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
+  <dialog id="details-dialog" aria-labelledby="details-title">
+    <div class="dialog-header">
+      <h2 id="details-title">Order Details</h2>
+      <button id="close-details" type="button">Close</button>
+    </div>
+    <div id="details-content"></div>
+  </dialog>
+
+  <dialog id="new-order-dialog" aria-labelledby="new-order-title">
+    <div class="dialog-header">
+      <h2 id="new-order-title">Create Food Order</h2>
+      <button id="close-new-order" type="button">Close</button>
+    </div>
+
+    <form id="new-order-form" class="form-grid">
+      <label>
+        Order Code
+        <input
+          name="order_code"
+          placeholder="SF006"
+          maxlength="30"
+          pattern="[A-Za-z0-9_\-]+"
+          required
+        >
+      </label>
+
+      <label>
+        Restaurant
+        <select name="restaurant_id" id="restaurant-select" required>
+          <option value="">Select a restaurant</option>
+        </select>
+      </label>
+
+      <p id="restaurant-info" class="muted wide"></p>
+
+      <label>
+        Customer Name
+        <input name="customer_name" maxlength="100" required>
+      </label>
+
+      <label>
+        Customer Phone
+        <input
+          name="customer_phone"
+          type="tel"
+          maxlength="16"
+          pattern="\+?[0-9]{8,15}"
+          required
+        >
+      </label>
+
+      <label class="wide">
+        Delivery Address
+        <textarea name="delivery_address" maxlength="255" required></textarea>
+      </label>
+
+      <label>
+        Delivery Latitude
+        <input
+          name="latitude"
+          type="number"
+          min="-90"
+          max="90"
+          step="any"
+          required
+        >
+      </label>
+
+      <label>
+        Delivery Longitude
+        <input
+          name="longitude"
+          type="number"
+          min="-180"
+          max="180"
+          step="any"
+          required
+        >
+      </label>
+
+      <label>
+        Package Weight (kg)
+        <input
+          name="weight_kg"
+          type="number"
+          min="0.01"
+          max="100000"
+          step="0.01"
+          required
+        >
+      </label>
+
+      <label>
+        Delivery Deadline — Local Time
+        <input name="due_at" type="datetime-local" required>
+      </label>
+
+      <label>
+        Delivery Fee (VND)
+        <input
+          name="delivery_fee"
+          type="number"
+          min="0"
+          max="1000000"
+          step="1"
+          required
+        >
+      </label>
+
+      <label>
+        Payment Method
+        <select name="payment_method">
+          <option value="cash">Cash on Delivery</option>
+          <option value="prepaid">Prepaid</option>
+        </select>
+      </label>
+
+      <section class="wide">
+        <h3>Food Items</h3>
+        <div id="food-items"></div>
+        <button id="add-food-item" type="button">+ Add Item</button>
+      </section>
+
+      <section class="summary wide">
+        <p><span>Food Subtotal</span><strong id="food-subtotal"></strong></p>
+        <p><span>Delivery Fee</span><strong id="fee-summary"></strong></p>
+        <p><span>Total Amount</span><strong id="total-summary"></strong></p>
+        <p><span>COD to Collect</span><strong id="cod-summary"></strong></p>
+      </section>
+
+      <p class="muted wide">
+        Payment method records how the order will be settled.
+        This prototype does not process online payments.
+      </p>
+
+      <p id="new-order-error" class="error wide" role="alert"></p>
+
+      <div class="form-actions wide">
+        <button id="cancel-new-order" type="button">Cancel</button>
+        <button id="create-order-button" class="primary" type="submit">
+          Create Order
+        </button>
+      </div>
+    </form>
+  </dialog>
+
   <script>
-    const button = document.getElementById("reload");
-    const message = document.getElementById("message");
     const tbody = document.getElementById("orders");
-    const currency = new Intl.NumberFormat("vi-VN", {
+    const message = document.getElementById("message");
+    const pendingButton = document.getElementById("pending-button");
+    const allButton = document.getElementById("all-button");
+    const refreshButton = document.getElementById("refresh-button");
+    const newOrderButton = document.getElementById("new-order-button");
+
+    const detailsDialog = document.getElementById("details-dialog");
+    const detailsContent = document.getElementById("details-content");
+
+    const newOrderDialog = document.getElementById("new-order-dialog");
+    const newOrderForm = document.getElementById("new-order-form");
+    const newOrderError = document.getElementById("new-order-error");
+    const createOrderButton = document.getElementById("create-order-button");
+    const restaurantSelect = document.getElementById("restaurant-select");
+    const foodItems = document.getElementById("food-items");
+    const addFoodItemButton = document.getElementById("add-food-item");
+
+    const currency = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "VND"
+      currency: "VND",
+      maximumFractionDigits: 0
     });
 
+    let currentView = "pending";
+    let loadingOrders = false;
+    let creatingOrder = false;
+    let restaurants = [];
+    let detailsRequest = 0;
+
+    async function requestJson(url, options = {}) {
+      const response = await fetch(url, options);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "The request failed.");
+      }
+
+      return result;
+    }
+
+    function createElement(tag, text, className = "") {
+      const node = document.createElement(tag);
+      node.textContent = text;
+
+      if (className) node.className = className;
+
+      return node;
+    }
+
+    function appendDetails(container, fields) {
+      const list = document.createElement("dl");
+
+      for (const [label, value] of fields) {
+        list.append(
+          createElement("dt", label),
+          createElement("dd", value)
+        );
+      }
+
+      container.appendChild(list);
+    }
+
+    function setOrdersLoading(value) {
+      loadingOrders = value;
+      pendingButton.disabled = value;
+      allButton.disabled = value;
+      refreshButton.disabled = value;
+      newOrderButton.disabled = value;
+    }
+
     async function loadOrders() {
-      button.disabled = true;
-      message.textContent = "Đang tải...";
+      if (loadingOrders) return;
+
+      setOrdersLoading(true);
+      message.className = "muted";
+      message.textContent = "Loading orders...";
       tbody.replaceChildren();
 
       try {
-        const response = await fetch("/api/orders/pending");
-        if (!response.ok) {
-          throw new Error("Không thể tải danh sách đơn hàng.");
-        }
-
-        const result = await response.json();
+        const result = await requestJson(
+          currentView === "pending"
+            ? "/api/orders/pending"
+            : "/api/orders"
+        );
 
         for (const order of result.data) {
           const row = document.createElement("tr");
-          const values = [
+
+          for (const value of [
             order.order_code,
             order.customer_name,
-            currency.format(Number(order.total_amount)),
-            "Đang chờ"
-          ];
-
-          for (const value of values) {
-            const cell = document.createElement("td");
-            cell.textContent = value;
-            row.appendChild(cell);
+            currency.format(Number(order.total_amount))
+          ]) {
+            row.appendChild(createElement("td", value));
           }
 
+          const statusCell = document.createElement("td");
+          const status = createElement("span", order.status, "status");
+
+          if ([
+            "pending", "confirmed", "assigned", "delivering",
+            "completed", "failed", "cancelled"
+          ].includes(order.status)) {
+            status.classList.add(order.status);
+          }
+
+          statusCell.appendChild(status);
+          row.appendChild(statusCell);
+
+          const actionCell = document.createElement("td");
+          const button = createElement("button", "View Details");
+          button.type = "button";
+
+          button.addEventListener("click", async () => {
+            button.disabled = true;
+
+            try {
+              await showDetails(order.id);
+            } finally {
+              button.disabled = false;
+            }
+          });
+
+          actionCell.appendChild(button);
+          row.appendChild(actionCell);
           tbody.appendChild(row);
         }
 
-        message.textContent = result.data.length
-          ? `Có ${result.data.length} đơn hàng đang chờ.`
-          : "Không có đơn hàng đang chờ.";
+        message.textContent = `${result.data.length} orders found.`;
       } catch (error) {
-        message.textContent = "Tải dữ liệu thất bại. Hãy kiểm tra backend và thử lại.";
+        message.className = "error";
+        message.textContent = error.message;
       } finally {
-        button.disabled = false;
+        setOrdersLoading(false);
       }
     }
 
-    button.addEventListener("click", loadOrders);
+    async function showDetails(id) {
+      const thisRequest = ++detailsRequest;
+      detailsContent.textContent = "Loading order details...";
+
+      if (!detailsDialog.open) detailsDialog.showModal();
+
+      try {
+        const result = await requestJson(`/api/orders/${id}`);
+
+        if (
+          thisRequest !== detailsRequest ||
+          !detailsDialog.open
+        ) {
+          return;
+        }
+
+        const order = result.data;
+        const container = document.createElement("div");
+
+        const payment = order.payment_method === "cash"
+          ? "Cash on Delivery"
+          : order.payment_method === "prepaid"
+            ? "Prepaid"
+            : "Not recorded";
+
+        appendDetails(container, [
+          ["Order Code", order.order_code],
+          ["Restaurant", order.restaurant_name || "Not selected"],
+          ["Pickup Address", order.pickup_address || "Not recorded"],
+          ["Restaurant Phone", order.restaurant_phone || "Not recorded"],
+          ["Customer", order.customer_name],
+          ["Customer Phone", order.customer_phone],
+          ["Delivery Address", order.delivery_address],
+          ["Payment Method", payment],
+          ["COD to Collect", currency.format(Number(order.cod_amount || 0))],
+          ["Status", order.status],
+          ["Assigned Driver", order.assigned_driver || "Unassigned"],
+          [
+            "COD Collected",
+            order.cod_collected == null
+              ? "Not recorded"
+              : currency.format(Number(order.cod_collected))
+          ],
+          [
+            "Delivery Confirmation",
+            order.delivery_note || "Not recorded"
+          ],
+          [
+            "Delivered At",
+            order.delivered_at
+              ? new Date(order.delivered_at).toLocaleString("en-GB")
+              : "Not completed"
+          ],
+          ["Created At", new Date(order.created_at).toLocaleString("en-GB")]
+        ]);
+
+        container.appendChild(createElement("h3", "Food Items"));
+
+        const items = Array.isArray(result.items) ? result.items : [];
+
+        if (items.length) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "table-wrapper";
+
+          const table = document.createElement("table");
+          const head = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+
+          for (const label of ["Item", "Qty", "Unit Price", "Amount"]) {
+            headerRow.appendChild(createElement("th", label));
+          }
+
+          head.appendChild(headerRow);
+          table.appendChild(head);
+
+          const body = document.createElement("tbody");
+
+          for (const item of items) {
+            const row = document.createElement("tr");
+
+            for (const value of [
+              item.item_name,
+              item.quantity,
+              currency.format(Number(item.unit_price)),
+              currency.format(Number(item.line_total))
+            ]) {
+              row.appendChild(createElement("td", value));
+            }
+
+            body.appendChild(row);
+          }
+
+          table.appendChild(body);
+          wrapper.appendChild(table);
+          container.appendChild(wrapper);
+        } else {
+          container.appendChild(
+            createElement("p", "No food items recorded.")
+          );
+        }
+
+        container.appendChild(createElement("h3", "Payment Summary"));
+
+        appendDetails(container, [
+          [
+            "Food Subtotal",
+            order.food_subtotal == null
+              ? "Not recorded"
+              : currency.format(Number(order.food_subtotal))
+          ],
+          ["Delivery Fee", currency.format(Number(order.delivery_fee || 0))],
+          ["Total Amount", currency.format(Number(order.total_amount))]
+        ]);
+
+        // Delivery photo uploaded by the assigned driver.
+        const proofSection = document.createElement("section");
+        proofSection.style.marginTop = "24px";
+
+        proofSection.appendChild(
+          createElement("h3", "Delivery Photo")
+        );
+
+        const proofMessage = createElement(
+          "p",
+          "Loading delivery photo..."
+        );
+        proofSection.appendChild(proofMessage);
+
+        const proofUrl = `/api/orders/${encodeURIComponent(order.id)}/proof`;
+
+        const proofImage = document.createElement("img");
+        proofImage.alt = "Delivery photo uploaded by the driver";
+        proofImage.hidden = true;
+        proofImage.style.cssText =
+          "display:block;max-width:100%;max-height:480px;" +
+          "object-fit:contain;border-radius:12px;margin-top:12px;border:1.5px solid #94a3b8;";
+
+        const proofLink = createElement("a", "Open full-size photo");
+        proofLink.href = proofUrl;
+        proofLink.target = "_blank";
+        proofLink.rel = "noopener noreferrer";
+        proofLink.hidden = true;
+
+        proofImage.onload = () => {
+          proofMessage.textContent =
+            "Uploaded by the driver as delivery evidence.";
+          proofImage.hidden = false;
+          proofLink.hidden = false;
+        };
+
+        proofImage.onerror = () => {
+          proofImage.remove();
+          proofLink.remove();
+          proofMessage.textContent =
+            "No delivery photo is available, or the photo could not be loaded.";
+        };
+
+        proofSection.appendChild(proofImage);
+        proofSection.appendChild(proofLink);
+        container.appendChild(proofSection);
+        proofImage.src = proofUrl;
+
+        container.appendChild(
+          createElement("h3", "COD Handover")
+        );
+
+        const requiresHandover =
+          order.payment_method === "cash" &&
+          Number(order.cod_amount) > 0;
+
+        let handoverStatus = "Not required";
+
+        if (requiresHandover) {
+          if (order.cod_settled_at) {
+            handoverStatus = "Confirmed";
+          } else if (order.status === "completed") {
+            handoverStatus = "Awaiting handover";
+          } else {
+            handoverStatus = "Not ready — order not completed";
+          }
+        }
+
+        appendDetails(container, [
+          ["Handover Status", handoverStatus],
+          [
+            "Amount Received by Manager",
+            order.cod_settled_at
+              ? currency.format(Number(order.cod_received_amount))
+              : "Not recorded"
+          ],
+          [
+            "Confirmed By",
+            order.cod_confirmed_by || "Not recorded"
+          ],
+          [
+            "Confirmed At",
+            order.cod_settled_at
+              ? new Date(order.cod_settled_at).toLocaleString("en-GB")
+              : "Not recorded"
+          ]
+        ]);
+
+        if (
+          requiresHandover &&
+          order.status === "completed" &&
+          !order.cod_settled_at
+        ) {
+          const settlementForm = document.createElement("form");
+          settlementForm.style.cssText =
+            "display:grid;gap:12px;margin:20px 0;";
+
+          const amountLabel = createElement(
+            "label",
+            "Amount actually received from the driver (VND)"
+          );
+
+          const amountInput = document.createElement("input");
+          amountInput.type = "number";
+          amountInput.min = "1";
+          amountInput.step = "1";
+          amountInput.required = true;
+          amountInput.placeholder = "Enter the received amount";
+          amountLabel.appendChild(amountInput);
+
+          const confirmationLabel = document.createElement("label");
+          const confirmationInput = document.createElement("input");
+          confirmationInput.type = "checkbox";
+          confirmationInput.required = true;
+
+          confirmationLabel.append(
+            confirmationInput,
+            document.createTextNode(
+              " I confirm that I have actually received this money."
+            )
+          );
+
+          const settlementMessage = createElement("p", "");
+          settlementMessage.setAttribute("role", "status");
+
+          const settlementButton = createElement(
+            "button",
+            "Confirm COD Handover",
+            "primary"
+          );
+          settlementButton.type = "submit";
+
+          settlementForm.append(
+            amountLabel,
+            confirmationLabel,
+            settlementButton,
+            settlementMessage
+          );
+
+          let savingSettlement = false;
+
+          settlementForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            if (savingSettlement || !settlementForm.reportValidity()) return;
+
+            const amount = Number(amountInput.value);
+
+            if (
+              !Number.isSafeInteger(amount) ||
+              amount <= 0 ||
+              amount !== Number(order.cod_amount) ||
+              amount !== Number(order.cod_collected)
+            ) {
+              settlementMessage.textContent =
+                "Received amount must match the required and collected COD.";
+              return;
+            }
+
+            savingSettlement = true;
+            settlementButton.disabled = true;
+            settlementMessage.textContent = "Saving COD handover...";
+
+            try {
+              await requestJson(
+                `/api/orders/${encodeURIComponent(order.id)}/cod-settlement`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ received_amount: amount })
+                }
+              );
+
+              settlementMessage.textContent = "COD handover confirmed.";
+
+              if (
+                detailsDialog.open &&
+                thisRequest === detailsRequest
+              ) {
+                await showDetails(order.id);
+              }
+            } catch (error) {
+              settlementMessage.textContent = error.message;
+              savingSettlement = false;
+              settlementButton.disabled = false;
+            }
+          });
+
+          container.appendChild(settlementForm);
+        }
+
+        detailsContent.replaceChildren(container);
+      } catch (error) {
+        if (thisRequest === detailsRequest && detailsDialog.open) {
+          detailsContent.textContent = error.message;
+        }
+      }
+    }
+
+    function field(name) {
+      return newOrderForm.elements.namedItem(name);
+    }
+
+    function syncItemButtons() {
+      const rows = foodItems.querySelectorAll(".food-row");
+
+      rows.forEach(row => {
+        row.querySelector(".remove-item").disabled =
+          creatingOrder || rows.length === 1;
+      });
+
+      addFoodItemButton.disabled =
+        creatingOrder || rows.length >= 50;
+    }
+
+    function updateTotals() {
+      let subtotal = 0;
+
+      for (const row of foodItems.querySelectorAll(".food-row")) {
+        const quantity = Number(row.querySelector(".item-quantity").value);
+        const price = Number(row.querySelector(".item-price").value);
+
+        const amount = Number.isFinite(quantity * price)
+          ? quantity * price
+          : 0;
+
+        row.querySelector("output").textContent = currency.format(amount);
+        subtotal += amount;
+      }
+
+      const rawFee = Number(field("delivery_fee").value);
+      const fee = Number.isFinite(rawFee) ? rawFee : 0;
+      const total = subtotal + fee;
+
+      const cod = field("payment_method").value === "cash"
+        ? total
+        : 0;
+
+      document.getElementById("food-subtotal").textContent =
+        currency.format(subtotal);
+
+      document.getElementById("fee-summary").textContent =
+        currency.format(fee);
+
+      document.getElementById("total-summary").textContent =
+        currency.format(total);
+
+      document.getElementById("cod-summary").textContent =
+        currency.format(cod);
+    }
+
+    function addFoodRow() {
+      if (creatingOrder) return;
+      if (foodItems.querySelectorAll(".food-row").length >= 50) return;
+
+      const row = document.createElement("div");
+      row.className = "food-row";
+
+      const definitions = [
+        {
+          label: "Item Name",
+          className: "item-name",
+          type: "text",
+          maxLength: 150,
+          placeholder: "Chicken Rice"
+        },
+        {
+          label: "Quantity",
+          className: "item-quantity",
+          type: "number",
+          min: 1,
+          max: 100,
+          step: 1,
+          value: 1
+        },
+        {
+          label: "Unit Price (VND)",
+          className: "item-price",
+          type: "number",
+          min: 0,
+          max: 1000000000,
+          step: 1,
+          placeholder: "45000"
+        }
+      ];
+
+      for (const definition of definitions) {
+        const label = createElement("label", definition.label);
+        const input = document.createElement("input");
+
+        input.className = definition.className;
+        input.type = definition.type;
+        input.required = true;
+
+        for (const property of [
+          "min", "max", "step", "maxLength", "placeholder", "value"
+        ]) {
+          if (definition[property] !== undefined) {
+            input[property] = definition[property];
+          }
+        }
+
+        input.addEventListener("input", updateTotals);
+        label.appendChild(input);
+        row.appendChild(label);
+      }
+
+      const amountLabel = createElement("label", "Amount");
+      amountLabel.appendChild(document.createElement("output"));
+      row.appendChild(amountLabel);
+
+      const remove = createElement("button", "Remove", "remove-item");
+      remove.type = "button";
+
+      remove.addEventListener("click", () => {
+        if (creatingOrder) return;
+
+        row.remove();
+        syncItemButtons();
+        updateTotals();
+      });
+
+      row.appendChild(remove);
+      foodItems.appendChild(row);
+
+      syncItemButtons();
+      updateTotals();
+    }
+
+    function localDateTime(date) {
+      const shifted = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000
+      );
+
+      return shifted.toISOString().slice(0, 16);
+    }
+
+    function showRestaurantInfo() {
+      const restaurant = restaurants.find(
+        item => item.id === Number(restaurantSelect.value)
+      );
+
+      document.getElementById("restaurant-info").textContent =
+        restaurant
+          ? `Pickup: ${restaurant.address} · Zone: ${restaurant.service_zone} · Preparation estimate: ${restaurant.estimated_prep_minutes} min.`
+          : "Select the restaurant where the driver will collect the food.";
+    }
+
+    async function openNewOrder() {
+      if (creatingOrder) return;
+
+      newOrderForm.reset();
+      newOrderError.textContent = "";
+      foodItems.replaceChildren();
+
+      field("latitude").value = 10.782;
+      field("longitude").value = 106.708;
+      field("weight_kg").value = 1;
+      field("delivery_fee").value = 15000;
+      field("payment_method").value = "cash";
+
+      field("due_at").value = localDateTime(
+        new Date(Date.now() + 45 * 60000)
+      );
+
+      field("due_at").min = localDateTime(new Date());
+
+      restaurantSelect.replaceChildren();
+
+      const placeholder = createElement("option", "Select a restaurant");
+      placeholder.value = "";
+      restaurantSelect.appendChild(placeholder);
+
+      restaurants = [];
+      showRestaurantInfo();
+      addFoodRow();
+
+      newOrderDialog.showModal();
+      restaurantSelect.disabled = true;
+      createOrderButton.disabled = true;
+
+      try {
+        const result = await requestJson("/api/orders/restaurants");
+        restaurants = result.data;
+
+        for (const restaurant of restaurants) {
+          const option = createElement("option", restaurant.name);
+          option.value = restaurant.id;
+          restaurantSelect.appendChild(option);
+        }
+
+        if (!restaurants.length) {
+          newOrderError.textContent =
+            "No restaurant is currently accepting orders.";
+        }
+      } catch (error) {
+        newOrderError.textContent = error.message;
+      } finally {
+        restaurantSelect.disabled = false;
+        createOrderButton.disabled = restaurants.length === 0;
+      }
+    }
+
+    function closeNewOrder() {
+      if (!creatingOrder) newOrderDialog.close();
+    }
+
+    newOrderForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (creatingOrder) return;
+
+      creatingOrder = true;
+      createOrderButton.disabled = true;
+      createOrderButton.textContent = "Creating...";
+      newOrderError.textContent = "";
+
+      try {
+        const body = Object.fromEntries(new FormData(newOrderForm));
+
+        body.restaurant_id = Number(body.restaurant_id);
+        body.latitude = Number(body.latitude);
+        body.longitude = Number(body.longitude);
+        body.weight_kg = Number(body.weight_kg);
+        body.delivery_fee = Number(body.delivery_fee);
+        body.due_at = new Date(body.due_at).toISOString();
+
+        body.items = Array.from(
+          foodItems.querySelectorAll(".food-row"),
+          row => ({
+            item_name: row.querySelector(".item-name").value,
+            quantity: Number(row.querySelector(".item-quantity").value),
+            unit_price: Number(row.querySelector(".item-price").value)
+          })
+        );
+
+        syncItemButtons();
+
+        await requestJson("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        newOrderDialog.close();
+        await loadOrders();
+      } catch (error) {
+        newOrderError.textContent = error.message;
+      } finally {
+        creatingOrder = false;
+        createOrderButton.disabled = restaurants.length === 0;
+        createOrderButton.textContent = "Create Order";
+        syncItemButtons();
+      }
+    });
+
+    function switchView(view) {
+      if (loadingOrders) return;
+
+      currentView = view;
+      pendingButton.classList.toggle("active", view === "pending");
+      allButton.classList.toggle("active", view === "all");
+
+      loadOrders();
+    }
+
+    pendingButton.addEventListener("click", () => switchView("pending"));
+    allButton.addEventListener("click", () => switchView("all"));
+    refreshButton.addEventListener("click", loadOrders);
+    newOrderButton.addEventListener("click", openNewOrder);
+
+    document.getElementById("close-details").addEventListener("click", () => {
+      detailsRequest++;
+      detailsDialog.close();
+    });
+
+    document.getElementById("close-new-order")
+      .addEventListener("click", closeNewOrder);
+
+    document.getElementById("cancel-new-order")
+      .addEventListener("click", closeNewOrder);
+
+    newOrderDialog.addEventListener("cancel", event => {
+      if (creatingOrder) event.preventDefault();
+    });
+
+    restaurantSelect.addEventListener("change", showRestaurantInfo);
+    field("delivery_fee").addEventListener("input", updateTotals);
+    field("payment_method").addEventListener("change", updateTotals);
+    addFoodItemButton.addEventListener("click", addFoodRow);
+
     loadOrders();
   </script>
+
+  <script>
+(() => {
+  function initialiseOrderSearch() {
+    const tbody = document.getElementById("orders");
+    const table = tbody?.closest(".table-wrapper");
+    if (!table || document.getElementById("order-search")) return;
+
+    // 1. KPI Summary Strip
+    const kpiGrid = document.createElement("div");
+    kpiGrid.className = "sf-kpi-grid";
+    kpiGrid.innerHTML = `
+      <div class="sf-kpi-card kpi-total">
+        <span class="sf-kpi-label">Loaded Orders</span>
+        <strong class="sf-kpi-value" id="kpi-count">0</strong>
+        <span class="sf-kpi-sub" id="kpi-view-label">In current tab</span>
+      </div>
+      <div class="sf-kpi-card kpi-pending">
+        <span class="sf-kpi-label">Awaiting Action</span>
+        <strong class="sf-kpi-value" id="kpi-pending">0</strong>
+        <span class="sf-kpi-sub">Pending & Confirmed</span>
+      </div>
+      <div class="sf-kpi-card kpi-active">
+        <span class="sf-kpi-label">In Progress / Done</span>
+        <strong class="sf-kpi-value" id="kpi-fulfilled">0</strong>
+        <span class="sf-kpi-sub">Assigned, Delivering & Completed</span>
+      </div>
+      <div class="sf-kpi-card kpi-value">
+        <span class="sf-kpi-label">Visible Order Value</span>
+        <strong class="sf-kpi-value" id="kpi-amount">₫0</strong>
+        <span class="sf-kpi-sub">Sum of filtered rows</span>
+      </div>
+    `;
+    table.before(kpiGrid);
+
+    // 2. Enhanced Search, Categorisation & Sort Panel
+    const box = document.createElement("div");
+    box.className = "sf-control-panel";
+
+    const topRow = document.createElement("div");
+    topRow.className = "sf-search-top";
+
+    const searchWrap = document.createElement("div");
+    searchWrap.className = "sf-search-input-wrap";
+    searchWrap.innerHTML = `
+      <svg class="sf-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    `;
+
+    const input = document.createElement("input");
+    input.id = "order-search";
+    input.type = "search";
+    input.placeholder = "Search by order code (e.g. SF001) or customer name...";
+    input.maxLength = 150;
+    input.setAttribute("aria-label", "Search orders");
+    input.setAttribute("aria-describedby", "order-search-status");
+    searchWrap.appendChild(input);
+
+    const sortGroup = document.createElement("div");
+    sortGroup.className = "sf-sort-group";
+
+    const sortLabel = document.createElement("label");
+    sortLabel.htmlFor = "order-sort";
+    sortLabel.className = "sf-sort-label";
+    sortLabel.textContent = "Sort by:";
+
+    const sortSelect = document.createElement("select");
+    sortSelect.id = "order-sort";
+    sortSelect.className = "sf-sort-select";
+    sortSelect.innerHTML = `
+      <option value="default">Newest First (Default)</option>
+      <option value="amount-desc">Total Amount: High → Low</option>
+      <option value="amount-asc">Total Amount: Low → High</option>
+      <option value="customer-asc">Customer Name: A → Z</option>
+      <option value="code-asc">Order Code: A → Z</option>
+    `;
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.textContent = "Reset Filters";
+    clear.disabled = true;
+
+    sortGroup.append(sortLabel, sortSelect, clear);
+    topRow.append(searchWrap, sortGroup);
+
+    // 3. Status Category Chips
+    const categoryBar = document.createElement("div");
+    categoryBar.className = "sf-category-bar";
+
+    const categories = [
+      { key: "all", label: "All Statuses" },
+      { key: "pending", label: "Pending" },
+      { key: "confirmed", label: "Confirmed" },
+      { key: "assigned", label: "Assigned" },
+      { key: "delivering", label: "Delivering" },
+      { key: "completed", label: "Completed" },
+      { key: "failed", label: "Failed / Cancelled" }
+    ];
+
+    let activeCategory = "all";
+    const chipElements = new Map();
+
+    for (const cat of categories) {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "sf-chip" + (cat.key === "all" ? " active" : "");
+      chip.dataset.status = cat.key;
+
+      const textSpan = document.createElement("span");
+      textSpan.textContent = cat.label;
+
+      const badge = document.createElement("span");
+      badge.className = "sf-chip-badge";
+      badge.textContent = "0";
+
+      chip.append(textSpan, badge);
+      chip.addEventListener("click", () => {
+        activeCategory = cat.key;
+        for (const [k, btn] of chipElements.entries()) {
+          btn.classList.toggle("active", k === activeCategory);
+        }
+        filterAndSortOrders();
+      });
+
+      chipElements.set(cat.key, chip);
+      categoryBar.appendChild(chip);
+    }
+
+    const status = document.createElement("p");
+    status.id = "order-search-status";
+    status.className = "muted";
+    status.setAttribute("role", "status");
+    status.style.margin = "0";
+    status.style.fontSize = "12.5px";
+
+    box.append(topRow, categoryBar, status);
+    table.before(box);
+
+    let isSorting = false;
+
+    function normalise(value) {
+      return String(value).normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đĐ]/g, "d")
+        .toLowerCase().trim();
+    }
+
+    function parseAmount(text) {
+      const digits = String(text || "").replace(/[^0-9.-]+/g, "");
+      return Number(digits) || 0;
+    }
+
+    function filterAndSortOrders() {
+      if (isSorting) return;
+
+      const rows = Array.from(tbody.rows);
+
+      // Assign original index once per loaded batch to preserve default order
+      rows.forEach((r, idx) => {
+        if (r.dataset.origIdx === undefined) {
+          r.dataset.origIdx = String(idx);
+        }
+      });
+
+      // Count statuses across all loaded rows in current tab
+      const counts = {
+        all: rows.length,
+        pending: 0,
+        confirmed: 0,
+        assigned: 0,
+        delivering: 0,
+        completed: 0,
+        failed: 0
+      };
+
+      for (const row of rows) {
+        const st = (row.cells[3]?.textContent || "").trim().toLowerCase();
+        if (st === "cancelled" || st === "failed") {
+          counts.failed++;
+        } else if (counts[st] !== undefined) {
+          counts[st]++;
+        }
+      }
+
+      for (const [key, chip] of chipElements.entries()) {
+        const badge = chip.querySelector(".sf-chip-badge");
+        if (badge) badge.textContent = String(counts[key] ?? 0);
+      }
+
+      // Sort rows if needed
+      const sortMode = sortSelect.value;
+      const sortedRows = [...rows].sort((a, b) => {
+        if (sortMode === "amount-desc") {
+          return parseAmount(b.cells[2]?.textContent) - parseAmount(a.cells[2]?.textContent);
+        }
+        if (sortMode === "amount-asc") {
+          return parseAmount(a.cells[2]?.textContent) - parseAmount(b.cells[2]?.textContent);
+        }
+        if (sortMode === "customer-asc") {
+          return (a.cells[1]?.textContent || "").localeCompare(b.cells[1]?.textContent || "");
+        }
+        if (sortMode === "code-asc") {
+          return (a.cells[0]?.textContent || "").localeCompare(b.cells[0]?.textContent || "");
+        }
+        return Number(a.dataset.origIdx) - Number(b.dataset.origIdx);
+      });
+
+      // Re-append only if order changed
+      const orderChanged = sortedRows.some((r, i) => r !== rows[i]);
+      if (orderChanged) {
+        isSorting = true;
+        tbody.append(...sortedRows);
+        isSorting = false;
+      }
+
+      // Filter by search terms & category chip
+      const terms = normalise(input.value).split(/\s+/).filter(Boolean);
+      let matched = 0;
+      let visibleSum = 0;
+
+      for (const row of sortedRows) {
+        const text = normalise([
+          row.cells[0]?.textContent || "",
+          row.cells[1]?.textContent || ""
+        ].join(" "));
+
+        const rowStatus = (row.cells[3]?.textContent || "").trim().toLowerCase();
+        const statusMatch =
+          activeCategory === "all" ||
+          (activeCategory === "failed"
+            ? rowStatus === "failed" || rowStatus === "cancelled"
+            : rowStatus === activeCategory);
+
+        const termMatch = terms.every(term => text.includes(term));
+        const visible = statusMatch && termMatch;
+
+        row.hidden = !visible;
+        if (visible) {
+          matched++;
+          visibleSum += parseAmount(row.cells[2]?.textContent);
+        }
+      }
+
+      // Update KPI cards
+      document.getElementById("kpi-count").textContent = String(rows.length);
+      document.getElementById("kpi-pending").textContent = String(counts.pending + counts.confirmed);
+      document.getElementById("kpi-fulfilled").textContent = String(
+        counts.assigned + counts.delivering + counts.completed
+      );
+      document.getElementById("kpi-amount").textContent = currency.format(visibleSum);
+
+      const hasActiveFilter =
+        input.value.length > 0 ||
+        activeCategory !== "all" ||
+        sortSelect.value !== "default";
+
+      clear.disabled = !hasActiveFilter;
+
+      status.textContent = (terms.length || activeCategory !== "all")
+        ? `Showing ${matched} of ${rows.length} loaded orders. ` +
+          (matched
+            ? "Filters apply to the selected tab."
+            : "No matching orders. Try resetting filters or switching to All Orders.")
+        : `Showing all ${rows.length} loaded orders in the selected tab.`;
+    }
+
+    input.addEventListener("input", filterAndSortOrders);
+    sortSelect.addEventListener("change", filterAndSortOrders);
+
+    clear.addEventListener("click", () => {
+      input.value = "";
+      sortSelect.value = "default";
+      activeCategory = "all";
+      for (const [k, btn] of chipElements.entries()) {
+        btn.classList.toggle("active", k === "all");
+      }
+      filterAndSortOrders();
+      input.focus();
+    });
+
+    new MutationObserver(() => {
+      if (!isSorting) filterAndSortOrders();
+    }).observe(tbody, { childList: true });
+
+    filterAndSortOrders();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded", initialiseOrderSearch, { once: true }
+    );
+  } else {
+    initialiseOrderSearch();
+  }
+})();
+</script>
 </body>
 </html>
