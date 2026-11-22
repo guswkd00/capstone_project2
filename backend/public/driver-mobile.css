@@ -1231,3 +1231,106 @@ main.df-driver-main {
     scroll-behavior: auto !important;
   }
 }
+/* Stop-order, bundling and prep-time advisor */
+
+#route-panel .route-sum {
+  flex-wrap: wrap;
+}
+
+#route-panel .advisor-stat {
+  flex: 1;
+  min-width: 100px;
+  background: #f6f8fa;
+  border-radius: 8px;
+  padding: 9px;
+}
+
+#route-panel .advisor-stat small,
+#route-panel .advisor-stat strong {
+  display: block;
+}
+
+#route-panel .advisor-stat small {
+  font-size: 10px;
+  color: #7b838c;
+}
+
+#route-panel .advisor-stat strong {
+  font-size: 12px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+#route-panel .advisor-card {
+  border: 1px solid #eceff2;
+  padding: 13px;
+  border-radius: 12px;
+  margin: 14px 0;
+  background: white;
+}
+
+#route-panel .advisor-card h3 {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+
+#route-panel .advisor-card p {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+#route-panel .advisor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 10px 0;
+}
+
+#route-panel .advisor-grid .advisor-stat {
+  min-width: 0;
+}
+
+#route-panel .advisor-note {
+  font-size: 10px;
+  color: #7b838c;
+  line-height: 1.6;
+}
+
+#route-panel .advisor-warning {
+  font-size: 10px;
+  color: #9c5a0c;
+  background: #fff5e6;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.advisor-badge {
+  display: inline-block;
+  background: #fff0e9;
+  color: #c74627;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.advisor-badge.positive {
+  background: #e7f7ee;
+  color: #078f46;
+}
+
+.sf-app .route-shortcut {
+  width: 100%;
+  border: 1px solid #f4c6b9;
+  background: #fff6f2;
+  color: #ee4d2d;
+  border-radius: 9px;
+  margin: 0 0 12px;
+  font-size: 11px;
+}
+
+#route-panel li > small {
+  display: block;
+  margin-top: 4px;
+}
