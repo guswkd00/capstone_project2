@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>My Reports · ShopeeFood</title>
+
+  <script
+    src="/auth-client.js?v=manager-shell-3"
+    data-role="manager"
+  ></script>
+   <script
+    src="/app-shell.js?v=manager-shell-3"
+    defer
+  ></script>
+
+  <link
+    rel="stylesheet"
+    href="/app-theme.css?v=manager-shell-3"
+  >
+
+  <link
+    rel="stylesheet"
+    href="/manager-reports.css?v=2"
+  >
+
+  <script
+    src="/my-reports.js?v=1"
+    defer
+  ></script>
+</head>
+
+<body class="sf-app">
+  <header>
+    <nav aria-label="Main navigation">
+      <a href="/dashboard.html">
+        Dashboard
+      </a>
+
+      <a href="/report-editor.html">
+        Create Report
+      </a>
+
+      <a href="/my-reports.html">
+        My Reports
+      </a>
+    </nav>
+  </header>
+
+  <main class="manager-report-main">
+    <div class="mr-page-heading">
+      <div>
+        <h1>My Reports</h1>
+
+        <p>
+          Continue your drafts, view submitted reports
+          and manage your report history.
+        </p>
+      </div>
+
+      <div class="mr-page-actions">
+        <a
+          class="mr-button mr-button-primary"
+          href="/report-editor.html"
+        >
+          + Create Report
+        </a>
+      </div>
+    </div>
+
+    <p
+      id="ml-message"
+      class="mr-status"
+      role="status"
+      aria-live="polite"
+    >
+      Loading your reports...
+    </p>
+
+    <form
+      id="ml-filter-form"
+      class="mr-list-toolbar"
+    >
+      <div class="mr-field">
+        <label for="ml-search">
+          Search
+        </label>
+
+        <input
+          id="ml-search"
+          name="q"
+          type="search"
+          maxlength="100"
+          placeholder="Search report title..."
+          disabled
+        >
+      </div>
+
+      <div class="mr-field">
+        <label for="ml-type">
+          Report type
+        </label>
+
+        <select
+          id="ml-type"
+          name="type"
+          disabled
+        >
+          <option value="all">
+            All types
+          </option>
+
+          <option value="delivery">
+            Delivery Operations
+          </option>
+
+          <option value="cod">
+            COD
+          </option>
+
+          <option value="maintenance">
+            Vehicle Maintenance
+          </option>
+
+          <option value="expense">
+            Expenses
+          </option>
+
+          <option value="incident">
+            Incidents
+          </option>
+
+          <option value="general">
+            General Operations
+          </option>
+        </select>
+      </div>
+
+      <div class="mr-field">
+        <label for="ml-status">
+          Status
+        </label>
+
+        <select
+          id="ml-status"
+          name="status"
+          disabled
+        >
+          <option value="all">
+            All statuses
+          </option>
+
+          <option value="draft">
+            Draft
+          </option>
+
+          <option value="submitted">
+            Submitted
+          </option>
+        </select>
+      </div>
+
+      <button
+        id="ml-refresh"
+        class="mr-button mr-button-secondary"
+        type="submit"
+        disabled
+      >
+        Refresh
+      </button>
+    </form>
+
+    <p
+      id="ml-summary"
+      class="mr-list-summary"
+      aria-live="polite"
+    ></p>
+
+    <div class="mr-table-wrap">
+      <table class="mr-table">
+        <thead>
+          <tr>
+            <th scope="col">
+              Report
+            </th>
+
+            <th scope="col">
+              Type
+            </th>
+
+            <th scope="col">
+              Reporting period
+            </th>
+
+            <th scope="col">
+              Status
+            </th>
+
+            <th scope="col">
+              Last updated
+            </th>
+
+            <th scope="col">
+              Actions
+            </th>
+          </tr>
+        </thead>
+
+        <tbody id="ml-rows">
+          <tr>
+            <td
+              colspan="6"
+              class="mr-empty"
+            >
+              Loading your reports...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mr-pagination">
+      <button
+        id="ml-more"
+        class="mr-button mr-button-secondary"
+        type="button"
+        hidden
+        disabled
+      >
+        Load more reports
+      </button>
+    </div>
+  </main>
+</body>
+</html>
