@@ -59,6 +59,10 @@ app.get("/api/health", async (req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use(
+  "/api/integrations",
+  require("./src/order-import").createImportRouter(pool)
+);
 
 function protectWrites(req, res, next) {
   if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
