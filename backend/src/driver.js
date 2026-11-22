@@ -81,11 +81,14 @@ router.use(async (req, res, next) => {
           d.status,
           d.latitude,
           d.longitude,
-          z.name AS service_zone,
-          v.plate_number,
-          v.vehicle_type,
-          v.capacity_kg,
-          v.status AS vehicle_status
+z.name AS service_zone,
+z.active AS zone_active,
+v.maintenance_due,
+v.plate_number,
+v.vehicle_type,
+v.capacity_kg,
+v.cost_per_km,
+v.status AS vehicle_status
         FROM drivers d
         LEFT JOIN zones z ON z.id = d.zone_id
         LEFT JOIN vehicles v ON v.id = d.vehicle_id
@@ -872,64 +875,79 @@ router.get("/route-plan", async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
 
   try {
-    const { planDriverRoute } = require("./route-planner");
+    const {
+      buildAdvice,
+    } = require("./driver-route-advisor");
 
     const [orders] = await pool.execute(
-      `SELECT
-         o.id,
-         o.order_code,
-         o.delivery_address,
-         o.latitude,
-         o.longitude,
-         o.picked_up_at,
-         r.address AS pickup_address,
-         r.latitude AS pickup_latitude,
-         r.longitude AS pickup_longitude
-       FROM orders o
-       LEFT JOIN restaurants r ON r.id = o.restaurant_id
-       WHERE o.driver_id = ?
-         AND o.status IN ('assigned', 'delivering')
-       ORDER BY o.id`,
+      `
+        SELECT
+          o.id,
+          o.order_code,
+          o.zone_id,
+          o.weight_kg,
+          o.delivery_address,
+          o.latitude,
+          o.longitude,
+          o.picked_up_at,
+          o.created_at,
+          o.due_at,
+          o.delivery_fee,
+
+          r.name AS restaurant_name,
+          r.address AS pickup_address,
+          r.latitude AS pickup_latitude,
+          r.longitude AS pickup_longitude,
+          r.estimated_prep_minutes
+
+        FROM orders o
+
+        LEFT JOIN restaurants r
+          ON r.id = o.restaurant_id
+
+        WHERE o.driver_id = ?
+          AND o.status IN ('assigned', 'delivering')
+
+        ORDER BY o.id
+      `,
       [req.driver.id]
     );
 
     let plan;
 
-    if (!orders.length) {
-      plan = {
-        stops: [],
-        estimated_total_km: 0,
-        estimated_travel_minutes: 0,
-        method: "No active deliveries."
-      };
-    } else {
-      try {
-        plan = planDriverRoute(req.driver, orders);
-      } catch (error) {
-        return res.status(422).json({
-          message: error.message
-        });
-      }
+    try {
+      plan = buildAdvice(req.driver, orders);
+    } catch (error) {
+      return res.status(422).json({
+        message: error.message,
+      });
     }
 
     return res.json({
       data: {
         ...plan,
+
         generated_at: new Date().toISOString(),
+
         position_note:
-          "Starts from stored driver coordinates; GPS freshness is not assessed.",
+          "Starts from stored driver coordinates; " +
+          "GPS freshness is not assessed.",
+
         estimate_note:
-          "Modeled distance and travel time. Excludes service time and live traffic. Not road navigation."
-      }
+          "Estimated routes include modeled prep waiting " +
+          "and service time. Travel time excludes waiting " +
+          "and service. No live traffic or kitchen feed. " +
+          "Advice does not reassign orders.",
+      },
     });
   } catch (error) {
     console.error(
-      "Driver route planning failed:",
+      "Driver route advisor failed:",
       error.code || error.name
     );
 
     return res.status(500).json({
-      message: "Unable to generate the suggested stop order."
+      message: "Unable to generate delivery advice.",
     });
   }
 });
