@@ -118,6 +118,17 @@ v.status AS vehicle_status
 // Get the current driver's profile.
 // Update the authenticated driver's own GPS position.
 const lastLocationUpdates = new Map();
+const { hashToken } = require("./security");
+
+const {
+  sharingHandler,
+  validSharingToken,
+} = require("./gps-sharing");
+
+router.post(
+  "/location/sharing",
+  sharingHandler(pool)
+);
 
 // Update only the authenticated driver's location.
 router.post("/location", async (req, res) => {
@@ -163,7 +174,12 @@ router.post("/location", async (req, res) => {
         "GPS reading is stale or has an invalid timestamp.",
     });
   }
-
+if (!validSharingToken(req.body.sharing_token)) {
+  return res.status(400).json({
+    message:
+      "Enable Share GPS before sending a location.",
+  });
+}
   const lastUpdate =
     lastLocationUpdates.get(req.driver.id) || 0;
 
@@ -175,29 +191,37 @@ router.post("/location", async (req, res) => {
   }
 
   try {
-    const [result] = await pool.execute(
-      `UPDATE drivers
-       SET latitude = ?,
-           longitude = ?,
-           location_accuracy_m = ?,
-           location_updated_at = UTC_TIMESTAMP()
-       WHERE id = ?
-         AND user_id = ?`,
-      [
-        latitude,
-        longitude,
-        Math.round(accuracy_m),
-        req.driver.id,
-        req.user.id,
-      ]
-    );
+   const [result] = await pool.execute(
+  `
+    UPDATE drivers
+    SET
+      latitude = ?,
+      longitude = ?,
+      location_accuracy_m = ?,
+      location_updated_at = UTC_TIMESTAMP(),
+      gps_location_token = ?
+    WHERE id = ?
+      AND user_id = ?
+      AND gps_sharing_enabled = 1
+      AND gps_session_token = ?
+  `,
+  [
+    latitude,
+    longitude,
+    Math.round(accuracy_m),
+    hashToken(req.body.sharing_token),
+    req.driver.id,
+    req.user.id,
+    hashToken(req.body.sharing_token),
+  ]
+);
 
     if (!result.affectedRows) {
-      return res.status(403).json({
-        message:
-          "Your driver account is no longer linked.",
-      });
-    }
+  return res.status(403).json({
+    message:
+      "GPS sharing session ended. Start Share GPS again.",
+  });
+}
 
     if (lastLocationUpdates.size > 10000) {
       lastLocationUpdates.clear();
@@ -544,23 +568,24 @@ router.post("/orders/:id/progress", async (req, res) => {
       }
 
             const [zoneRows] = await connection.execute(
-        `SELECT active
-         FROM zones
-         WHERE id = ?`,
-        [driver.zone_id]
-      );
+  `
+    SELECT active
+    FROM zones
+    WHERE id = ?
+  `,
+  [order.zone_id]
+);
 
-      if (
-        !zoneRows.length ||
-        Number(zoneRows[0].active) !== 1 ||
-        Number(driver.zone_id) !== Number(order.zone_id)
-      ) {
-        throw apiError(
-          409,
-          "The assigned delivery requires your active service zone."
-        );
-      }
-
+if (
+  !zoneRows.length ||
+  Number(zoneRows[0].active) !== 1
+) {
+  throw apiError(
+    409,
+    "The assigned delivery requires an active service zone."
+  );
+}
+      
       const {
         lockWallet,
       } = require("./driver-wallet-store");
