@@ -135,7 +135,9 @@ if (
         await admin.query(statement);
       }
     }
-
+    await require(
+  "../migrations/021-manager-operations"
+).migrate(admin);
     await admin.end();
 
     ({ pool } = require("../src/db"));
@@ -730,30 +732,58 @@ if (
     );
   });
 
-  test("GPS validates types, timestamps and own driver scope", async () => {
+  test(
+  "GPS validates types, timestamps and own driver scope",
+  async () => {
+    const sharing = await call(
+      "one",
+      "/api/driver/location/sharing",
+      {
+        enabled: true,
+      }
+    );
+
+    assert.equal(sharing.status, 200);
+
+    assert.match(
+      sharing.sharing_token,
+      /^[a-f0-9]{64}$/
+    );
+
+    // Reject coordinates with incorrect types.
     assert.equal(
       (
-        await call("one", "/api/driver/location", {
-          latitude: "21",
-          longitude: 105,
-          accuracy_m: 10,
-        })
+        await call(
+          "one",
+          "/api/driver/location",
+          {
+            latitude: "21",
+            longitude: 105,
+            accuracy_m: 10,
+          }
+        )
       ).status,
       400
     );
 
+    // Reject stale GPS readings.
     assert.equal(
       (
-        await call("one", "/api/driver/location", {
-          latitude: 21,
-          longitude: 105,
-          accuracy_m: 10,
-          captured_at: Date.now() - 120000,
-        })
+        await call(
+          "one",
+          "/api/driver/location",
+          {
+            latitude: 21,
+            longitude: 105,
+            accuracy_m: 10,
+            captured_at: Date.now() - 120000,
+          }
+        )
       ).status,
       400
     );
 
+    // A supplied driver ID cannot change another driver.
     const result = await call(
       "one",
       "/api/driver/location",
@@ -763,6 +793,7 @@ if (
         accuracy_m: 10,
         captured_at: Date.now(),
         driver_id: 2,
+        sharing_token: sharing.sharing_token,
       }
     );
 
@@ -772,20 +803,29 @@ if (
       "SELECT latitude FROM drivers WHERE id = 2"
     );
 
-    assert.equal(Number(other.latitude), 21.02);
+    assert.equal(
+      Number(other.latitude),
+      21.02
+    );
 
+    // Preserve the existing upload rate limit.
     assert.equal(
       (
-        await call("one", "/api/driver/location", {
-          latitude: 21.03,
-          longitude: 105.83,
-          accuracy_m: 10,
-        })
+        await call(
+          "one",
+          "/api/driver/location",
+          {
+            latitude: 21.03,
+            longitude: 105.83,
+            accuracy_m: 10,
+            sharing_token: sharing.sharing_token,
+          }
+        )
       ).status,
       429
     );
-  });
-
+  }
+);
   test("messages persist, retries deduplicate, cross-driver reads and writes are denied", async () => {
     const body = {
       message_text:
