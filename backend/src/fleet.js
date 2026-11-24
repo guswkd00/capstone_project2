@@ -822,8 +822,9 @@ router.put("/drivers/:id", async (req, res) => {
           vehicle_id = ?,
           status = ?,
           latitude = ?,
-          longitude = ?
-        WHERE id = ?
+          longitude = ?,
+          gps_location_token = NULL
+          WHERE id = ?
       `,
       [
         data.driverCode,
