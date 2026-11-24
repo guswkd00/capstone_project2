@@ -275,11 +275,24 @@ router.post(
   requireCsrf,
   async (req, res) => {
     try {
-      await pool.execute(
-        "DELETE FROM sessions WHERE token_hash = ?",
-        [req.user.token_hash]
-      );
+      try {
+  if (req.user.role === "driver") {
+    await pool.execute(
+      `
+        UPDATE drivers
+        SET
+          gps_sharing_enabled = 0,
+          gps_session_token = NULL
+        WHERE user_id = ?
+      `,
+      [req.user.id]
+    );
+  }
 
+  await pool.execute(
+    "DELETE FROM sessions WHERE token_hash = ?",
+    [req.user.token_hash]
+  );
       res.clearCookie("fleet_session", { path: "/" });
       res.json({ message: "Signed out successfully." });
     } catch (error) {
