@@ -618,3 +618,13 @@ The demonstration dataset is not evidence of production load capacity or hundred
 - Production performance and full concurrency have not been established by the synthetic dataset.
 - Never commit credentials, API keys, session cookies or password-reset links.
 - Root-level `Intro.html` is separate from the application served from `backend/public`.
+## Manager Operations
+
+This update adds Hanoi operating zones, Manager live GPS tracking,
+login audit emails and authenticated order import with duplicate protection.
+
+See [Manager Operations](docs/MANAGER_OPERATIONS.md) for configuration,
+migration instructions, API payloads and verification requirements.
+
+The migration is manual and must be tested against a disposable database.
+No Render deployment or operational database migration is automatic.
