@@ -8,6 +8,7 @@
 
     if (!start || !stop || !status) return;
 
+    let sharingToken = null;
     let watch = null;
     let busy = false;
     let lastSent = 0;
@@ -15,8 +16,46 @@
     let controller = null;
     let lastPosition = 0;
 
+    async function stopOnServer(token) {
+      if (!token) return;
+
+      try {
+        const response = await fetch(
+          "/api/driver/location/sharing",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              enabled: false,
+              sharing_token: token,
+            }),
+            keepalive: true,
+            signal: AbortSignal.timeout(10000),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Server stop was not confirmed."
+          );
+        }
+      } catch {
+        status.textContent =
+          "GPS stopped on this device. " +
+          "Server stop could not be confirmed; " +
+          "the live marker will expire automatically.";
+      }
+    }
+
     function end() {
       generation++;
+
+      const token = sharingToken;
+      sharingToken = null;
+
+      void stopOnServer(token);
 
       if (watch !== null) {
         navigator.geolocation.clearWatch(watch);
@@ -29,25 +68,30 @@
       stop.disabled = true;
     }
 
-    function failure(e) {
+    function failure(error) {
       const labels = {
         1:
-          "Location permission denied. Allow location in your browser settings.",
+          "Location permission denied. " +
+          "Allow location in your browser settings.",
         2:
-          "Position unavailable. Waiting for a new GPS reading.",
+          "Position unavailable. " +
+          "Waiting for a new GPS reading.",
         3:
-          "GPS timed out. Waiting for a new reading.",
+          "GPS timed out. " +
+          "Waiting for a new reading.",
       };
 
       status.textContent =
-        labels[e.code] || e.message || "GPS is unavailable.";
+        labels[error.code] ||
+        error.message ||
+        "GPS is unavailable.";
 
-      if (e.code === 1) {
+      if (error.code === 1) {
         end();
       }
     }
 
-    start.addEventListener("click", () => {
+    start.addEventListener("click", async () => {
       if (watch !== null) return;
 
       if (
@@ -67,13 +111,60 @@
       status.textContent =
         "Waiting for GPS permission and a current position...";
 
+      try {
+        const response = await fetch(
+          "/api/driver/location/sharing",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              enabled: true,
+            }),
+            signal: AbortSignal.timeout(10000),
+          }
+        );
+
+        const data = await response.json();
+
+        if (
+          !response.ok ||
+          !/^[a-f0-9]{64}$/.test(
+            data.sharing_token || ""
+          )
+        ) {
+          throw new Error(
+            data.message || "Unable to enable sharing."
+          );
+        }
+
+        if (session !== generation) {
+          void stopOnServer(data.sharing_token);
+          return;
+        }
+
+        sharingToken = data.sharing_token;
+        lastSent = 0;
+      } catch (error) {
+        if (session === generation) {
+          end();
+          status.textContent = error.message;
+        }
+
+        return;
+      }
+
       watch = navigator.geolocation.watchPosition(
-        async (position) => {
+        async position => {
           if (session !== generation || busy) return;
 
-          if (Date.now() - position.timestamp > 60000) {
+          if (
+            Date.now() - position.timestamp > 60000
+          ) {
             status.textContent =
-              "GPS reading is stale. Waiting for a current position.";
+              "GPS reading is stale. " +
+              "Waiting for a current position.";
             return;
           }
 
@@ -104,6 +195,7 @@
                   longitude: position.coords.longitude,
                   accuracy_m: position.coords.accuracy,
                   captured_at: position.timestamp,
+                  sharing_token: sharingToken,
                 }),
               }
             );
@@ -130,26 +222,29 @@
             }
 
             status.textContent =
-              `GPS saved: ` +
+              "GPS saved: " +
               `${position.coords.latitude.toFixed(5)}, ` +
               `${position.coords.longitude.toFixed(5)} · ` +
               `±${Math.round(position.coords.accuracy)} m · ` +
               new Date(data.updated_at).toLocaleTimeString();
 
-document.dispatchEvent(
-  new CustomEvent("driver:location-updated", {
-    detail: {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      accuracy_m: position.coords.accuracy,
-      captured_at: position.timestamp,
-    },
-  })
-);
-          } catch (e) {
+            document.dispatchEvent(
+              new CustomEvent(
+                "driver:location-updated",
+                {
+                  detail: {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy_m: position.coords.accuracy,
+                    captured_at: position.timestamp,
+                  },
+                }
+              )
+            );
+          } catch (error) {
             if (session === generation) {
               status.textContent =
-                `${e.message}. ` +
+                `${error.message}. ` +
                 "Will retry on the next GPS update.";
             }
           } finally {
@@ -170,7 +265,8 @@ document.dispatchEvent(
       end();
 
       status.textContent =
-        "Sharing stopped. The last saved position is retained; it is not live GPS.";
+        "Sharing stopped. The last saved position " +
+        "is retained; it is not live GPS.";
     });
 
     const freshness = setInterval(() => {
@@ -180,7 +276,8 @@ document.dispatchEvent(
         Date.now() - lastPosition > 60000
       ) {
         status.textContent =
-          "GPS position is stale. Waiting for a new reading.";
+          "GPS position is stale. " +
+          "Waiting for a new reading.";
       }
     }, 15000);
 
