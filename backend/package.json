@@ -4,12 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "test": "node --test src/*.test.js",
-  "start": "node server.js",
-  "migrate:manager-operations": "node scripts/migrate-manager-operations.js"
-},
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "node --test src/*.test.js",
+    "start": "node server.js",
+    "migrate:manager-operations": "node scripts/migrate-manager-operations.js"
   },
   "keywords": [],
   "author": "",
