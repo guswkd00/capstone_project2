@@ -185,3 +185,114 @@ module.exports = {
   notify,
   notifyWithdrawal
 };
+function deviceLabel(userAgent) {
+  if (
+    typeof userAgent !== "string" ||
+    !userAgent.trim()
+  ) {
+    return "Không xác định";
+  }
+
+  const text = userAgent.slice(0, 1000);
+
+  const os = /Android/i.test(text)
+    ? "Android"
+    : /iPhone|iPad/i.test(text)
+      ? "iOS"
+      : /Windows/i.test(text)
+        ? "Windows"
+        : /Macintosh/i.test(text)
+          ? "macOS"
+          : /Linux/i.test(text)
+            ? "Linux"
+            : "Không xác định";
+
+  const browser = /Edg\//.test(text)
+    ? "Edge"
+    : /Firefox\//.test(text)
+      ? "Firefox"
+      : /Chrome\//.test(text)
+        ? "Chrome"
+        : /Safari\//.test(text)
+          ? "Safari"
+          : "Không xác định";
+
+  return `${browser} / ${os}`;
+}
+
+async function notifyLogin(user, request = {}) {
+  const managerEmail = (
+    process.env.MANAGER_LOGIN_EMAIL || ""
+  ).trim().toLowerCase();
+
+  const validEmail = email =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+    email.length <= 150;
+
+  if (!validEmail(managerEmail)) {
+    console.warn(
+      JSON.stringify({
+        event: "login_email_config",
+        reason: "missing_or_invalid_manager_recipient",
+      })
+    );
+  }
+
+  // A normalized address receives only one email per event.
+  const recipients = new Map();
+
+  if (validEmail(user.email || "")) {
+    recipients.set(
+      user.email.trim().toLowerCase(),
+      user.full_name
+    );
+  }
+
+  if (validEmail(managerEmail)) {
+    recipients.set(managerEmail, "Manager");
+  }
+
+  const timestamp = new Date().toLocaleString(
+    "en-GB",
+    {
+      timeZone: "Asia/Ho_Chi_Minh",
+    }
+  );
+
+  const text =
+    "Successful sign-in — ShopeeFood Delivery DSS\n\n" +
+    `Role: ${user.role || "Không xác định"}\n` +
+    `Name: ${user.full_name || "Không xác định"}\n` +
+    `Account: ${user.email || "Không xác định"}\n` +
+    `Time: ${timestamp} (Asia/Ho_Chi_Minh)\n` +
+    `IP: ${request.ip || "Không xác định"}\n` +
+    `Device: ${deviceLabel(request.userAgent)}\n\n` +
+    "If this was unexpected, review the account's security.";
+
+  await Promise.all(
+    [...recipients].map(async ([email, name]) => {
+      try {
+        await sendEmail(
+          email,
+          name,
+          "Successful sign-in — ShopeeFood Delivery DSS",
+          text
+        );
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            event: "login_email_failed",
+            user_id: user.id,
+            code: error.code || error.name,
+            reason: emailEnabled()
+              ? "provider_error"
+              : "missing_email_config",
+          })
+        );
+      }
+    })
+  );
+}
+
+module.exports.notifyLogin = notifyLogin;
+module.exports.deviceLabel = deviceLabel;
