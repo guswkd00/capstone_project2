@@ -1144,6 +1144,16 @@
           ]) {
             row.appendChild(createElement("td", value));
           }
+          const source = createElement(
+  "small",
+  order.external_order_id
+    ? `${order.import_source || "Imported"} · ${order.external_order_id}`
+    : "Manual entry"
+);
+
+source.style.display = "block";
+
+row.firstElementChild.appendChild(source);
 
           const statusCell = document.createElement("td");
           const status = createElement("span", order.status, "status");
