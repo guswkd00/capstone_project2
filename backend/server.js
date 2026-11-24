@@ -85,6 +85,8 @@ app.use(
   requireLogin,
   requireManager,
   protectWrites,
+  require("./src/manager-operations")
+    .createManagerOperationsRouter(pool),
   fleetRouter
 );
 
