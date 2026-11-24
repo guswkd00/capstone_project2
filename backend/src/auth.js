@@ -291,30 +291,31 @@ router.post(
   requireCsrf,
   async (req, res) => {
     try {
-      try {
-  if (req.user.role === "driver") {
-    await pool.execute(
-      `
-        UPDATE drivers
-        SET
-          gps_sharing_enabled = 0,
-          gps_session_token = NULL
-        WHERE user_id = ?
-      `,
-      [req.user.id]
-    );
-  }
+      if (req.user.role === "driver") {
+        await pool.execute(
+          `
+            UPDATE drivers
+            SET
+              gps_sharing_enabled = 0,
+              gps_session_token = NULL,
+              gps_location_token = NULL
+            WHERE user_id = ?
+          `,
+          [req.user.id]
+        );
+      }
 
-  await pool.execute(
-    "DELETE FROM sessions WHERE token_hash = ?",
-    [req.user.token_hash]
-  );
+      await pool.execute(
+        "DELETE FROM sessions WHERE token_hash = ?",
+        [req.user.token_hash]
+      );
+
       res.clearCookie("fleet_session", { path: "/" });
-      res.json({ message: "Signed out successfully." });
+      return res.json({ message: "Signed out successfully." });
     } catch (error) {
-      console.error("Logout failed:", error.code);
+      console.error("Logout failed:", error.code || error.name);
 
-      res.status(500).json({
+      return res.status(500).json({
         message: "Unable to sign out.",
       });
     }
