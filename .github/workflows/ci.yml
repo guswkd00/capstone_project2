@@ -136,7 +136,8 @@ jobs:
           node --test \
             src/dss.test.js \
             src/manager-ai.test.js \
-            src/driver-workspace.test.js
+            src/driver-workspace.test.js \
+            src/manager-operations.test.js
 
   driver-database:
     name: Driver MySQL integration
@@ -174,11 +175,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test Driver APIs and MySQL transactions
-        run: node --test src/driver-workspace.integration.cjs
+      - name: Test Manager operations and import concurrency
+        run: node --test src/manager-operations.integration.cjs
         env:
-          DRIVER_TEST_DB: ci_driver_test
-          DRIVER_TEST_HOST: 127.0.0.1
-          DRIVER_TEST_PORT: '3306'
-          DRIVER_TEST_USER: root
-          DRIVER_TEST_PASSWORD: isolated-ci-only
+          MANAGER_TEST_DB: ci_manager_test
+          MANAGER_TEST_HOST: 127.0.0.1
+          MANAGER_TEST_PORT: '3306'
+          MANAGER_TEST_USER: root
+          MANAGER_TEST_PASSWORD: isolated-ci-only
