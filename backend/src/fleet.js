@@ -22,7 +22,7 @@ router.get("/drivers", async (req, res) => {
         v.capacity_kg,
         v.status AS vehicle_status
       FROM drivers d
-      JOIN zones z ON z.id = d.zone_id
+      LEFT JOIN zones z ON z.id = d.zone_id
       JOIN vehicles v ON v.id = d.vehicle_id
       ORDER BY d.driver_code
     `);
