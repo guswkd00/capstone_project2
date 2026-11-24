@@ -10,8 +10,15 @@ const router = express.Router();
 router.get("/pending", async (req, res) => {
   try {
     const [orders] = await pool.execute(`
-      SELECT id, order_code, customer_name,
-             total_amount, status, created_at
+      SELECT
+  id,
+  order_code,
+  customer_name,
+  total_amount,
+  status,
+  created_at,
+  import_source,
+  external_order_id
       FROM orders
       WHERE status = 'pending'
       ORDER BY created_at DESC, id DESC
@@ -62,8 +69,15 @@ router.get("/restaurants", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const [orders] = await pool.execute(`
-      SELECT id, order_code, customer_name,
-             total_amount, status, created_at
+      SELECT
+  id,
+  order_code,
+  customer_name,
+  total_amount,
+  status,
+  created_at,
+  import_source,
+  external_order_id
       FROM orders
       ORDER BY created_at DESC, id DESC
     `);
