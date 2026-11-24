@@ -7,7 +7,9 @@ const {
   hashToken,
 } = require("./security");
 
-const { notify } = require("./mail");
+const {
+  notifyLogin,
+} = require("./mail");
 const passwordResetRouter = require("./password-reset");
 
 const router = express.Router();
@@ -245,7 +247,21 @@ router.post("/login", async (req, res) => {
       csrf_token: csrfToken,
     });
 
-    notify(user, "login", req.ip);
+Promise.resolve()
+  .then(() =>
+    notifyLogin(user, {
+      ip: req.ip,
+      userAgent: req.get("user-agent"),
+    })
+  )
+  .catch(error => {
+    console.error(
+      JSON.stringify({
+        event: "login_email_failed",
+        code: error.code || error.name,
+      })
+    );
+  });
   } catch (error) {
     console.error("Login failed:", error.code || error.name);
 
