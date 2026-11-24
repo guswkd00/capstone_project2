@@ -30,32 +30,80 @@
     return item;
   }
 
-  function clearMap() {
+    function clearMap() {
+    if (window.sfLiveTrackingEnabled) return;
+
     markers?.clearLayers();
     details.replaceChildren();
+
     message.textContent = "Loading order locations…";
   }
 
-  window.renderDispatchMap = result => {
+  function ensureMap() {
     if (!window.L) {
       message.textContent =
-        "Map library could not load. Use the driver cards below.";
-      return;
+        "Map library could not load. " +
+        "Use the driver cards below.";
+
+      return false;
     }
 
     if (!map) {
-      map = L.map("dispatch-map").setView([21.0285, 105.8542], 12);
+      map = L.map("dispatch-map").setView(
+        [21.0285, 105.8542],
+        12
+      );
 
       L.tileLayer(
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
           maxZoom: 19,
           attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            '&copy; <a href="https://www.openstreetmap.org/copyright">' +
+            "OpenStreetMap</a> contributors",
         }
       ).addTo(map);
 
       markers = L.layerGroup().addTo(map);
+    }
+
+    return true;
+  }
+
+  let lastResult;
+
+  window.getDispatchMap = () =>
+    ensureMap() ? map : null;
+
+  window.setDispatchLiveMode = enabled => {
+    window.sfLiveTrackingEnabled = enabled;
+
+    if (!ensureMap()) return;
+
+    if (enabled) {
+      map.removeLayer(markers);
+      details.replaceChildren();
+
+      message.textContent =
+        "Live GPS mode. Operational status and " +
+        "GPS freshness are independent.";
+    } else {
+      markers.addTo(map);
+
+      if (lastResult) {
+        window.renderDispatchMap(lastResult);
+      }
+    }
+  };
+
+  window.renderDispatchMap = result => {
+    lastResult = result;
+
+    if (
+      window.sfLiveTrackingEnabled ||
+      !ensureMap()
+    ) {
+      return;
     }
 
     clearMap();
@@ -322,7 +370,7 @@ window.renderDeliveryTracking = tracking => {
     recommended_driver_id: driver?.id ?? null,
     tracking: true
   });
-
+  if (window.sfLiveTrackingEnabled) return;
   details.replaceChildren(
     text("h3", phase),
     text(
