@@ -1,0 +1,60 @@
+.manager-zone-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.manager-zone-summary span {
+  padding: 7px 10px;
+  background: #fff3ef;
+  border: 1px solid #f5d4c9;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.manager-zone-driver {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.manager-zone-driver strong {
+  min-width: 220px;
+}
+
+.manager-zone-driver span {
+  min-width: 160px;
+  color: #626b75;
+}
+
+.manager-zone-driver select {
+  max-width: 100%;
+  min-height: 40px;
+}
+
+.manager-zone-driver button {
+  min-height: 40px;
+}
+
+.manager-zone-list {
+  max-height: 320px;
+  overflow: auto;
+  margin-top: 12px;
+}
+
+.manager-tracking-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.manager-tracking-controls [role="status"] {
+  color: #626b75;
+  font-size: 13px;
+}
